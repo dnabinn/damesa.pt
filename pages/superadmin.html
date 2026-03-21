@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Super Admin — Da Mesa</title>
+  <link rel="manifest" href="../assets/manifest.json" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --bg:#faf7f2; --card:#fff; --text:#1c1612; --muted:#7a6a5e; --accent:#c0392b; --border:#e8dfd4; --radius:12px; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); }
+    a { color: inherit; text-decoration: none; }
+
+    nav { display:flex; align-items:center; justify-content:space-between; padding:16px 24px; background:#1c1612; color:#fff; }
+    .logo { font-family:Georgia,serif; font-size:22px; font-weight:normal; }
+    .logo span { color:#e07060; }
+    .nav-right { display:flex; gap:16px; align-items:center; font-size:14px; color:#b0a090; }
+    .admin-badge { background:#c0392b; color:#fff; padding:3px 10px; border-radius:100px; font-size:11px; font-weight:600; letter-spacing:0.5px; }
+    .btn-sm { background:none; border:1px solid #3a3028; padding:7px 14px; border-radius:8px; cursor:pointer; font-size:13px; color:#b0a090; }
+    .btn-sm:hover { border-color:#fff; color:#fff; }
+
+    /* TABS */
+    .tab-nav { background:#fff; border-bottom:1px solid var(--border); padding:0 24px; display:flex; gap:0; }
+    .tnav { padding:14px 20px; font-size:14px; cursor:pointer; color:var(--muted); border-bottom:2px solid transparent; margin-bottom:-1px; transition:all 0.15s; }
+    .tnav.active { color:var(--text); border-bottom-color:var(--text); font-weight:500; }
+
+    .tab-pane { display:none; }
+    .tab-pane.active { display:block; }
+
+    .page-wrap { max-width:1200px; margin:0 auto; padding:32px 24px 60px; }
+
+    /* STATS */
+    .stats { display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:16px; margin-bottom:36px; }
+    .stat-card { background:#fff; border:1px solid var(--border); border-radius:var(--radius); padding:22px; }
+    .stat-label { font-size:12px; text-transform:uppercase; letter-spacing:1px; color:var(--muted); margin-bottom:8px; }
+    .stat-value { font-family:Georgia,serif; font-size:36px; font-weight:normal; }
+    .stat-sub { font-size:12px; color:var(--muted); margin-top:4px; }
+
+    /* TABLE */
+    .section-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+    .section-title { font-family:Georgia,serif; font-size:22px; font-weight:normal; }
+    .btn-primary { background:var(--text); color:#fff; border:none; padding:10px 20px; border-radius:8px; font-size:13px; cursor:pointer; }
+    .btn-primary:hover { opacity:0.85; }
+
+    .table-wrap { background:#fff; border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; margin-bottom:32px; }
+    table { width:100%; border-collapse:collapse; }
+    thead th { padding:12px 16px; text-align:left; font-size:12px; text-transform:uppercase; letter-spacing:1px; color:var(--muted); border-bottom:1px solid var(--border); background:var(--bg); }
+    tbody td { padding:14px 16px; font-size:14px; border-bottom:1px solid var(--border); }
+    tbody tr:last-child td { border-bottom:none; }
+    tbody tr:hover td { background:#faf7f2; }
+
+    .status { padding:3px 10px; border-radius:100px; font-size:12px; font-weight:500; }
+    .status-active { background:#e8f5e9; color:#2e7d32; }
+    .status-pending { background:#fff8e1; color:#f57f17; }
+    .status-suspended { background:#fce4ec; color:#c62828; }
+    .sub-pro { background:#e3f2fd; color:#1565c0; padding:3px 8px; border-radius:6px; font-size:11px; }
+    .sub-enterprise { background:#f3e5f5; color:#6a1b9a; padding:3px 8px; border-radius:6px; font-size:11px; }
+    .sub-free { background:var(--bg); border:1px solid var(--border); padding:3px 8px; border-radius:6px; font-size:11px; color:var(--muted); }
+
+    .action-btn { border:none; border-radius:6px; padding:5px 10px; font-size:12px; cursor:pointer; margin-right:4px; }
+    .btn-activate { background:#e8f5e9; color:#2e7d32; }
+    .btn-suspend { background:#fce4ec; color:#c62828; }
+
+    .search-input { padding:9px 14px; border:1px solid var(--border); border-radius:8px; font-size:14px; background:#fff; outline:none; width:260px; }
+    .search-input:focus { border-color:var(--text); }
+
+    footer { text-align:center; padding:40px 24px; color:var(--muted); font-size:13px; border-top:1px solid var(--border); }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="logo">Da <span>Mesa</span> <span class="admin-badge">ADMIN</span></a>
+  <div class="nav-right">
+    <span id="nav-name"></span>
+    <button class="btn-sm" onclick="handleSignOut()">Sair</button>
+  </div>
+</nav>
+
+<div class="tab-nav">
+  <div class="tnav active" onclick="switchTab('overview')">Visão Geral</div>
+  <div class="tnav" onclick="switchTab('restaurants')">Restaurantes</div>
+  <div class="tnav" onclick="switchTab('bookings')">Reservas</div>
+  <div class="tnav" onclick="switchTab('users')">Utilizadores</div>
+</div>
+
+<!-- OVERVIEW -->
+<div class="tab-pane active" id="tab-overview">
+  <div class="page-wrap">
+    <div class="stats" id="platform-stats">
+      <div class="stat-card"><div class="stat-label">Restaurantes</div><div class="stat-value" id="s-restaurants">—</div></div>
+      <div class="stat-card"><div class="stat-label">Reservas totais</div><div class="stat-value" id="s-bookings">—</div></div>
+      <div class="stat-card"><div class="stat-label">Proprietários</div><div class="stat-value" id="s-owners">—</div></div>
+      <div class="stat-card"><div class="stat-label">Utilizadores</div><div class="stat-value" id="s-users">—</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- RESTAURANTS -->
+<div class="tab-pane" id="tab-restaurants">
+  <div class="page-wrap">
+    <div class="section-header">
+      <div class="section-title">Restaurantes</div>
+      <input class="search-input" id="rest-search" placeholder="Pesquisar..." oninput="filterRestaurants()" />
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Nome</th><th>Cozinha</th><th>Proprietário</th><th>Estado</th><th>Subscrição</th><th>Ações</th></tr>
+        </thead>
+        <tbody id="restaurants-tbody">
+          <tr><td colspan="6" style="padding:32px;text-align:center;color:var(--muted)">A carregar...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- BOOKINGS -->
+<div class="tab-pane" id="tab-bookings">
+  <div class="page-wrap">
+    <div class="section-header">
+      <div class="section-title">Todas as reservas</div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Data</th><th>Hora</th><th>Restaurante</th><th>Cliente</th><th>Pessoas</th><th>Estado</th><th>Ref</th></tr>
+        </thead>
+        <tbody id="bookings-tbody">
+          <tr><td colspan="7" style="padding:32px;text-align:center;color:var(--muted)">A carregar...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- USERS -->
+<div class="tab-pane" id="tab-users">
+  <div class="page-wrap">
+    <div class="section-header">
+      <div class="section-title">Utilizadores</div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Nome</th><th>Email</th><th>Role</th><th>Registado</th></tr>
+        </thead>
+        <tbody id="users-tbody">
+          <tr><td colspan="4" style="padding:32px;text-align:center;color:var(--muted)">A carregar...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<footer><strong>Da Mesa</strong> — Painel Super Admin</footer>
+
+<script type="module">
+  import { guardRoute, signOut } from '../src/js/auth.js'
+  import { getPlatformStats } from '../src/js/analytics.js'
+  import { supabase } from '../src/js/supabase.js'
+
+  const profile = await guardRoute()
+  if (!profile || profile.role !== 'super_admin') {
+    window.location.href = 'dashboard.html'
+    return
+  }
+
+  document.getElementById('nav-name').textContent = profile.full_name ?? profile.email
+
+  // Platform stats
+  const { totalRestaurants, totalBookings, activeOwners } = await getPlatformStats()
+  document.getElementById('s-restaurants').textContent = totalRestaurants ?? 0
+  document.getElementById('s-bookings').textContent = totalBookings ?? 0
+  document.getElementById('s-owners').textContent = activeOwners ?? 0
+
+  const { count: totalUsers } = await supabase.from('profiles').select('*', { count: 'exact', head: true })
+  document.getElementById('s-users').textContent = totalUsers ?? 0
+
+  // Restaurants
+  let allRestaurants = []
+  async function loadRestaurants() {
+    const { data } = await supabase
+      .from('restaurants')
+      .select('*, profiles(full_name, email)')
+      .order('created_at', { ascending: false })
+    allRestaurants = data ?? []
+    renderRestaurants(allRestaurants)
+  }
+
+  function renderRestaurants(list) {
+    document.getElementById('restaurants-tbody').innerHTML = list.map(r => `
+      <tr>
+        <td><strong>${r.name}</strong><br><span style="font-size:11px;color:var(--muted)">${r.slug}</span></td>
+        <td>${r.cuisine_type ?? '—'}</td>
+        <td style="font-size:12px;color:var(--muted)">${r.profiles?.full_name ?? '—'}<br>${r.profiles?.email ?? ''}</td>
+        <td><span class="status status-${r.status}">${r.status}</span></td>
+        <td><span class="sub-${r.subscription}">${r.subscription}</span></td>
+        <td>
+          ${r.status !== 'active' ? `<button class="action-btn btn-activate" onclick="setRestStatus('${r.id}','active')">Ativar</button>` : ''}
+          ${r.status !== 'suspended' ? `<button class="action-btn btn-suspend" onclick="setRestStatus('${r.id}','suspended')">Suspender</button>` : ''}
+        </td>
+      </tr>
+    `).join('')
+  }
+
+  window.filterRestaurants = function() {
+    const q = document.getElementById('rest-search').value.toLowerCase()
+    renderRestaurants(allRestaurants.filter(r =>
+      r.name.toLowerCase().includes(q) || r.slug.includes(q) || (r.cuisine_type ?? '').toLowerCase().includes(q)
+    ))
+  }
+
+  window.setRestStatus = async function(id, status) {
+    await supabase.from('restaurants').update({ status }).eq('id', id)
+    await loadRestaurants()
+  }
+
+  // Bookings
+  async function loadAllBookings() {
+    const { data } = await supabase
+      .from('bookings')
+      .select('*, restaurants(name)')
+      .order('booking_date', { ascending: false })
+      .limit(200)
+    document.getElementById('bookings-tbody').innerHTML = (data ?? []).map(b => `
+      <tr>
+        <td>${b.booking_date}</td>
+        <td>${b.booking_time?.slice(0,5)}</td>
+        <td>${b.restaurants?.name ?? '—'}</td>
+        <td style="font-size:12px">${b.diner_name}<br><span style="color:var(--muted)">${b.diner_email}</span></td>
+        <td>${b.party_size}</td>
+        <td><span class="status status-${b.status}">${b.status}</span></td>
+        <td style="font-size:11px;color:var(--muted)">#${b.reference_code}</td>
+      </tr>
+    `).join('')
+  }
+
+  // Users
+  async function loadUsers() {
+    const { data } = await supabase
+      .from('profiles')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(100)
+    document.getElementById('users-tbody').innerHTML = (data ?? []).map(u => `
+      <tr>
+        <td>${u.full_name ?? '—'}</td>
+        <td style="font-size:13px;color:var(--muted)">${u.email ?? ''}</td>
+        <td><span class="status status-${u.role === 'super_admin' ? 'suspended' : u.role === 'restaurant_owner' ? 'active' : 'pending'}">${u.role}</span></td>
+        <td style="font-size:12px;color:var(--muted)">${new Date(u.created_at).toLocaleDateString('pt-PT')}</td>
+      </tr>
+    `).join('')
+  }
+
+  window.switchTab = function(tab) {
+    document.querySelectorAll('.tnav').forEach((t, i) => {
+      t.classList.toggle('active', ['overview','restaurants','bookings','users'][i] === tab)
+    })
+    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'))
+    document.getElementById(`tab-${tab}`).classList.add('active')
+
+    if (tab === 'restaurants') loadRestaurants()
+    if (tab === 'bookings') loadAllBookings()
+    if (tab === 'users') loadUsers()
+  }
+
+  window.handleSignOut = signOut
+</script>
+
+</body>
+</html>

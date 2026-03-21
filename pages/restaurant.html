@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Restaurante — Da Mesa</title>
+  <link rel="manifest" href="../assets/manifest.json" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --bg:#faf7f2; --card:#fff; --text:#1c1612; --muted:#7a6a5e; --accent:#c0392b; --border:#e8dfd4; --radius:12px; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); }
+    a { color: inherit; text-decoration: none; }
+    nav { display:flex; align-items:center; justify-content:space-between; padding:16px 24px; background:#fff; border-bottom:1px solid var(--border); position:sticky; top:0; z-index:100; }
+    .logo { font-family:Georgia,serif; font-size:22px; font-weight:normal; }
+    .logo span { color:var(--accent); }
+    .nav-links { display:flex; gap:24px; align-items:center; font-size:14px; color:var(--muted); }
+    .nav-cta { background:var(--text); color:#fff !important; padding:8px 18px; border-radius:8px; font-size:13px; }
+
+    /* HERO */
+    .cover { height: 320px; background: #e8dfd4; background-size: cover; background-position: center; }
+    .page-wrap { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+    /* HEADER */
+    .rest-header { display:flex; justify-content:space-between; align-items:flex-start; padding: 32px 0 24px; gap: 24px; flex-wrap: wrap; }
+    .rest-title h1 { font-family:Georgia,serif; font-size:34px; font-weight:normal; margin-bottom:8px; }
+    .rest-meta { display:flex; gap:16px; font-size:14px; color:var(--muted); flex-wrap:wrap; }
+    .badge { background:#fff; border:1px solid var(--border); border-radius:6px; padding:3px 10px; font-size:12px; }
+
+    /* LAYOUT */
+    .layout { display: grid; grid-template-columns: 1fr 360px; gap: 32px; padding-bottom: 60px; }
+    @media (max-width: 768px) { .layout { grid-template-columns: 1fr; } .booking-widget { order: -1; } }
+
+    /* MENU */
+    .menu-section h2 { font-family:Georgia,serif; font-size:24px; font-weight:normal; margin-bottom:24px; }
+    .menu-category { margin-bottom: 32px; }
+    .menu-category h3 { font-size:13px; text-transform:uppercase; letter-spacing:1px; color:var(--muted); margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid var(--border); }
+    .menu-item { display:flex; justify-content:space-between; align-items:flex-start; padding:12px 0; border-bottom:1px solid var(--border); gap:16px; }
+    .menu-item:last-child { border-bottom:none; }
+    .item-name { font-weight:500; margin-bottom:4px; }
+    .item-desc { font-size:13px; color:var(--muted); }
+    .item-price { font-size:15px; font-weight:600; white-space:nowrap; }
+
+    /* BOOKING WIDGET */
+    .booking-widget { background:#fff; border:1px solid var(--border); border-radius:var(--radius); padding:24px; height:fit-content; position:sticky; top:88px; }
+    .widget-title { font-family:Georgia,serif; font-size:20px; font-weight:normal; margin-bottom:20px; }
+
+    /* STEPS */
+    .step { display:none; }
+    .step.active { display:block; }
+    .step-label { font-size:12px; text-transform:uppercase; letter-spacing:1px; color:var(--muted); margin-bottom:16px; }
+
+    /* DATE + PARTY */
+    .form-group { margin-bottom:16px; }
+    .form-group label { display:block; font-size:13px; color:var(--muted); margin-bottom:6px; }
+    .form-group input, .form-group select { width:100%; padding:11px 14px; border:1px solid var(--border); border-radius:8px; font-size:14px; outline:none; background:#fff; }
+    .form-group input:focus, .form-group select:focus { border-color:var(--text); }
+
+    /* TIME SLOTS */
+    .slots { display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; margin-bottom:16px; }
+    .slot { padding:10px 6px; text-align:center; border:1px solid var(--border); border-radius:8px; font-size:13px; cursor:pointer; background:#fff; transition:all 0.15s; }
+    .slot:hover { border-color:var(--text); }
+    .slot.sel { background:var(--text); color:#fff; border-color:var(--text); }
+    .slot.full { opacity:0.4; pointer-events:none; }
+
+    /* CTA */
+    .bcta { width:100%; padding:14px; background:var(--accent); color:#fff; border:none; border-radius:10px; font-size:15px; cursor:pointer; margin-top:8px; transition:opacity 0.15s; }
+    .bcta:hover { opacity:0.9; }
+
+    /* CONFIRMATION */
+    .conf { text-align:center; padding:16px 0; }
+    .conf-icon { font-size:40px; margin-bottom:12px; }
+    .conf-ref { font-family:Georgia,serif; font-size:22px; margin-bottom:8px; }
+    .conf-msg { color:var(--muted); font-size:14px; }
+
+    footer { text-align:center; padding:40px 24px; color:var(--muted); font-size:13px; border-top:1px solid var(--border); }
+    footer strong { color:var(--text); font-family:Georgia,serif; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="logo">Da <span>Mesa</span></a>
+  <div class="nav-links">
+    <a href="restaurantes.html">Restaurantes</a>
+    <a href="cozinhas.html">Cozinhas</a>
+    <a href="login.html" class="nav-cta">Entrar</a>
+  </div>
+</nav>
+
+<div class="cover" id="cover-img"></div>
+
+<div class="page-wrap">
+  <div class="rest-header">
+    <div class="rest-title">
+      <h1 id="rest-name">A carregar...</h1>
+      <div class="rest-meta">
+        <span id="rest-cuisine"></span>
+        <span id="rest-price" class="badge"></span>
+        <span id="rest-address"></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="layout">
+    <!-- MENU -->
+    <div class="menu-section">
+      <h2>Ementa</h2>
+      <div id="menu-container"><p style="color:var(--muted)">A carregar ementa...</p></div>
+    </div>
+
+    <!-- BOOKING WIDGET -->
+    <div class="booking-widget">
+      <div class="widget-title">Reservar mesa</div>
+
+      <!-- Step 1: Date & Party -->
+      <div class="step active" id="bs1">
+        <div class="step-label">1 — Data e hora</div>
+        <div class="form-group">
+          <label>Data</label>
+          <input type="date" id="bdate" />
+        </div>
+        <div class="form-group">
+          <label>Pessoas</label>
+          <select id="bparty">
+            <option value="1">1 pessoa</option>
+            <option value="2" selected>2 pessoas</option>
+            <option value="3">3 pessoas</option>
+            <option value="4">4 pessoas</option>
+            <option value="5">5 pessoas</option>
+            <option value="6">6 pessoas</option>
+            <option value="7">7 pessoas</option>
+            <option value="8">8+ pessoas</option>
+          </select>
+        </div>
+        <div class="step-label" style="margin-top:20px;">Hora</div>
+        <div class="slots" id="time-slots"></div>
+        <button class="bcta" onclick="goS(2)">Continuar</button>
+      </div>
+
+      <!-- Step 2: Contact details -->
+      <div class="step" id="bs2">
+        <div class="step-label">2 — Os seus dados</div>
+        <div class="form-group">
+          <label>Nome completo</label>
+          <input type="text" id="diner-name" placeholder="O seu nome" />
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="diner-email" placeholder="email@exemplo.pt" />
+        </div>
+        <div class="form-group">
+          <label>Telemóvel</label>
+          <input type="tel" id="diner-phone" placeholder="+351 9XX XXX XXX" />
+        </div>
+        <div class="form-group">
+          <label>Pedidos especiais (opcional)</label>
+          <input type="text" id="special-requests" placeholder="Alergias, aniversário, cadeira de bebé..." />
+        </div>
+        <button class="bcta" onclick="submitBooking()">Confirmar reserva</button>
+        <button onclick="goS(1)" style="width:100%;margin-top:8px;padding:10px;border:none;background:none;color:var(--muted);cursor:pointer;font-size:13px;">← Voltar</button>
+      </div>
+
+      <!-- Step 3: Confirmation -->
+      <div class="step" id="bs3">
+        <div class="conf">
+          <div class="conf-icon">✅</div>
+          <div class="conf-ref" id="conf-ref">REF #--------</div>
+          <p class="conf-msg">Reserva confirmada! Receberá um SMS e email de confirmação.</p>
+          <a href="restaurantes.html" style="display:block;margin-top:20px;font-size:13px;color:var(--muted);">← Ver outros restaurantes</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <strong>Da Mesa</strong> — Reservas de restaurantes em Lisboa · <a href="mailto:ola@damesa.pt">ola@damesa.pt</a>
+</footer>
+
+<script type="module">
+  import { getRestaurantBySlug, getAvailableSlots } from '../src/js/restaurants.js'
+  import { createBooking } from '../src/js/bookings.js'
+  import { trackEvent } from '../src/js/analytics.js'
+
+  const slug = new URLSearchParams(window.location.search).get('slug')
+  if (!slug) window.location.href = 'restaurantes.html'
+
+  const { restaurant, error } = await getRestaurantBySlug(slug)
+  if (error || !restaurant) { window.location.href = 'restaurantes.html' }
+
+  // Set meta
+  document.title = `${restaurant.name} — Da Mesa`
+  document.getElementById('rest-name').textContent = restaurant.name
+  document.getElementById('rest-cuisine').textContent = restaurant.cuisine_type ?? ''
+  document.getElementById('rest-price').textContent = restaurant.price_range ?? ''
+  document.getElementById('rest-address').textContent = restaurant.address ?? ''
+  if (restaurant.cover_image) {
+    document.getElementById('cover-img').style.backgroundImage = `url(${restaurant.cover_image})`
+  }
+
+  // Render menu
+  const cats = restaurant.menu_categories ?? []
+  const menuEl = document.getElementById('menu-container')
+  if (!cats.length) {
+    menuEl.innerHTML = '<p style="color:var(--muted)">Ementa não disponível.</p>'
+  } else {
+    menuEl.innerHTML = cats.map(cat => `
+      <div class="menu-category">
+        <h3>${cat.name}</h3>
+        ${(cat.menu_items ?? []).map(item => `
+          <div class="menu-item">
+            <div>
+              <div class="item-name">${item.name}</div>
+              ${item.description ? `<div class="item-desc">${item.description}</div>` : ''}
+            </div>
+            ${item.price ? `<div class="item-price">${Number(item.price).toFixed(2)} €</div>` : ''}
+          </div>
+        `).join('')}
+      </div>
+    `).join('')
+  }
+
+  // Set default date to tomorrow
+  const tomorrow = new Date()
+  tomorrow.setDate(tomorrow.getDate() + 1)
+  document.getElementById('bdate').value = tomorrow.toISOString().split('T')[0]
+  document.getElementById('bdate').min = tomorrow.toISOString().split('T')[0]
+
+  // Load time slots
+  async function loadSlots() {
+    const date = document.getElementById('bdate').value
+    if (!date) return
+    const slots = await getAvailableSlots(restaurant.id, date)
+    const capacity = restaurant.capacity ?? 50
+    document.getElementById('time-slots').innerHTML = slots.map(s => {
+      const full = s.booked >= capacity
+      const sel = ''
+      return `<div class="slot${full ? ' full' : ''}" data-time="${s.time}" onclick="selectSlot(this)">${s.time}</div>`
+    }).join('')
+  }
+
+  document.getElementById('bdate').addEventListener('change', loadSlots)
+  await loadSlots()
+
+  window.selectSlot = function(el) {
+    document.querySelectorAll('.slot').forEach(s => s.classList.remove('sel'))
+    el.classList.add('sel')
+  }
+
+  window.goS = function(n) {
+    document.querySelectorAll('.step').forEach(s => s.classList.remove('active'))
+    document.getElementById(`bs${n}`).classList.add('active')
+  }
+
+  window.submitBooking = async function() {
+    const selectedSlot = document.querySelector('.slot.sel')
+    if (!selectedSlot) { alert('Selecione um horário.'); goS(1); return }
+
+    const name = document.getElementById('diner-name').value.trim()
+    const email = document.getElementById('diner-email').value.trim()
+    const phone = document.getElementById('diner-phone').value.trim()
+    if (!name || !email || !phone) { alert('Preencha todos os campos obrigatórios.'); return }
+
+    const btn = document.querySelector('#bs2 .bcta')
+    btn.textContent = 'A confirmar...'
+    btn.disabled = true
+
+    const { booking, error } = await createBooking({
+      restaurantId: restaurant.id,
+      dinerName: name,
+      dinerEmail: email,
+      dinerPhone: phone,
+      bookingDate: document.getElementById('bdate').value,
+      bookingTime: selectedSlot.dataset.time,
+      partySize: parseInt(document.getElementById('bparty').value),
+      specialRequests: document.getElementById('special-requests').value
+    })
+
+    if (error) {
+      alert('Erro ao criar reserva: ' + error.message)
+      btn.textContent = 'Confirmar reserva'
+      btn.disabled = false
+      return
+    }
+
+    document.getElementById('conf-ref').textContent = `REF #${booking.reference_code}`
+    trackEvent('booking_created', { restaurant_id: restaurant.id, party_size: booking.party_size })
+    goS(3)
+  }
+
+  trackEvent('restaurant_view', { slug, restaurant_id: restaurant.id })
+</script>
+
+</body>
+</html>

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cozinhas — Da Mesa</title>
+  <meta name="description" content="Explore os melhores restaurantes de Lisboa por tipo de cozinha." />
+  <link rel="manifest" href="../assets/manifest.json" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --bg:#faf7f2; --card:#fff; --text:#1c1612; --muted:#7a6a5e; --accent:#c0392b; --border:#e8dfd4; --radius:12px; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); }
+    a { color: inherit; text-decoration: none; }
+    nav { display:flex; align-items:center; justify-content:space-between; padding:16px 24px; background:#fff; border-bottom:1px solid var(--border); position:sticky; top:0; z-index:100; }
+    .logo { font-family:Georgia,serif; font-size:22px; font-weight:normal; }
+    .logo span { color:var(--accent); }
+    .nav-links { display:flex; gap:24px; align-items:center; font-size:14px; color:var(--muted); }
+    .nav-cta { background:var(--text); color:#fff !important; padding:8px 18px; border-radius:8px; font-size:13px; }
+
+    .page-header { padding:48px 24px 40px; max-width:1100px; margin:0 auto; }
+    .page-header h1 { font-family:Georgia,serif; font-size:36px; font-weight:normal; margin-bottom:8px; }
+    .page-header p { color:var(--muted); }
+
+    .cuisine-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(260px, 1fr)); gap:16px; padding:0 24px 60px; max-width:1100px; margin:0 auto; }
+    .cuisine-card { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:28px 24px; cursor:pointer; transition:transform 0.15s, box-shadow 0.15s; display:flex; flex-direction:column; gap:8px; }
+    .cuisine-card:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(0,0,0,0.08); }
+    .cuisine-icon { font-size:32px; }
+    .cuisine-name { font-family:Georgia,serif; font-size:20px; font-weight:normal; }
+    .cuisine-count { font-size:13px; color:var(--muted); }
+
+    footer { text-align:center; padding:40px 24px; color:var(--muted); font-size:13px; border-top:1px solid var(--border); }
+    footer strong { color:var(--text); font-family:Georgia,serif; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="logo">Da <span>Mesa</span></a>
+  <div class="nav-links">
+    <a href="restaurantes.html">Restaurantes</a>
+    <a href="cozinhas.html">Cozinhas</a>
+    <a href="login.html" class="nav-cta">Entrar</a>
+  </div>
+</nav>
+
+<div class="page-header">
+  <h1>Explorar por cozinha</h1>
+  <p>Descobre os melhores restaurantes de Lisboa por tipo de cozinha.</p>
+</div>
+
+<div class="cuisine-grid" id="cuisine-grid">
+  <p style="color:var(--muted);padding:0 0 24px">A carregar...</p>
+</div>
+
+<footer>
+  <strong>Da Mesa</strong> — Reservas de restaurantes em Lisboa · <a href="mailto:ola@damesa.pt">ola@damesa.pt</a>
+</footer>
+
+<script type="module">
+  import { getRestaurants } from '../src/js/restaurants.js'
+
+  const CUISINE_ICONS = {
+    'Portuguesa': '🍖',
+    'Marisco': '🦞',
+    'Italiana': '🍝',
+    'Japonesa': '🍣',
+    'Contemporânea': '✨',
+    'Grelhados': '🥩',
+    'Vegan': '🥗',
+    'Vegetariana': '🥦',
+    'Petiscos': '🫒',
+    'Fusão': '🌏',
+    'Peruana': '🫙',
+    'Asiática': '🥢',
+  }
+
+  const { restaurants } = await getRestaurants()
+  const counts = {}
+  for (const r of restaurants ?? []) {
+    if (r.cuisine_type) counts[r.cuisine_type] = (counts[r.cuisine_type] ?? 0) + 1
+  }
+
+  const grid = document.getElementById('cuisine-grid')
+  grid.innerHTML = Object.entries(counts)
+    .sort((a, b) => b[1] - a[1])
+    .map(([cuisine, count]) => `
+      <a class="cuisine-card" href="restaurantes.html?cuisine=${encodeURIComponent(cuisine)}">
+        <div class="cuisine-icon">${CUISINE_ICONS[cuisine] ?? '🍽️'}</div>
+        <div class="cuisine-name">${cuisine}</div>
+        <div class="cuisine-count">${count} restaurante${count !== 1 ? 's' : ''}</div>
+      </a>
+    `).join('')
+</script>
+
+</body>
+</html>

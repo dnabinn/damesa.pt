@@ -1,0 +1,28 @@
+# Environment variables — NEVER commit
+.env
+.env.local
+.env.production
+
+# Dependencies
+node_modules/
+
+# Supabase local
+supabase/.branches
+supabase/.temp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+
+# Build artifacts
+dist/
+build/
+
+# Logs
+*.log
+npm-debug.log*

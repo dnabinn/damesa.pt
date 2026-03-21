@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — Da Mesa</title>
+  <link rel="manifest" href="../assets/manifest.json" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --bg:#faf7f2; --card:#fff; --text:#1c1612; --muted:#7a6a5e; --accent:#c0392b; --border:#e8dfd4; --radius:12px; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); }
+    a { color: inherit; text-decoration: none; }
+    nav { display:flex; align-items:center; justify-content:space-between; padding:16px 24px; background:#fff; border-bottom:1px solid var(--border); }
+    .logo { font-family:Georgia,serif; font-size:22px; font-weight:normal; }
+    .logo span { color:var(--accent); }
+    .nav-right { display:flex; gap:16px; align-items:center; font-size:14px; color:var(--muted); }
+    .btn-logout { background:none; border:1px solid var(--border); padding:7px 14px; border-radius:8px; cursor:pointer; font-size:13px; color:var(--muted); }
+    .btn-logout:hover { color:var(--text); border-color:var(--text); }
+
+    .page-wrap { max-width: 800px; margin: 0 auto; padding: 40px 24px 60px; }
+    .greeting { font-family:Georgia,serif; font-size:28px; font-weight:normal; margin-bottom:6px; }
+    .greeting-sub { color:var(--muted); margin-bottom:40px; }
+
+    .section-title { font-size:13px; text-transform:uppercase; letter-spacing:1px; color:var(--muted); margin-bottom:16px; }
+
+    .booking-list { display:flex; flex-direction:column; gap:12px; margin-bottom:40px; }
+    .booking-card { background:#fff; border:1px solid var(--border); border-radius:var(--radius); padding:20px; display:flex; justify-content:space-between; align-items:center; gap:16px; }
+    .booking-info h3 { font-size:16px; font-weight:600; margin-bottom:4px; }
+    .booking-meta { font-size:13px; color:var(--muted); display:flex; gap:12px; }
+    .status { padding:3px 10px; border-radius:100px; font-size:12px; font-weight:500; }
+    .status-confirmed { background:#e8f5e9; color:#2e7d32; }
+    .status-pending { background:#fff8e1; color:#f57f17; }
+    .status-cancelled { background:#fce4ec; color:#c62828; }
+
+    .empty-state { text-align:center; padding:60px 24px; color:var(--muted); }
+    .empty-state a { color:var(--text); border-bottom:1px solid var(--border); }
+
+    footer { text-align:center; padding:40px 24px; color:var(--muted); font-size:13px; border-top:1px solid var(--border); }
+    footer strong { color:var(--text); font-family:Georgia,serif; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="logo">Da <span>Mesa</span></a>
+  <div class="nav-right">
+    <span id="nav-name"></span>
+    <button class="btn-logout" onclick="handleSignOut()">Sair</button>
+  </div>
+</nav>
+
+<div class="page-wrap">
+  <div class="greeting" id="greeting">Olá!</div>
+  <div class="greeting-sub">As tuas reservas em Da Mesa.</div>
+
+  <div class="section-title">Próximas reservas</div>
+  <div class="booking-list" id="booking-list">
+    <p style="color:var(--muted)">A carregar...</p>
+  </div>
+
+  <div style="text-align:center;margin-top:32px;">
+    <a href="restaurantes.html" style="display:inline-block;padding:13px 28px;background:var(--text);color:#fff;border-radius:10px;font-size:14px;">Reservar mesa</a>
+  </div>
+</div>
+
+<footer>
+  <strong>Da Mesa</strong> — <a href="index.html">Início</a> · <a href="restaurantes.html">Restaurantes</a>
+</footer>
+
+<script type="module">
+  import { guardRoute, signOut } from '../src/js/auth.js'
+  import { supabase } from '../src/js/supabase.js'
+
+  const profile = await guardRoute()
+  if (!profile) return
+
+  document.getElementById('greeting').textContent = `Olá, ${profile.full_name?.split(' ')[0] ?? 'Bem-vindo'}!`
+  document.getElementById('nav-name').textContent = profile.full_name ?? profile.email
+
+  // Fetch this user's bookings
+  const today = new Date().toISOString().split('T')[0]
+  const { data: bookings } = await supabase
+    .from('bookings')
+    .select('*, restaurants(name, address)')
+    .eq('diner_email', profile.email)
+    .gte('booking_date', today)
+    .order('booking_date')
+    .order('booking_time')
+
+  const list = document.getElementById('booking-list')
+  if (!bookings?.length) {
+    list.innerHTML = `
+      <div class="empty-state">
+        <p>Ainda não tens reservas.</p>
+        <p style="margin-top:12px;"><a href="restaurantes.html">Explora os restaurantes →</a></p>
+      </div>`
+  } else {
+    list.innerHTML = bookings.map(b => `
+      <div class="booking-card">
+        <div class="booking-info">
+          <h3>${b.restaurants?.name ?? 'Restaurante'}</h3>
+          <div class="booking-meta">
+            <span>${b.booking_date}</span>
+            <span>${b.booking_time?.slice(0,5)}</span>
+            <span>${b.party_size} pessoas</span>
+            <span style="color:var(--muted);font-size:11px">REF #${b.reference_code}</span>
+          </div>
+        </div>
+        <span class="status status-${b.status}">${translateStatus(b.status)}</span>
+      </div>
+    `).join('')
+  }
+
+  function translateStatus(s) {
+    return { pending: 'Pendente', confirmed: 'Confirmada', cancelled: 'Cancelada', completed: 'Concluída', no_show: 'Não apareceu' }[s] ?? s
+  }
+
+  window.handleSignOut = signOut
+</script>
+
+</body>
+</html>
