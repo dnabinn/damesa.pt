@@ -182,13 +182,15 @@
 </div>
 
 <footer>
-  <strong>Da Mesa</strong> — Reservas de restaurantes em Lisboa · <a href="mailto:ola@damesa.pt">ola@damesa.pt</a> · <a href="login.html">Entrar como restaurante</a>
+  <strong>Da Mesa</strong> — Reservas de restaurantes em Lisboa · <a href="mailto:ola@damesa.pt">ola@damesa.pt</a> · <a href="login.html">Entrar como restaurante</a> · <a href="privacy.html">Privacidade</a> · <a href="terms.html">Termos</a>
 </footer>
 
 <script type="module">
   import { getRestaurantBySlug, getAvailableSlots } from '../src/js/restaurants.js'
   import { createBooking } from '../src/js/bookings.js'
   import { trackEvent } from '../src/js/analytics.js'
+  import { initCookieBanner } from '../src/js/cookies.js'
+  initCookieBanner()
 
   const slug = new URLSearchParams(window.location.search).get('slug')
   if (!slug) window.location.href = 'restaurantes.html'

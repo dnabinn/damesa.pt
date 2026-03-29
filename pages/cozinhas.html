@@ -53,11 +53,13 @@
 </div>
 
 <footer>
-  <strong>Da Mesa</strong> — Reservas de restaurantes em Lisboa · <a href="mailto:ola@damesa.pt">ola@damesa.pt</a> · <a href="login.html">Entrar como restaurante</a>
+  <strong>Da Mesa</strong> — Reservas de restaurantes em Lisboa · <a href="mailto:ola@damesa.pt">ola@damesa.pt</a> · <a href="login.html">Entrar como restaurante</a> · <a href="privacy.html">Privacidade</a> · <a href="terms.html">Termos</a>
 </footer>
 
 <script type="module">
   import { getRestaurants } from '../src/js/restaurants.js'
+  import { initCookieBanner } from '../src/js/cookies.js'
+  initCookieBanner()
 
   const CUISINE_ICONS = {
     'Portuguesa': '🍖',
