@@ -4,6 +4,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Restaurante — Da Mesa</title>
+  <meta name="description" content="Reserva a tua mesa online. Sem taxas de reserva." />
+  <meta name="robots" content="index, follow" />
+  <meta property="og:type" content="restaurant" />
+  <meta property="og:site_name" content="Da Mesa" />
+  <meta property="og:image" content="https://damesa.pt/assets/og-image.jpg" />
+  <meta id="og-title" property="og:title" content="Restaurante — Da Mesa" />
+  <meta id="og-description" property="og:description" content="Reserva a tua mesa online. Sem taxas de reserva." />
+  <meta id="og-url" property="og:url" content="https://damesa.pt/restaurant.html" />
   <link rel="manifest" href="../assets/manifest.json" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -188,8 +196,50 @@
   const { restaurant, error } = await getRestaurantBySlug(slug)
   if (error || !restaurant) { window.location.href = 'restaurantes.html' }
 
-  // Set meta
-  document.title = `${restaurant.name} — Da Mesa`
+  // Set meta + SEO
+  document.title = `${restaurant.name} — Reservar Mesa em Lisboa | Da Mesa`
+  document.querySelector('meta[name="description"]').content = `Reserva mesa no ${restaurant.name} em Lisboa. ${restaurant.cuisine_type ?? 'Restaurante'} em ${restaurant.address ?? 'Lisboa'}. Sem taxas de reserva — Da Mesa.`
+  document.getElementById('og-title').content = `${restaurant.name} — Da Mesa`
+  document.getElementById('og-description').content = `Reserva mesa no ${restaurant.name}. ${restaurant.cuisine_type ?? ''} · ${restaurant.price_range ?? ''} · ${restaurant.address ?? 'Lisboa'}`
+  document.getElementById('og-url').content = `https://damesa.pt/restaurant.html?slug=${slug}`
+
+  // Schema.org JSON-LD
+  const schema = {
+    "@context": "https://schema.org",
+    "@type": "Restaurant",
+    "name": restaurant.name,
+    "description": restaurant.description ?? `Restaurante ${restaurant.cuisine_type ?? ''} em Lisboa.`,
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": restaurant.address ?? '',
+      "addressLocality": "Lisboa",
+      "addressCountry": "PT"
+    },
+    "servesCuisine": restaurant.cuisine_type ?? '',
+    "priceRange": restaurant.price_range ?? '€€',
+    "telephone": restaurant.phone ?? '',
+    "url": `https://damesa.pt/restaurant.html?slug=${slug}`,
+    "potentialAction": {
+      "@type": "ReserveAction",
+      "target": {
+        "@type": "EntryPoint",
+        "urlTemplate": `https://damesa.pt/restaurant.html?slug=${slug}`,
+        "inLanguage": "pt-PT",
+        "actionPlatform": [
+          "https://schema.org/DesktopWebPlatform",
+          "https://schema.org/MobileWebPlatform"
+        ]
+      },
+      "result": {
+        "@type": "FoodEstablishmentReservation",
+        "name": `Reserva no ${restaurant.name}`
+      }
+    }
+  }
+  const schemaEl = document.createElement('script')
+  schemaEl.type = 'application/ld+json'
+  schemaEl.textContent = JSON.stringify(schema)
+  document.head.appendChild(schemaEl)
   document.getElementById('rest-name').textContent = restaurant.name
   document.getElementById('rest-cuisine').textContent = restaurant.cuisine_type ?? ''
   document.getElementById('rest-price').textContent = restaurant.price_range ?? ''
