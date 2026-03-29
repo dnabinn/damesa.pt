@@ -29,23 +29,14 @@ export async function createBooking(bookingData) {
   return { booking: data }
 }
 
-// Send confirmation (calls Supabase edge functions)
+// Send confirmation (email only — SMS coming soon)
 async function sendBookingConfirmation(booking) {
-  // SMS to diner
-  await fetch('/api/send-notification', {
+  await fetch('https://jdkbywroucgwrfpirloa.supabase.co/functions/v1/send-notification', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      type: 'sms',
-      to: booking.diner_phone,
-      message: `✅ Reserva confirmada! ${booking.reference_code} - ${booking.booking_date} às ${booking.booking_time}. Da Mesa`
-    })
-  })
-
-  // Email to diner
-  await fetch('/api/send-notification', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer sb_publishable_rU5h79iwvA6wDozm72uvMg_zSFZAkkY'
+    },
     body: JSON.stringify({
       type: 'email',
       to: booking.diner_email,
