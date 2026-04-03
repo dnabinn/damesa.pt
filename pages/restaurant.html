@@ -15,249 +15,600 @@
   <link rel="manifest" href="../assets/manifest.json" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root { --bg:#faf7f2; --card:#fff; --text:#1c1612; --muted:#7a6a5e; --accent:#c0392b; --border:#e8dfd4; --radius:12px; }
+    :root {
+      --bg: #faf7f2;
+      --card: #ffffff;
+      --text: #1c1612;
+      --muted: #7a6a5e;
+      --accent: #c0392b;
+      --accent-dark: #a93226;
+      --border: #e8dfd4;
+      --radius: 14px;
+      --shadow: 0 4px 24px rgba(0,0,0,0.08);
+      --shadow-lg: 0 12px 48px rgba(0,0,0,0.14);
+    }
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); }
     a { color: inherit; text-decoration: none; }
-    nav { display:flex; align-items:center; justify-content:space-between; padding:16px 24px; background:#fff; border-bottom:1px solid var(--border); position:sticky; top:0; z-index:100; }
-    .logo { font-family:Georgia,serif; font-size:22px; font-weight:normal; }
-    .logo span { color:var(--accent); }
-    .nav-links { display:flex; gap:24px; align-items:center; font-size:14px; color:var(--muted); }
-    .nav-cta { background:var(--text); color:#fff !important; padding:8px 18px; border-radius:8px; font-size:13px; }
 
-    /* HERO */
-    .cover { height: 320px; background: #e8dfd4; background-size: cover; background-position: center; }
+    /* ── ANIMATIONS ─────────────────────────────── */
+    @keyframes shimmer {
+      0% { background-position: -800px 0 }
+      100% { background-position: 800px 0 }
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50%       { transform: scale(1.06); }
+    }
+    .fade-up { animation: fadeUp 0.45s ease both; }
+    .fade-in { animation: fadeIn 0.3s ease both; }
+
+    /* ── SKELETON ───────────────────────────────── */
+    .skeleton {
+      background: linear-gradient(90deg, #ede8e0 25%, #f5f0e8 50%, #ede8e0 75%);
+      background-size: 800px 100%;
+      animation: shimmer 1.4s infinite linear;
+      border-radius: 6px;
+    }
+    .sk-line { height: 16px; margin-bottom: 10px; }
+    .sk-line.wide { width: 70%; }
+    .sk-line.med  { width: 45%; }
+    .sk-line.short{ width: 28%; }
+    .sk-title { height: 38px; width: 55%; margin-bottom: 14px; border-radius: 8px; }
+    .sk-block { height: 120px; border-radius: 12px; margin-bottom: 16px; }
+
+    /* ── NAV ────────────────────────────────────── */
+    nav {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 24px; background: rgba(255,255,255,0.96);
+      border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; z-index: 200;
+      backdrop-filter: blur(10px);
+    }
+    .logo { font-family: Georgia, serif; font-size: 22px; font-weight: normal; }
+    .logo span { color: var(--accent); }
+    .nav-links { display: flex; gap: 20px; align-items: center; font-size: 14px; color: var(--muted); }
+    .nav-back { display: flex; align-items: center; gap: 6px; font-size: 14px; color: var(--muted); transition: color 0.15s; }
+    .nav-back:hover { color: var(--text); }
+    .nav-cta { background: var(--text); color: #fff !important; padding: 8px 18px; border-radius: 8px; font-size: 13px; }
+
+    /* ── HERO ───────────────────────────────────── */
+    .hero-wrap { position: relative; height: 460px; overflow: hidden; background: #d4c9bc; }
+    .cover-img {
+      position: absolute; inset: 0;
+      background-size: cover; background-position: center;
+      transition: transform 8s ease;
+    }
+    .hero-wrap:hover .cover-img { transform: scale(1.03); }
+    .hero-gradient {
+      position: absolute; inset: 0;
+      background: linear-gradient(to top, rgba(20,14,10,0.85) 0%, rgba(20,14,10,0.3) 50%, transparent 100%);
+    }
+    .hero-content {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      padding: 32px;
+      color: #fff;
+      animation: fadeUp 0.5s 0.1s ease both;
+    }
+    .hero-badge {
+      display: inline-block;
+      background: rgba(255,255,255,0.2);
+      border: 1px solid rgba(255,255,255,0.3);
+      backdrop-filter: blur(8px);
+      color: #fff;
+      padding: 4px 14px;
+      border-radius: 100px;
+      font-size: 12px;
+      letter-spacing: 0.5px;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+    }
+    .hero-name {
+      font-family: Georgia, serif;
+      font-size: clamp(28px, 4vw, 48px);
+      font-weight: normal;
+      line-height: 1.1;
+      margin-bottom: 12px;
+      color: #fff;
+    }
+    .hero-meta {
+      display: flex; gap: 16px; align-items: center; flex-wrap: wrap;
+      font-size: 14px; color: rgba(255,255,255,0.8);
+    }
+    .hero-meta-item { display: flex; align-items: center; gap: 5px; }
+    .hero-rating {
+      display: flex; align-items: center; gap: 6px;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.25);
+      border-radius: 100px; padding: 4px 12px;
+      font-size: 13px; font-weight: 600; color: #fff;
+    }
+    .hero-rating .star { color: #f0c040; }
+    .price-pill {
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.25);
+      border-radius: 100px; padding: 4px 12px;
+      font-size: 13px; color: #fff;
+    }
+    @media (max-width: 768px) { .hero-wrap { height: 340px; } .hero-content { padding: 20px; } }
+
+    /* ── INFOBAR ────────────────────────────────── */
+    .infobar {
+      background: var(--card); border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+    }
+    .infobar-inner {
+      max-width: 1100px; margin: 0 auto;
+      display: flex; gap: 0; align-items: stretch;
+    }
+    .info-chip {
+      display: flex; align-items: center; gap: 8px;
+      padding: 16px 24px 16px 0;
+      font-size: 13px; color: var(--muted);
+      border-right: 1px solid var(--border);
+      margin-right: 24px;
+    }
+    .info-chip:last-child { border-right: none; }
+    .info-chip .icon { font-size: 16px; }
+
+    /* ── TABS ───────────────────────────────────── */
+    .tabs-bar {
+      background: var(--card); border-bottom: 1px solid var(--border);
+      position: sticky; top: 57px; z-index: 100;
+    }
+    .tabs-inner {
+      max-width: 1100px; margin: 0 auto; padding: 0 24px;
+      display: flex; gap: 0;
+    }
+    .tab-btn {
+      padding: 16px 24px;
+      font-size: 14px; font-weight: 500; color: var(--muted);
+      border: none; background: none; cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s; white-space: nowrap;
+    }
+    .tab-btn:hover { color: var(--text); }
+    .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    /* ── MAIN LAYOUT ────────────────────────────── */
     .page-wrap { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 40px; padding: 40px 0 80px;
+      align-items: start;
+    }
+    @media (max-width: 860px) {
+      .layout { grid-template-columns: 1fr; }
+      .booking-col { order: -1; }
+    }
 
-    /* HEADER */
-    .rest-header { display:flex; justify-content:space-between; align-items:flex-start; padding: 32px 0 24px; gap: 24px; flex-wrap: wrap; }
-    .rest-title h1 { font-family:Georgia,serif; font-size:34px; font-weight:normal; margin-bottom:8px; }
-    .rest-meta { display:flex; gap:16px; font-size:14px; color:var(--muted); flex-wrap:wrap; }
-    .badge { background:#fff; border:1px solid var(--border); border-radius:6px; padding:3px 10px; font-size:12px; }
+    /* ── TAB PANELS ─────────────────────────────── */
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; animation: fadeIn 0.25s ease; }
 
-    /* LAYOUT */
-    .layout { display: grid; grid-template-columns: 1fr 360px; gap: 32px; padding-bottom: 60px; }
-    @media (max-width: 768px) { .layout { grid-template-columns: 1fr; } .booking-widget { order: -1; } }
+    /* ── MENU ───────────────────────────────────── */
+    .menu-category { margin-bottom: 40px; }
+    .menu-cat-title {
+      font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px;
+      color: var(--muted); margin-bottom: 16px;
+      padding-bottom: 10px; border-bottom: 1px solid var(--border);
+    }
+    .menu-item {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      padding: 16px 0; border-bottom: 1px solid var(--border); gap: 20px;
+      transition: background 0.15s;
+    }
+    .menu-item:last-child { border-bottom: none; }
+    .item-name { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+    .item-desc { font-size: 13px; color: var(--muted); line-height: 1.5; max-width: 360px; }
+    .item-badges { display: flex; gap: 6px; margin-top: 6px; }
+    .item-tag { font-size: 10px; padding: 2px 8px; border-radius: 100px; border: 1px solid var(--border); color: var(--muted); }
+    .item-price { font-size: 16px; font-weight: 700; color: var(--text); white-space: nowrap; flex-shrink: 0; }
+    .menu-empty { color: var(--muted); font-size: 14px; padding: 24px 0; }
 
-    /* MENU */
-    .menu-section h2 { font-family:Georgia,serif; font-size:24px; font-weight:normal; margin-bottom:24px; }
-    .menu-category { margin-bottom: 32px; }
-    .menu-category h3 { font-size:13px; text-transform:uppercase; letter-spacing:1px; color:var(--muted); margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid var(--border); }
-    .menu-item { display:flex; justify-content:space-between; align-items:flex-start; padding:12px 0; border-bottom:1px solid var(--border); gap:16px; }
-    .menu-item:last-child { border-bottom:none; }
-    .item-name { font-weight:500; margin-bottom:4px; }
-    .item-desc { font-size:13px; color:var(--muted); }
-    .item-price { font-size:15px; font-weight:600; white-space:nowrap; }
+    /* ── PHOTOS ─────────────────────────────────── */
+    .photos-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 10px; margin-bottom: 24px;
+    }
+    .photo-thumb {
+      aspect-ratio: 1; border-radius: 10px; overflow: hidden;
+      background: var(--border); cursor: pointer;
+      position: relative;
+    }
+    .photo-thumb img {
+      width: 100%; height: 100%; object-fit: cover;
+      transition: transform 0.3s ease;
+    }
+    .photo-thumb:hover img { transform: scale(1.07); }
+    .photo-thumb .photo-author {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      padding: 6px 10px; font-size: 11px; color: #fff;
+      background: linear-gradient(transparent, rgba(0,0,0,0.5));
+      opacity: 0; transition: opacity 0.2s;
+    }
+    .photo-thumb:hover .photo-author { opacity: 1; }
+    .photos-empty { color: var(--muted); font-size: 14px; grid-column: 1/-1; padding: 40px 0; text-align: center; }
+    .upload-area {
+      border: 2px dashed var(--border); border-radius: var(--radius);
+      padding: 32px; text-align: center; cursor: pointer;
+      transition: all 0.2s; background: var(--card);
+    }
+    .upload-area:hover { border-color: var(--accent); background: #fff8f6; }
+    .upload-area .upload-icon { font-size: 32px; margin-bottom: 10px; }
+    .upload-area p { color: var(--muted); font-size: 14px; }
+    #photo-input { display: none; }
+    .upload-confirm {
+      display: none; margin-top: 16px;
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 16px;
+      flex-direction: column; gap: 10px;
+    }
+    .upload-confirm.show { display: flex; }
+    .upload-confirm input {
+      padding: 10px 14px; border: 1px solid var(--border);
+      border-radius: 8px; font-size: 14px; outline: none;
+    }
+    .upload-confirm input:focus { border-color: var(--text); }
 
-    /* BOOKING WIDGET */
-    .booking-widget { background:#fff; border:1px solid var(--border); border-radius:var(--radius); padding:24px; height:fit-content; position:sticky; top:88px; }
-    .widget-title { font-family:Georgia,serif; font-size:20px; font-weight:normal; margin-bottom:20px; }
+    /* ── REVIEWS ────────────────────────────────── */
+    .rating-hero {
+      display: flex; align-items: center; gap: 24px;
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 24px;
+      margin-bottom: 28px;
+    }
+    .rating-big { font-family: Georgia, serif; font-size: 56px; font-weight: normal; line-height: 1; color: var(--text); }
+    .rating-stars-row { font-size: 24px; color: #f0c040; letter-spacing: 2px; }
+    .rating-count { font-size: 13px; color: var(--muted); margin-top: 4px; }
+    .review-list { display: flex; flex-direction: column; gap: 14px; margin-bottom: 32px; }
+    .review-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 20px;
+      animation: fadeUp 0.3s ease both;
+    }
+    .review-top { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }
+    .review-avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: var(--accent); color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; font-weight: 600; flex-shrink: 0;
+    }
+    .review-meta { flex: 1; }
+    .review-author { font-weight: 600; font-size: 14px; }
+    .review-date { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .review-stars { font-size: 14px; color: #f0c040; letter-spacing: 1px; }
+    .review-text { font-size: 14px; color: var(--muted); line-height: 1.65; }
+    .review-empty { color: var(--muted); font-size: 14px; padding: 24px 0; }
 
-    /* STEPS */
-    .step { display:none; }
-    .step.active { display:block; }
-    .step-label { font-size:12px; text-transform:uppercase; letter-spacing:1px; color:var(--muted); margin-bottom:16px; }
+    /* Review form */
+    .review-form {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 28px;
+    }
+    .review-form-title {
+      font-family: Georgia, serif; font-size: 20px;
+      font-weight: normal; margin-bottom: 20px;
+    }
+    .star-picker {
+      display: flex; gap: 6px; font-size: 32px;
+      cursor: pointer; margin-bottom: 16px; width: fit-content;
+    }
+    .star-picker span { color: #e8dfd4; transition: color 0.1s, transform 0.1s; }
+    .star-picker span.active { color: #f0c040; transform: scale(1.15); }
+    .review-form input, .review-form textarea {
+      width: 100%; padding: 12px 16px;
+      border: 1px solid var(--border); border-radius: 10px;
+      font-size: 14px; outline: none; background: var(--bg);
+      font-family: inherit; transition: border-color 0.15s;
+      margin-bottom: 12px;
+    }
+    .review-form input:focus, .review-form textarea:focus { border-color: var(--text); background: #fff; }
+    .review-form textarea { resize: vertical; min-height: 90px; }
 
-    /* DATE + PARTY */
-    .form-group { margin-bottom:16px; }
-    .form-group label { display:block; font-size:13px; color:var(--muted); margin-bottom:6px; }
-    .form-group input, .form-group select { width:100%; padding:11px 14px; border:1px solid var(--border); border-radius:8px; font-size:14px; outline:none; background:#fff; }
-    .form-group input:focus, .form-group select:focus { border-color:var(--text); }
+    /* ── BOOKING WIDGET ─────────────────────────── */
+    .booking-col { position: sticky; top: 100px; }
+    .booking-widget {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); overflow: hidden;
+      box-shadow: var(--shadow-lg);
+    }
+    .widget-header {
+      background: var(--text); color: #fff;
+      padding: 20px 24px;
+    }
+    .widget-title { font-family: Georgia, serif; font-size: 20px; font-weight: normal; }
+    .widget-subtitle { font-size: 13px; color: rgba(255,255,255,0.6); margin-top: 4px; }
+    .widget-body { padding: 24px; }
 
-    /* TIME SLOTS */
-    .slots { display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; margin-bottom:16px; }
-    .slot { padding:10px 6px; text-align:center; border:1px solid var(--border); border-radius:8px; font-size:13px; cursor:pointer; background:#fff; transition:all 0.15s; }
-    .slot:hover { border-color:var(--text); }
-    .slot.sel { background:var(--text); color:#fff; border-color:var(--text); }
-    .slot.full { opacity:0.4; pointer-events:none; }
+    /* Steps */
+    .step { display: none; }
+    .step.active { display: block; animation: fadeIn 0.2s ease; }
+    .step-indicator {
+      display: flex; gap: 8px; margin-bottom: 20px;
+    }
+    .step-dot {
+      height: 3px; flex: 1; border-radius: 2px; background: var(--border);
+      transition: background 0.3s;
+    }
+    .step-dot.done { background: var(--accent); }
 
-    /* CTA */
-    .bcta { width:100%; padding:14px; background:var(--accent); color:#fff; border:none; border-radius:10px; font-size:15px; cursor:pointer; margin-top:8px; transition:opacity 0.15s; }
-    .bcta:hover { opacity:0.9; }
+    .form-group { margin-bottom: 14px; }
+    .form-group label { display: block; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); margin-bottom: 6px; font-weight: 500; }
+    .form-group input, .form-group select {
+      width: 100%; padding: 12px 14px;
+      border: 1.5px solid var(--border); border-radius: 10px;
+      font-size: 14px; outline: none; background: var(--bg);
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .form-group input:focus, .form-group select:focus { border-color: var(--text); background: #fff; }
 
-    /* CONFIRMATION */
-    .conf { text-align:center; padding:16px 0; }
-    .conf-icon { font-size:40px; margin-bottom:12px; }
-    .conf-ref { font-family:Georgia,serif; font-size:22px; margin-bottom:8px; }
-    .conf-msg { color:var(--muted); font-size:14px; }
+    /* Time slots */
+    .slots-label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); margin: 18px 0 10px; font-weight: 500; }
+    .slots { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 20px; }
+    .slot {
+      padding: 11px 6px; text-align: center;
+      border: 1.5px solid var(--border); border-radius: 10px;
+      font-size: 13px; font-weight: 500; cursor: pointer;
+      background: var(--bg); color: var(--text);
+      transition: all 0.15s;
+    }
+    .slot:hover { border-color: var(--accent); color: var(--accent); background: #fff8f6; }
+    .slot.sel { background: var(--accent); color: #fff; border-color: var(--accent); animation: pulse 0.25s ease; }
+    .slot.full { opacity: 0.35; pointer-events: none; }
 
-    /* PHOTOS */
-    .section-block { padding: 48px 0; border-top: 1px solid var(--border); }
-    .section-block h2 { font-family:Georgia,serif; font-size:24px; font-weight:normal; margin-bottom:24px; }
-    .photos-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(180px, 1fr)); gap:12px; }
-    .photo-thumb { aspect-ratio:1; background:#e8dfd4; border-radius:10px; overflow:hidden; cursor:pointer; }
-    .photo-thumb img { width:100%; height:100%; object-fit:cover; transition:transform 0.2s; }
-    .photo-thumb:hover img { transform:scale(1.04); }
-    .photos-empty { color:var(--muted); font-size:14px; }
-    .upload-photo-btn { display:inline-flex; align-items:center; gap:8px; margin-top:20px; padding:10px 20px; border:1px dashed var(--border); border-radius:8px; font-size:13px; color:var(--muted); cursor:pointer; background:#fff; transition:all 0.15s; }
-    .upload-photo-btn:hover { border-color:var(--text); color:var(--text); }
-    #photo-input { display:none; }
+    /* Booking CTA */
+    .bcta {
+      width: 100%; padding: 15px;
+      background: var(--accent); color: #fff;
+      border: none; border-radius: 10px; font-size: 15px; font-weight: 600;
+      cursor: pointer; transition: background 0.15s, transform 0.1s;
+      letter-spacing: 0.2px;
+    }
+    .bcta:hover { background: var(--accent-dark); }
+    .bcta:active { transform: scale(0.98); }
+    .bcta:disabled { opacity: 0.6; cursor: not-allowed; }
+    .back-btn {
+      width: 100%; margin-top: 10px; padding: 10px;
+      border: none; background: none; color: var(--muted);
+      cursor: pointer; font-size: 13px; transition: color 0.15s;
+    }
+    .back-btn:hover { color: var(--text); }
 
-    /* REVIEWS */
-    .rating-summary { display:flex; align-items:center; gap:16px; margin-bottom:32px; }
-    .rating-big { font-family:Georgia,serif; font-size:48px; line-height:1; }
-    .rating-stars { font-size:22px; letter-spacing:2px; color:#f0a500; }
-    .rating-count { font-size:13px; color:var(--muted); margin-top:4px; }
-    .review-list { display:flex; flex-direction:column; gap:20px; margin-bottom:32px; }
-    .review-card { background:#fff; border:1px solid var(--border); border-radius:var(--radius); padding:20px; }
-    .review-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
-    .review-author { font-weight:600; font-size:14px; }
-    .review-stars { color:#f0a500; font-size:14px; letter-spacing:1px; }
-    .review-date { font-size:12px; color:var(--muted); margin-bottom:10px; }
-    .review-text { font-size:14px; color:var(--muted); line-height:1.6; }
-    .review-form { background:#fff; border:1px solid var(--border); border-radius:var(--radius); padding:24px; }
-    .review-form h3 { font-family:Georgia,serif; font-size:18px; font-weight:normal; margin-bottom:20px; }
-    .star-picker { display:flex; gap:6px; margin-bottom:16px; font-size:28px; cursor:pointer; }
-    .star-picker span { color:#e8dfd4; transition:color 0.1s; }
-    .star-picker span.active { color:#f0a500; }
-    .review-form textarea { width:100%; padding:11px 14px; border:1px solid var(--border); border-radius:8px; font-size:14px; outline:none; resize:vertical; min-height:80px; font-family:inherit; }
-    .review-form textarea:focus { border-color:var(--text); }
-    .review-form input { width:100%; padding:11px 14px; border:1px solid var(--border); border-radius:8px; font-size:14px; outline:none; margin-bottom:12px; }
-    .review-form input:focus { border-color:var(--text); }
+    /* Confirmation */
+    .conf { text-align: center; padding: 20px 0; }
+    .conf-icon { font-size: 52px; margin-bottom: 16px; animation: fadeUp 0.4s ease both; }
+    .conf-ref {
+      font-family: Georgia, serif; font-size: 24px;
+      color: var(--accent); margin-bottom: 8px;
+    }
+    .conf-msg { color: var(--muted); font-size: 14px; line-height: 1.6; }
+    .conf-back { display: block; margin-top: 24px; font-size: 13px; color: var(--muted); transition: color 0.15s; }
+    .conf-back:hover { color: var(--text); }
 
-    footer { text-align:center; padding:40px 24px; color:var(--muted); font-size:13px; border-top:1px solid var(--border); }
-    footer strong { color:var(--text); font-family:Georgia,serif; }
+    /* No-fee badge */
+    .no-fee-badge {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 12px; color: var(--muted); margin-top: 14px;
+      padding-top: 14px; border-top: 1px solid var(--border);
+    }
+    .no-fee-badge .check { color: #27ae60; }
+
+    /* ── MOBILE FLOATING CTA ─────────────────────── */
+    .mobile-reserve-cta {
+      display: none; position: fixed; bottom: 20px; left: 50%;
+      transform: translateX(-50%); z-index: 300;
+      background: var(--accent); color: #fff;
+      padding: 15px 40px; border-radius: 100px;
+      font-size: 15px; font-weight: 600;
+      box-shadow: 0 8px 32px rgba(192,57,43,0.4);
+      cursor: pointer; border: none;
+      animation: fadeUp 0.4s 0.3s ease both;
+    }
+    @media (max-width: 860px) { .mobile-reserve-cta { display: block; } }
+
+    /* ── FOOTER ─────────────────────────────────── */
+    footer { text-align: center; padding: 40px 24px; color: var(--muted); font-size: 13px; border-top: 1px solid var(--border); }
+    footer strong { color: var(--text); font-family: Georgia, serif; }
+    footer a { color: var(--muted); transition: color 0.15s; }
+    footer a:hover { color: var(--text); }
   </style>
 </head>
 <body>
 
+<!-- NAV -->
 <nav>
   <a href="index.html" class="logo">Da <span>Mesa</span></a>
   <div class="nav-links">
-    <a href="restaurantes.html">Restaurantes</a>
-    <a href="cozinhas.html">Cozinhas</a>
+    <a href="restaurantes.html" class="nav-back">← Restaurantes</a>
     <a href="login.html" class="nav-cta">Entrar</a>
   </div>
 </nav>
 
-<div class="cover" id="cover-img"></div>
-
-<div class="page-wrap">
-  <div class="rest-header">
-    <div class="rest-title">
-      <h1 id="rest-name">A carregar...</h1>
-      <div class="rest-meta">
-        <span id="rest-cuisine"></span>
-        <span id="rest-price" class="badge"></span>
-        <span id="rest-address"></span>
+<!-- HERO -->
+<div class="hero-wrap">
+  <div class="cover-img skeleton" id="cover-img"></div>
+  <div class="hero-gradient"></div>
+  <div class="hero-content">
+    <div class="hero-badge" id="rest-cuisine">A carregar...</div>
+    <h1 class="hero-name" id="rest-name"> </h1>
+    <div class="hero-meta">
+      <span class="price-pill" id="rest-price"></span>
+      <span class="hero-meta-item"><span class="icon">📍</span><span id="rest-address"></span></span>
+      <div class="hero-rating" id="hero-rating" style="display:none;">
+        <span class="star">★</span>
+        <span id="hero-rating-val"></span>
+        <span id="hero-rating-count" style="font-weight:400;opacity:0.7;"></span>
       </div>
-    </div>
-  </div>
-
-  <div class="layout">
-    <!-- MENU -->
-    <div class="menu-section">
-      <h2>Ementa</h2>
-      <div id="menu-container"><p style="color:var(--muted)">A carregar ementa...</p></div>
-    </div>
-
-    <!-- BOOKING WIDGET -->
-    <div class="booking-widget">
-      <div class="widget-title">Reservar mesa</div>
-
-      <!-- Step 1: Date & Party -->
-      <div class="step active" id="bs1">
-        <div class="step-label">1 — Data e hora</div>
-        <div class="form-group">
-          <label>Data</label>
-          <input type="date" id="bdate" />
-        </div>
-        <div class="form-group">
-          <label>Pessoas</label>
-          <select id="bparty">
-            <option value="1">1 pessoa</option>
-            <option value="2" selected>2 pessoas</option>
-            <option value="3">3 pessoas</option>
-            <option value="4">4 pessoas</option>
-            <option value="5">5 pessoas</option>
-            <option value="6">6 pessoas</option>
-            <option value="7">7 pessoas</option>
-            <option value="8">8+ pessoas</option>
-          </select>
-        </div>
-        <div class="step-label" style="margin-top:20px;">Hora</div>
-        <div class="slots" id="time-slots"></div>
-        <button class="bcta" onclick="goS(2)">Continuar</button>
-      </div>
-
-      <!-- Step 2: Contact details -->
-      <div class="step" id="bs2">
-        <div class="step-label">2 — Os seus dados</div>
-        <div class="form-group">
-          <label>Nome completo</label>
-          <input type="text" id="diner-name" placeholder="O seu nome" />
-        </div>
-        <div class="form-group">
-          <label>Email</label>
-          <input type="email" id="diner-email" placeholder="email@exemplo.pt" />
-        </div>
-        <div class="form-group">
-          <label>Telemóvel</label>
-          <input type="tel" id="diner-phone" placeholder="+351 9XX XXX XXX" />
-        </div>
-        <div class="form-group">
-          <label>Pedidos especiais (opcional)</label>
-          <input type="text" id="special-requests" placeholder="Alergias, aniversário, cadeira de bebé..." />
-        </div>
-        <button class="bcta" onclick="submitBooking()">Confirmar reserva</button>
-        <button onclick="goS(1)" style="width:100%;margin-top:8px;padding:10px;border:none;background:none;color:var(--muted);cursor:pointer;font-size:13px;">← Voltar</button>
-      </div>
-
-      <!-- Step 3: Confirmation -->
-      <div class="step" id="bs3">
-        <div class="conf">
-          <div class="conf-icon">✅</div>
-          <div class="conf-ref" id="conf-ref">REF #--------</div>
-          <p class="conf-msg">Reserva confirmada! Receberá um SMS e email de confirmação.</p>
-          <a href="restaurantes.html" style="display:block;margin-top:20px;font-size:13px;color:var(--muted);">← Ver outros restaurantes</a>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- PHOTOS -->
-  <div class="section-block">
-    <h2>Fotos</h2>
-    <div class="photos-grid" id="photos-grid">
-      <p class="photos-empty">Nenhuma foto ainda. Sê o primeiro a partilhar!</p>
-    </div>
-    <label class="upload-photo-btn" for="photo-input">
-      📷 Partilhar uma foto
-    </label>
-    <input type="file" id="photo-input" accept="image/*" />
-    <div id="photo-upload-name" style="font-size:13px;color:var(--muted);margin-top:10px;display:none;">
-      <input type="text" id="photo-diner-name" placeholder="O seu nome (opcional)" style="max-width:260px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;outline:none;margin-right:8px;" />
-      <button id="photo-submit-btn" style="padding:8px 18px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer;">Enviar</button>
-    </div>
-  </div>
-
-  <!-- REVIEWS -->
-  <div class="section-block">
-    <h2>Avaliações</h2>
-    <div class="rating-summary" id="rating-summary" style="display:none;">
-      <div>
-        <div class="rating-big" id="rating-avg">—</div>
-        <div class="rating-stars" id="rating-stars"></div>
-        <div class="rating-count" id="rating-count"></div>
-      </div>
-    </div>
-    <div class="review-list" id="review-list"></div>
-
-    <!-- Submit review form -->
-    <div class="review-form">
-      <h3>Deixa a tua avaliação</h3>
-      <input type="text" id="review-name" placeholder="O teu nome" />
-      <div class="star-picker" id="star-picker">
-        <span data-v="1">★</span>
-        <span data-v="2">★</span>
-        <span data-v="3">★</span>
-        <span data-v="4">★</span>
-        <span data-v="5">★</span>
-      </div>
-      <textarea id="review-comment" placeholder="Conta-nos a tua experiência..."></textarea>
-      <button class="bcta" id="review-submit-btn" style="margin-top:12px;" onclick="submitReview()">Publicar avaliação</button>
     </div>
   </div>
 </div>
+
+<!-- TABS BAR -->
+<div class="tabs-bar">
+  <div class="tabs-inner">
+    <button class="tab-btn active" data-tab="menu">Ementa</button>
+    <button class="tab-btn" data-tab="photos">Fotos</button>
+    <button class="tab-btn" data-tab="reviews">Avaliações</button>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="page-wrap">
+  <div class="layout">
+
+    <!-- LEFT CONTENT -->
+    <div class="content-col">
+
+      <!-- MENU TAB -->
+      <div class="tab-panel active" id="tab-menu">
+        <div id="menu-container">
+          <div class="sk-title skeleton"></div>
+          <div class="sk-block skeleton"></div>
+          <div class="sk-block skeleton"></div>
+        </div>
+      </div>
+
+      <!-- PHOTOS TAB -->
+      <div class="tab-panel" id="tab-photos">
+        <div class="photos-grid" id="photos-grid">
+          <p class="photos-empty">Nenhuma foto ainda. Sê o primeiro a partilhar!</p>
+        </div>
+        <label class="upload-area" for="photo-input">
+          <div class="upload-icon">📷</div>
+          <p><strong>Partilhar uma foto</strong></p>
+          <p style="margin-top:4px;font-size:12px;">Clica para escolher do dispositivo</p>
+        </label>
+        <input type="file" id="photo-input" accept="image/*" />
+        <div class="upload-confirm" id="photo-upload-name">
+          <input type="text" id="photo-diner-name" placeholder="O teu nome (opcional)" />
+          <button id="photo-submit-btn" class="bcta">Enviar foto</button>
+        </div>
+      </div>
+
+      <!-- REVIEWS TAB -->
+      <div class="tab-panel" id="tab-reviews">
+        <div class="rating-hero" id="rating-summary" style="display:none;">
+          <div class="rating-big" id="rating-avg">—</div>
+          <div>
+            <div class="rating-stars-row" id="rating-stars"></div>
+            <div class="rating-count" id="rating-count"></div>
+          </div>
+        </div>
+        <div class="review-list" id="review-list"></div>
+        <div class="review-form">
+          <div class="review-form-title">Deixa a tua avaliação</div>
+          <input type="text" id="review-name" placeholder="O teu nome" />
+          <div class="star-picker" id="star-picker">
+            <span data-v="1">★</span>
+            <span data-v="2">★</span>
+            <span data-v="3">★</span>
+            <span data-v="4">★</span>
+            <span data-v="5">★</span>
+          </div>
+          <textarea id="review-comment" placeholder="Conta-nos a tua experiência..."></textarea>
+          <button class="bcta" id="review-submit-btn" onclick="submitReview()">Publicar avaliação</button>
+        </div>
+      </div>
+
+    </div><!-- /content-col -->
+
+    <!-- RIGHT: BOOKING WIDGET -->
+    <div class="booking-col">
+      <div class="booking-widget">
+        <div class="widget-header">
+          <div class="widget-title">Reservar mesa</div>
+          <div class="widget-subtitle">Confirmação imediata · Sem taxas</div>
+        </div>
+        <div class="widget-body">
+
+          <!-- Step 1: Date & Time -->
+          <div class="step active" id="bs1">
+            <div class="step-indicator">
+              <div class="step-dot done" id="sd1"></div>
+              <div class="step-dot" id="sd2"></div>
+            </div>
+            <div class="form-group">
+              <label>Data</label>
+              <input type="date" id="bdate" />
+            </div>
+            <div class="form-group">
+              <label>Pessoas</label>
+              <select id="bparty">
+                <option value="1">1 pessoa</option>
+                <option value="2" selected>2 pessoas</option>
+                <option value="3">3 pessoas</option>
+                <option value="4">4 pessoas</option>
+                <option value="5">5 pessoas</option>
+                <option value="6">6 pessoas</option>
+                <option value="7">7 pessoas</option>
+                <option value="8">8+ pessoas</option>
+              </select>
+            </div>
+            <div class="slots-label">Hora disponível</div>
+            <div class="slots" id="time-slots"></div>
+            <button class="bcta" onclick="goS(2)">Continuar</button>
+            <div class="no-fee-badge">
+              <span class="check">✓</span> Sem taxas de reserva
+            </div>
+          </div>
+
+          <!-- Step 2: Contact -->
+          <div class="step" id="bs2">
+            <div class="step-indicator">
+              <div class="step-dot done"></div>
+              <div class="step-dot done"></div>
+            </div>
+            <div class="form-group">
+              <label>Nome completo</label>
+              <input type="text" id="diner-name" placeholder="O seu nome" />
+            </div>
+            <div class="form-group">
+              <label>Email</label>
+              <input type="email" id="diner-email" placeholder="email@exemplo.pt" />
+            </div>
+            <div class="form-group">
+              <label>Telemóvel</label>
+              <input type="tel" id="diner-phone" placeholder="+351 9XX XXX XXX" />
+            </div>
+            <div class="form-group">
+              <label>Pedido especial (opcional)</label>
+              <input type="text" id="special-requests" placeholder="Alergias, aniversário..." />
+            </div>
+            <button class="bcta" onclick="submitBooking()">Confirmar reserva</button>
+            <button class="back-btn" onclick="goS(1)">← Voltar</button>
+          </div>
+
+          <!-- Step 3: Confirmed -->
+          <div class="step" id="bs3">
+            <div class="conf">
+              <div class="conf-icon">🎉</div>
+              <div class="conf-ref" id="conf-ref">REF #--------</div>
+              <p class="conf-msg">Mesa reservada! Enviámos a confirmação para o seu email.</p>
+              <a href="restaurantes.html" class="conf-back">← Ver outros restaurantes</a>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div><!-- /booking-col -->
+
+  </div>
+</div>
+
+<!-- MOBILE FLOATING CTA -->
+<button class="mobile-reserve-cta" onclick="document.querySelector('.booking-widget').scrollIntoView({behavior:'smooth'})">
+  Reservar mesa
+</button>
 
 <footer>
   <strong>Da Mesa</strong> — Reservas de restaurantes em Lisboa · <a href="mailto:ola@damesa.pt">ola@damesa.pt</a> · <a href="login.html">Entrar como restaurante</a> · <a href="privacy.html">Privacidade</a> · <a href="terms.html">Termos</a>
@@ -277,72 +628,70 @@
   const { restaurant, error } = await getRestaurantBySlug(slug)
   if (error || !restaurant) { window.location.href = 'restaurantes.html' }
 
-  // Set meta + SEO
+  // ── SEO & META ───────────────────────────────────────────
   document.title = `${restaurant.name} — Reservar Mesa em Lisboa | Da Mesa`
   document.querySelector('meta[name="description"]').content = `Reserva mesa no ${restaurant.name} em Lisboa. ${restaurant.cuisine_type ?? 'Restaurante'} em ${restaurant.address ?? 'Lisboa'}. Sem taxas de reserva — Da Mesa.`
   document.getElementById('og-title').content = `${restaurant.name} — Da Mesa`
   document.getElementById('og-description').content = `Reserva mesa no ${restaurant.name}. ${restaurant.cuisine_type ?? ''} · ${restaurant.price_range ?? ''} · ${restaurant.address ?? 'Lisboa'}`
   document.getElementById('og-url').content = `https://damesa.pt/restaurant.html?slug=${slug}`
 
-  // Schema.org JSON-LD
   const schema = {
-    "@context": "https://schema.org",
-    "@type": "Restaurant",
+    "@context": "https://schema.org", "@type": "Restaurant",
     "name": restaurant.name,
     "description": restaurant.description ?? `Restaurante ${restaurant.cuisine_type ?? ''} em Lisboa.`,
-    "address": {
-      "@type": "PostalAddress",
-      "streetAddress": restaurant.address ?? '',
-      "addressLocality": "Lisboa",
-      "addressCountry": "PT"
-    },
+    "address": { "@type": "PostalAddress", "streetAddress": restaurant.address ?? '', "addressLocality": "Lisboa", "addressCountry": "PT" },
     "servesCuisine": restaurant.cuisine_type ?? '',
     "priceRange": restaurant.price_range ?? '€€',
     "telephone": restaurant.phone ?? '',
     "url": `https://damesa.pt/restaurant.html?slug=${slug}`,
-    "potentialAction": {
-      "@type": "ReserveAction",
-      "target": {
-        "@type": "EntryPoint",
-        "urlTemplate": `https://damesa.pt/restaurant.html?slug=${slug}`,
-        "inLanguage": "pt-PT",
-        "actionPlatform": [
-          "https://schema.org/DesktopWebPlatform",
-          "https://schema.org/MobileWebPlatform"
-        ]
-      },
-      "result": {
-        "@type": "FoodEstablishmentReservation",
-        "name": `Reserva no ${restaurant.name}`
-      }
-    }
+    "potentialAction": { "@type": "ReserveAction", "target": { "@type": "EntryPoint", "urlTemplate": `https://damesa.pt/restaurant.html?slug=${slug}`, "inLanguage": "pt-PT", "actionPlatform": ["https://schema.org/DesktopWebPlatform","https://schema.org/MobileWebPlatform"] }, "result": { "@type": "FoodEstablishmentReservation", "name": `Reserva no ${restaurant.name}` } }
   }
   const schemaEl = document.createElement('script')
   schemaEl.type = 'application/ld+json'
   schemaEl.textContent = JSON.stringify(schema)
   document.head.appendChild(schemaEl)
-  document.getElementById('rest-name').textContent = restaurant.name
-  document.getElementById('rest-cuisine').textContent = restaurant.cuisine_type ?? ''
-  document.getElementById('rest-price').textContent = restaurant.price_range ?? ''
-  document.getElementById('rest-address').textContent = restaurant.address ?? ''
-  if (restaurant.cover_image) {
-    document.getElementById('cover-img').style.backgroundImage = `url(${restaurant.cover_image})`
-  }
 
-  // Render menu
+  // ── HERO ─────────────────────────────────────────────────
+  const coverEl = document.getElementById('cover-img')
+  coverEl.classList.remove('skeleton')
+  if (restaurant.cover_image) {
+    coverEl.style.backgroundImage = `url(${restaurant.cover_image})`
+  } else {
+    coverEl.style.background = 'linear-gradient(135deg, #c8b5a0 0%, #a08060 100%)'
+  }
+  document.getElementById('rest-name').textContent = restaurant.name
+  document.getElementById('rest-cuisine').textContent = restaurant.cuisine_type ?? 'Restaurante'
+  document.getElementById('rest-price').textContent = restaurant.price_range ?? ''
+  document.getElementById('rest-address').textContent = restaurant.address ?? 'Lisboa'
+
+  // ── TABS ─────────────────────────────────────────────────
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'))
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'))
+      btn.classList.add('active')
+      document.getElementById('tab-' + btn.dataset.tab).classList.add('active')
+    })
+  })
+
+  // ── MENU ─────────────────────────────────────────────────
   const cats = restaurant.menu_categories ?? []
   const menuEl = document.getElementById('menu-container')
   if (!cats.length) {
-    menuEl.innerHTML = '<p style="color:var(--muted)">Ementa não disponível.</p>'
+    menuEl.innerHTML = '<p class="menu-empty">Ementa não disponível de momento.</p>'
   } else {
-    menuEl.innerHTML = cats.map(cat => `
-      <div class="menu-category">
-        <h3>${cat.name}</h3>
+    menuEl.innerHTML = cats.map((cat, i) => `
+      <div class="menu-category fade-up" style="animation-delay:${i * 0.07}s">
+        <div class="menu-cat-title">${cat.name}</div>
         ${(cat.menu_items ?? []).map(item => `
           <div class="menu-item">
             <div>
               <div class="item-name">${item.name}</div>
               ${item.description ? `<div class="item-desc">${item.description}</div>` : ''}
+              <div class="item-badges">
+                ${item.is_vegetarian ? '<span class="item-tag">🌿 Vegetariano</span>' : ''}
+                ${item.is_vegan ? '<span class="item-tag">🌱 Vegan</span>' : ''}
+              </div>
             </div>
             ${item.price ? `<div class="item-price">${Number(item.price).toFixed(2)} €</div>` : ''}
           </div>
@@ -351,21 +700,21 @@
     `).join('')
   }
 
-  // Set default date to tomorrow
+  // ── BOOKING ───────────────────────────────────────────────
   const tomorrow = new Date()
   tomorrow.setDate(tomorrow.getDate() + 1)
   document.getElementById('bdate').value = tomorrow.toISOString().split('T')[0]
   document.getElementById('bdate').min = tomorrow.toISOString().split('T')[0]
 
-  // Load time slots
   async function loadSlots() {
     const date = document.getElementById('bdate').value
     if (!date) return
+    const slotsEl = document.getElementById('time-slots')
+    slotsEl.innerHTML = [1,2,3,4,5,6].map(() => `<div class="slot skeleton" style="height:40px;border:none;"></div>`).join('')
     const slots = await getAvailableSlots(restaurant.id, date)
     const capacity = restaurant.capacity ?? 50
-    document.getElementById('time-slots').innerHTML = slots.map(s => {
+    slotsEl.innerHTML = slots.map(s => {
       const full = s.booked >= capacity
-      const sel = ''
       return `<div class="slot${full ? ' full' : ''}" data-time="${s.time}" onclick="selectSlot(this)">${s.time}</div>`
     }).join('')
   }
@@ -386,136 +735,116 @@
   window.submitBooking = async function() {
     const selectedSlot = document.querySelector('.slot.sel')
     if (!selectedSlot) { alert('Selecione um horário.'); goS(1); return }
-
     const name = document.getElementById('diner-name').value.trim()
     const email = document.getElementById('diner-email').value.trim()
     const phone = document.getElementById('diner-phone').value.trim()
     if (!name || !email || !phone) { alert('Preencha todos os campos obrigatórios.'); return }
-
     const btn = document.querySelector('#bs2 .bcta')
     btn.textContent = 'A confirmar...'
     btn.disabled = true
-
     const { booking, error } = await createBooking({
       restaurantId: restaurant.id,
-      dinerName: name,
-      dinerEmail: email,
-      dinerPhone: phone,
+      dinerName: name, dinerEmail: email, dinerPhone: phone,
       bookingDate: document.getElementById('bdate').value,
       bookingTime: selectedSlot.dataset.time,
       partySize: parseInt(document.getElementById('bparty').value),
       specialRequests: document.getElementById('special-requests').value
     })
-
     if (error) {
       alert('Erro ao criar reserva: ' + error.message)
-      btn.textContent = 'Confirmar reserva'
-      btn.disabled = false
-      return
+      btn.textContent = 'Confirmar reserva'; btn.disabled = false; return
     }
-
     document.getElementById('conf-ref').textContent = `REF #${booking.reference_code}`
     trackEvent('booking_created', { restaurant_id: restaurant.id, party_size: booking.party_size })
     goS(3)
   }
 
-  trackEvent('restaurant_view', { slug, restaurant_id: restaurant.id })
-
-  // ── PHOTOS ──────────────────────────────────────────────
+  // ── PHOTOS ───────────────────────────────────────────────
   async function loadPhotos() {
     const { data } = await supabase
-      .from('restaurant_photos')
-      .select('*')
-      .eq('restaurant_id', restaurant.id)
-      .eq('approved', true)
+      .from('restaurant_photos').select('*')
+      .eq('restaurant_id', restaurant.id).eq('approved', true)
       .order('created_at', { ascending: false })
-
     const grid = document.getElementById('photos-grid')
     if (!data?.length) return
     grid.innerHTML = data.map(p => `
       <div class="photo-thumb">
         <img src="${p.photo_url}" alt="Foto de ${p.diner_name ?? 'cliente'}" loading="lazy" />
+        ${p.diner_name ? `<div class="photo-author">${p.diner_name}</div>` : ''}
       </div>
     `).join('')
   }
   await loadPhotos()
 
-  const photoInput = document.getElementById('photo-input')
-  photoInput.addEventListener('change', () => {
-    if (photoInput.files[0]) {
-      document.getElementById('photo-upload-name').style.display = 'block'
-    }
+  document.getElementById('photo-input').addEventListener('change', (e) => {
+    if (e.target.files[0]) document.getElementById('photo-upload-name').classList.add('show')
   })
 
   document.getElementById('photo-submit-btn').addEventListener('click', async () => {
-    const file = photoInput.files[0]
+    const file = document.getElementById('photo-input').files[0]
     if (!file) return
     const btn = document.getElementById('photo-submit-btn')
-    btn.textContent = 'A enviar...'
-    btn.disabled = true
-
+    btn.textContent = 'A enviar...'; btn.disabled = true
     const ext = file.name.split('.').pop()
     const path = `${restaurant.id}/${Date.now()}.${ext}`
-    const { data: upload, error: uploadErr } = await supabase.storage
-      .from('restaurant-photos')
-      .upload(path, file, { contentType: file.type })
-
-    if (uploadErr) { alert('Erro ao enviar foto.'); btn.textContent = 'Enviar'; btn.disabled = false; return }
-
+    const { error: uploadErr } = await supabase.storage.from('restaurant-photos').upload(path, file, { contentType: file.type })
+    if (uploadErr) { alert('Erro ao enviar foto.'); btn.textContent = 'Enviar foto'; btn.disabled = false; return }
     const { data: { publicUrl } } = supabase.storage.from('restaurant-photos').getPublicUrl(path)
     const dinerName = document.getElementById('photo-diner-name').value.trim() || null
-
-    await supabase.from('restaurant_photos').insert({
-      restaurant_id: restaurant.id,
-      diner_name: dinerName,
-      photo_url: publicUrl
-    })
-
-    photoInput.value = ''
-    document.getElementById('photo-upload-name').style.display = 'none'
-    btn.textContent = 'Enviar'
-    btn.disabled = false
+    await supabase.from('restaurant_photos').insert({ restaurant_id: restaurant.id, diner_name: dinerName, photo_url: publicUrl })
+    document.getElementById('photo-input').value = ''
+    document.getElementById('photo-upload-name').classList.remove('show')
+    btn.textContent = 'Enviar foto'; btn.disabled = false
     await loadPhotos()
   })
 
-  // ── REVIEWS ─────────────────────────────────────────────
+  // ── REVIEWS ──────────────────────────────────────────────
   async function loadReviews() {
     const { data } = await supabase
-      .from('reviews')
-      .select('*')
-      .eq('restaurant_id', restaurant.id)
-      .eq('approved', true)
+      .from('reviews').select('*')
+      .eq('restaurant_id', restaurant.id).eq('approved', true)
       .order('created_at', { ascending: false })
-
-    if (!data?.length) return
-
+    if (!data?.length) {
+      document.getElementById('review-list').innerHTML = '<p class="review-empty">Ainda sem avaliações. Sê o primeiro!</p>'
+      return
+    }
     const avg = (data.reduce((s, r) => s + r.rating, 0) / data.length).toFixed(1)
-    const stars = '★'.repeat(Math.round(avg)) + '☆'.repeat(5 - Math.round(avg))
+    const roundedAvg = Math.round(avg)
+    const starsStr = '★'.repeat(roundedAvg) + '☆'.repeat(5 - roundedAvg)
+
+    // Update review summary
     document.getElementById('rating-summary').style.display = 'flex'
     document.getElementById('rating-avg').textContent = avg
-    document.getElementById('rating-stars').textContent = stars
+    document.getElementById('rating-stars').textContent = starsStr
     document.getElementById('rating-count').textContent = `${data.length} avaliação${data.length !== 1 ? 'ões' : ''}`
 
-    document.getElementById('review-list').innerHTML = data.map(r => `
-      <div class="review-card">
-        <div class="review-header">
-          <span class="review-author">${r.diner_name}</span>
-          <span class="review-stars">${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)}</span>
+    // Update hero rating
+    document.getElementById('hero-rating').style.display = 'flex'
+    document.getElementById('hero-rating-val').textContent = avg
+    document.getElementById('hero-rating-count').textContent = `(${data.length})`
+
+    document.getElementById('review-list').innerHTML = data.map((r, i) => `
+      <div class="review-card" style="animation-delay:${i * 0.06}s">
+        <div class="review-top">
+          <div class="review-avatar">${r.diner_name.charAt(0).toUpperCase()}</div>
+          <div class="review-meta">
+            <div class="review-author">${r.diner_name}</div>
+            <div class="review-date">${new Date(r.created_at).toLocaleDateString('pt-PT', { day:'numeric', month:'long', year:'numeric' })}</div>
+          </div>
+          <div class="review-stars">${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)}</div>
         </div>
-        <div class="review-date">${new Date(r.created_at).toLocaleDateString('pt-PT', { day:'numeric', month:'long', year:'numeric' })}</div>
         ${r.comment ? `<div class="review-text">${r.comment}</div>` : ''}
       </div>
     `).join('')
   }
   await loadReviews()
 
-  // Star picker
   let selectedRating = 0
-  const stars = document.querySelectorAll('#star-picker span')
-  stars.forEach(s => {
-    s.addEventListener('mouseover', () => stars.forEach((x, i) => x.classList.toggle('active', i < s.dataset.v)))
-    s.addEventListener('mouseout', () => stars.forEach((x, i) => x.classList.toggle('active', i < selectedRating)))
-    s.addEventListener('click', () => { selectedRating = parseInt(s.dataset.v); stars.forEach((x, i) => x.classList.toggle('active', i < selectedRating)) })
+  const starEls = document.querySelectorAll('#star-picker span')
+  starEls.forEach(s => {
+    s.addEventListener('mouseover', () => starEls.forEach((x, i) => x.classList.toggle('active', i < s.dataset.v)))
+    s.addEventListener('mouseout', () => starEls.forEach((x, i) => x.classList.toggle('active', i < selectedRating)))
+    s.addEventListener('click', () => { selectedRating = parseInt(s.dataset.v); starEls.forEach((x, i) => x.classList.toggle('active', i < selectedRating)) })
   })
 
   window.submitReview = async function() {
@@ -523,28 +852,19 @@
     const comment = document.getElementById('review-comment').value.trim()
     if (!name) { alert('Indica o teu nome.'); return }
     if (!selectedRating) { alert('Seleciona uma classificação.'); return }
-
     const btn = document.getElementById('review-submit-btn')
-    btn.textContent = 'A publicar...'
-    btn.disabled = true
-
-    const { error } = await supabase.from('reviews').insert({
-      restaurant_id: restaurant.id,
-      diner_name: name,
-      rating: selectedRating,
-      comment: comment || null
-    })
-
+    btn.textContent = 'A publicar...'; btn.disabled = true
+    const { error } = await supabase.from('reviews').insert({ restaurant_id: restaurant.id, diner_name: name, rating: selectedRating, comment: comment || null })
     if (error) { alert('Erro ao publicar avaliação.'); btn.textContent = 'Publicar avaliação'; btn.disabled = false; return }
-
     document.getElementById('review-name').value = ''
     document.getElementById('review-comment').value = ''
     selectedRating = 0
-    stars.forEach(x => x.classList.remove('active'))
-    btn.textContent = 'Publicar avaliação'
-    btn.disabled = false
+    starEls.forEach(x => x.classList.remove('active'))
+    btn.textContent = 'Publicar avaliação'; btn.disabled = false
     await loadReviews()
   }
+
+  trackEvent('restaurant_view', { slug, restaurant_id: restaurant.id })
 </script>
 
 </body>
