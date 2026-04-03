@@ -3,8 +3,62 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Da Mesa — Reserva o teu restaurante em Lisboa</title>
-  <meta name="description" content="Da Mesa é a plataforma de reservas de restaurantes em Lisboa. Sem taxas, sem complicações." />
+  <title>Da Mesa — Reserva o teu restaurante em Lisboa | Sem taxas</title>
+  <meta name="description" content="Reserva mesa em restaurantes em Lisboa de forma gratuita e instantânea. Portuguesa, marisco, italiana, japonesa e mais. Sem taxas de reserva." />
+  <meta name="keywords" content="reservar restaurante lisboa, reservas restaurantes online, restaurantes em lisboa, mesa restaurante, reserva instantânea, cozinha portuguesa lisboa" />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://damesa.pt/" />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://damesa.pt/" />
+  <meta property="og:title" content="Da Mesa — Reserva o teu restaurante em Lisboa" />
+  <meta property="og:description" content="Os melhores restaurantes de Lisboa com reserva gratuita e instantânea. Sem taxas, sem complicações." />
+  <meta property="og:image" content="https://damesa.pt/assets/og-image.jpg" />
+  <meta property="og:locale" content="pt_PT" />
+  <meta property="og:site_name" content="Da Mesa" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Da Mesa — Reserva o teu restaurante em Lisboa" />
+  <meta name="twitter:description" content="Reserva mesa em restaurantes em Lisboa. Gratuito, instantâneo, sem taxas." />
+
+  <!-- Schema.org -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "Da Mesa",
+    "url": "https://damesa.pt",
+    "description": "Plataforma de reservas de restaurantes em Lisboa. Sem taxas de reserva.",
+    "inLanguage": "pt-PT",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": "https://damesa.pt/restaurantes.html?q={search_term_string}",
+      "query-input": "required name=search_term_string"
+    }
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Da Mesa",
+    "url": "https://damesa.pt",
+    "logo": "https://damesa.pt/assets/icons/icon-192.png",
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "email": "ola@damesa.pt",
+      "contactType": "customer support",
+      "availableLanguage": "Portuguese"
+    },
+    "areaServed": {
+      "@type": "City",
+      "name": "Lisboa"
+    }
+  }
+  </script>
+
   <link rel="manifest" href="../assets/manifest.json" />
   <link rel="icon" href="../assets/icons/icon-192.png" />
   <style>
@@ -54,6 +108,24 @@
     .card-meta { font-size: 13px; color: var(--muted); display: flex; gap: 12px; }
     .card-badge { background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 2px 8px; font-size: 11px; }
 
+    /* SEO SECTIONS */
+    .seo-section { padding: 64px 24px; max-width: 1100px; margin: 0 auto; }
+    .seo-section + .seo-section { border-top: 1px solid var(--border); }
+    .seo-section h2 { font-family: Georgia, serif; font-size: 28px; font-weight: normal; margin-bottom: 12px; }
+    .seo-section .lead { color: var(--muted); font-size: 16px; max-width: 640px; margin-bottom: 40px; line-height: 1.7; }
+    .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 24px; }
+    .step { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px 24px; }
+    .step-num { font-family: Georgia, serif; font-size: 32px; color: var(--accent); margin-bottom: 12px; }
+    .step h3 { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+    .step p { font-size: 14px; color: var(--muted); line-height: 1.6; }
+    .bairros { display: flex; gap: 10px; flex-wrap: wrap; }
+    .bairro-tag { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 10px 18px; font-size: 14px; transition: all 0.15s; }
+    .bairro-tag:hover { background: var(--text); color: #fff; border-color: var(--text); }
+    .why-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
+    .why-item { padding: 4px 0; }
+    .why-item h3 { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
+    .why-item p { font-size: 14px; color: var(--muted); line-height: 1.6; }
+
     /* FOOTER */
     footer { text-align: center; padding: 40px 24px; color: var(--muted); font-size: 13px; border-top: 1px solid var(--border); margin-top: 60px; }
     footer strong { color: var(--text); font-family: Georgia, serif; }
@@ -97,13 +169,80 @@
   </div>
 </div>
 
+<!-- SEO: Como funciona -->
+<div class="seo-section">
+  <h2>Como funciona</h2>
+  <p class="lead">Reservar um restaurante em Lisboa nunca foi tão simples. Três passos e a tua mesa está garantida — sem taxas, sem conta obrigatória.</p>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <h3>Escolhe o restaurante</h3>
+      <p>Pesquisa por nome, cozinha ou bairro. Temos restaurantes portugueses, de marisco, italianos, japoneses e muito mais em Lisboa.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <h3>Seleciona data e hora</h3>
+      <p>Vê a disponibilidade em tempo real e escolhe o horário que preferes. Reservas disponíveis a qualquer hora do dia.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <h3>Confirma a reserva</h3>
+      <p>Recebes confirmação imediata por SMS e email. Sem taxas de reserva, sem surpresas.</p>
+    </div>
+  </div>
+</div>
+
+<!-- SEO: Bairros -->
+<div class="seo-section">
+  <h2>Restaurantes por bairro em Lisboa</h2>
+  <p class="lead">Descobre os melhores restaurantes em todos os bairros de Lisboa — do Chiado à Mouraria, de Belém ao Parque das Nações.</p>
+  <div class="bairros">
+    <a class="bairro-tag" href="restaurantes.html?bairro=chiado">Chiado</a>
+    <a class="bairro-tag" href="restaurantes.html?bairro=bairro-alto">Bairro Alto</a>
+    <a class="bairro-tag" href="restaurantes.html?bairro=alfama">Alfama</a>
+    <a class="bairro-tag" href="restaurantes.html?bairro=belem">Belém</a>
+    <a class="bairro-tag" href="restaurantes.html?bairro=intendente">Intendente</a>
+    <a class="bairro-tag" href="restaurantes.html?bairro=mouraria">Mouraria</a>
+    <a class="bairro-tag" href="restaurantes.html?bairro=campo-de-ourique">Campo de Ourique</a>
+    <a class="bairro-tag" href="restaurantes.html?bairro=lx-factory">LX Factory</a>
+    <a class="bairro-tag" href="restaurantes.html?bairro=parque-das-nacoes">Parque das Nações</a>
+    <a class="bairro-tag" href="restaurantes.html?bairro=principe-real">Príncipe Real</a>
+  </div>
+</div>
+
+<!-- SEO: Porquê Da Mesa -->
+<div class="seo-section">
+  <h2>Porquê reservar com Da Mesa?</h2>
+  <p class="lead">A Da Mesa é a plataforma de reservas de restaurantes em Lisboa pensada para quem quer uma experiência simples, rápida e sem custos extra.</p>
+  <div class="why-grid">
+    <div class="why-item">
+      <h3>Sem taxas de reserva</h3>
+      <p>Reservar um restaurante em Lisboa através da Da Mesa é sempre gratuito. Sem surpresas na conta.</p>
+    </div>
+    <div class="why-item">
+      <h3>Confirmação imediata</h3>
+      <p>Recebes confirmação por SMS e email assim que a reserva é feita. Sem esperas nem chamadas telefónicas.</p>
+    </div>
+    <div class="why-item">
+      <h3>Restaurantes verificados</h3>
+      <p>Todos os restaurantes na Da Mesa são verificados e parceiros ativos da plataforma.</p>
+    </div>
+    <div class="why-item">
+      <h3>Disponibilidade real</h3>
+      <p>A disponibilidade é atualizada em tempo real. O que vês é o que existe — sem reservas duplicadas.</p>
+    </div>
+  </div>
+</div>
+
 <footer>
-  <strong>Da Mesa</strong> — Reservas de restaurantes em Lisboa · <a href="mailto:ola@damesa.pt">ola@damesa.pt</a> · <a href="login.html">Entrar como restaurante</a>
+  <strong>Da Mesa</strong> — Reservas de restaurantes em Lisboa · <a href="mailto:ola@damesa.pt">ola@damesa.pt</a> · <a href="login.html">Entrar como restaurante</a> · <a href="privacy.html">Privacidade</a> · <a href="terms.html">Termos</a>
 </footer>
 
 <script type="module">
   import { getRestaurants } from '../src/js/restaurants.js'
   import { trackEvent } from '../src/js/analytics.js'
+  import { initCookieBanner } from '../src/js/cookies.js'
+  initCookieBanner()
 
   let allRestaurants = []
 
