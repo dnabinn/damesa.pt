@@ -1,0 +1,15 @@
+Options -Indexes
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # Serve existing files and directories directly (src/js, assets, etc.)
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # Root → pages/index.html
+  RewriteRule ^$ pages/index.html [L]
+
+  # *.html → pages/*.html (e.g. damesa.pt/restaurantes.html)
+  RewriteRule ^([a-zA-Z0-9_-]+\.html)$ pages/$1 [L]
+</IfModule>
