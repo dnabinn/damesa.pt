@@ -316,7 +316,11 @@
     .review-form textarea { resize: vertical; min-height: 90px; }
 
     /* ── BOOKING WIDGET ─────────────────────────── */
-    .booking-col { position: sticky; top: 100px; }
+    .booking-col { position: static; }
+    @media (min-width: 861px) {
+      .booking-col { position: sticky; top: 100px; }
+      .booking-widget { max-height: calc(100vh - 120px); overflow-y: auto; }
+    }
     .booking-widget {
       background: var(--card); border: 1px solid var(--border);
       border-radius: var(--radius); overflow: hidden;
