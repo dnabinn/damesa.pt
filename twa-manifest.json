@@ -1,0 +1,43 @@
+{
+  "packageId": "pt.damesa.app",
+  "host": "damesa.pt",
+  "name": "Da Mesa",
+  "launcherName": "Da Mesa",
+  "display": "standalone",
+  "orientation": "portrait",
+  "themeColor": "#1c1612",
+  "backgroundColor": "#faf7f2",
+  "startUrl": "/",
+  "iconUrl": "https://damesa.pt/assets/icons/icon-512.png",
+  "maskableIconUrl": "https://damesa.pt/assets/icons/icon-512.png",
+  "monochromeIconUrl": "https://damesa.pt/assets/icons/icon-512.png",
+  "appVersion": "1.0.0",
+  "appVersionCode": 1,
+  "signingKey": {
+    "path": "./damesa-release-key.jks",
+    "alias": "damesa"
+  },
+  "splashScreenFadeOutDuration": 300,
+  "enableNotifications": false,
+  "shortcuts": [
+    {
+      "name": "Restaurantes",
+      "shortName": "Restaurantes",
+      "url": "/restaurantes.html",
+      "chosenIconUrl": "https://damesa.pt/assets/icons/icon-96.png"
+    }
+  ],
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://damesa.pt/assets/manifest.json",
+  "fallbackType": "customtabs",
+  "features": {},
+  "alphaDependencies": {
+    "enabled": false
+  },
+  "enableSiteSettingsShortcut": true,
+  "isChromeOSOnly": false,
+  "isMetaQuest": false,
+  "fullScopeUrl": "https://damesa.pt/",
+  "minSdkVersion": 19,
+  "pwaCompatEnabled": true
+}
