@@ -319,10 +319,10 @@
 <footer><strong>Da Mesa</strong> — Painel do Restaurante</footer>
 
 <script type="module">
-  import { guardRoute, signOut } from '../src/js/auth.js'
-  import { getRestaurantBookings, updateBookingStatus, subscribeToBookings } from '../src/js/bookings.js'
-  import { getRestaurantStats } from '../src/js/analytics.js'
-  import { supabase } from '../src/js/supabase.js'
+  import { guardRoute, signOut } from '/src/js/auth.js?v=2'
+  import { getRestaurantBookings, updateBookingStatus, subscribeToBookings } from '/src/js/bookings.js?v=2'
+  import { getRestaurantStats } from '/src/js/analytics.js?v=2'
+  import { supabase } from '/src/js/supabase.js?v=2'
 
   ;(async () => {
   const profile = await guardRoute()
