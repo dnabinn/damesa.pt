@@ -232,12 +232,28 @@
     .photo-thumb:hover img { transform: scale(1.07); }
     .photo-thumb .photo-author {
       position: absolute; bottom: 0; left: 0; right: 0;
-      padding: 6px 10px; font-size: 11px; color: #fff;
-      background: linear-gradient(transparent, rgba(0,0,0,0.5));
+      padding: 20px 10px 8px; font-size: 11px; color: #fff;
+      background: linear-gradient(transparent, rgba(0,0,0,0.55));
       opacity: 0; transition: opacity 0.2s;
     }
     .photo-thumb:hover .photo-author { opacity: 1; }
+    /* damesa.pt watermark — always visible, subtle */
+    .photo-thumb::after {
+      content: 'damesa.pt';
+      position: absolute; bottom: 7px; right: 9px;
+      font-family: Georgia, serif; font-size: 10px; font-style: italic;
+      color: rgba(255,255,255,0.55);
+      text-shadow: 0 1px 4px rgba(0,0,0,0.45);
+      pointer-events: none; letter-spacing: 0.2px;
+      z-index: 2;
+    }
     .photos-empty { color: var(--muted); font-size: 14px; grid-column: 1/-1; padding: 40px 0; text-align: center; }
+    /* Lightbox */
+    .lightbox { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.88); z-index:1000; align-items:center; justify-content:center; cursor:zoom-out; }
+    .lightbox.open { display:flex; animation: fadeIn 0.2s ease; }
+    .lightbox img { max-width:92vw; max-height:88vh; border-radius:8px; object-fit:contain; box-shadow:0 20px 80px rgba(0,0,0,0.6); }
+    .lightbox-wm { position:absolute; bottom:20px; right:24px; font-family:Georgia,serif; font-style:italic; font-size:13px; color:rgba(255,255,255,0.45); letter-spacing:0.3px; pointer-events:none; }
+    .lightbox-close { position:absolute; top:20px; right:24px; color:#fff; font-size:28px; cursor:pointer; opacity:0.6; line-height:1; }
     .upload-area {
       border: 2px dashed var(--border); border-radius: var(--radius);
       padding: 32px; text-align: center; cursor: pointer;
@@ -785,7 +801,7 @@
     const grid = document.getElementById('photos-grid')
     if (!data?.length) return
     grid.innerHTML = data.map(p => `
-      <div class="photo-thumb">
+      <div class="photo-thumb" onclick="openLightbox('${p.photo_url}', 'Foto de ${p.diner_name ?? 'cliente'}')">
         <img src="${p.photo_url}" alt="Foto de ${p.diner_name ?? 'cliente'}" loading="lazy" />
         ${p.diner_name ? `<div class="photo-author">${p.diner_name}</div>` : ''}
       </div>
@@ -882,6 +898,27 @@
   }
 
   trackEvent('restaurant_view', { slug, restaurant_id: restaurant.id })
+</script>
+
+<!-- LIGHTBOX -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <span class="lightbox-close" onclick="closeLightbox()">✕</span>
+  <img id="lightbox-img" src="" alt="" />
+  <div class="lightbox-wm">damesa.pt</div>
+</div>
+<script>
+  function openLightbox(src, alt) {
+    const lb = document.getElementById('lightbox')
+    document.getElementById('lightbox-img').src = src
+    document.getElementById('lightbox-img').alt = alt
+    lb.classList.add('open')
+    document.body.style.overflow = 'hidden'
+  }
+  function closeLightbox() {
+    document.getElementById('lightbox').classList.remove('open')
+    document.body.style.overflow = ''
+  }
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox() })
 </script>
 
 </body>

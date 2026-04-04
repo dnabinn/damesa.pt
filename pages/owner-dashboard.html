@@ -327,8 +327,30 @@
   const profile = await guardRoute()
   if (!profile) return
 
-  const { data: restaurant } = await supabase
-    .from('restaurants').select('*').eq('owner_id', profile.id).single()
+  // ── SUPERADMIN IMPERSONATION ───────────────────────────────
+  let restaurant = null
+  const _imp = localStorage.getItem('damesa_impersonate')
+  const impersonate = _imp && profile.role === 'super_admin' ? JSON.parse(_imp) : null
+
+  if (impersonate) {
+    // Show impersonation banner
+    const banner = document.createElement('div')
+    banner.style.cssText = 'background:#1c1612;color:#fff;padding:10px 24px;display:flex;align-items:center;justify-content:space-between;font-size:13px;gap:16px;'
+    banner.innerHTML = `
+      <span>👁 A simular acesso como: <strong>${impersonate.name}</strong></span>
+      <button onclick="localStorage.removeItem('damesa_impersonate'); window.location.href='superadmin.html'"
+        style="background:#c0392b;color:#fff;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;">
+        ← Voltar ao Admin
+      </button>
+    `
+    document.body.insertBefore(banner, document.body.firstChild)
+
+    const { data } = await supabase.from('restaurants').select('*').eq('id', impersonate.id).single()
+    restaurant = data
+  } else {
+    const { data } = await supabase.from('restaurants').select('*').eq('owner_id', profile.id).single()
+    restaurant = data
+  }
 
   if (!restaurant) {
     document.querySelector('.page-wrap').innerHTML = '<p style="color:var(--muted);padding:40px">Nenhum restaurante associado. Contacta o suporte.</p>'
