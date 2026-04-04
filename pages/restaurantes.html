@@ -129,6 +129,10 @@
     render(filtered)
   }
 
+  function citySlug(city) {
+    return (city ?? 'portugal').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-')
+  }
+
   function render(list) {
     document.getElementById('results-count').textContent = `${list.length} restaurante${list.length !== 1 ? 's' : ''}`
     const grid = document.getElementById('restaurants-grid')
@@ -137,7 +141,7 @@
       return
     }
     grid.innerHTML = list.map(r => `
-      <a class="card" href="restaurant.html?slug=${r.slug}">
+      <a class="card" href="/restaurante/${citySlug(r.city)}/${r.slug}">
         <div class="card-img" style="${r.cover_image ? `background-image:url(${r.cover_image})` : ''}"></div>
         <div class="card-body">
           <div class="card-name">${r.name}</div>

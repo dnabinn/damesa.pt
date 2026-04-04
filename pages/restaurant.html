@@ -632,23 +632,36 @@
   const { restaurant, error } = await getRestaurantBySlug(slug)
   if (error || !restaurant) { window.location.href = 'restaurantes.html' }
 
+  // Build clean canonical URL: /restaurante/lisboa/lumbini
+  const _cs = (city) => (city ?? 'portugal').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-')
+  const cleanUrl = `https://damesa.pt/restaurante/${_cs(restaurant.city)}/${restaurant.slug}`
+
+  // Update browser URL bar to the clean version (no ?slug= param)
+  if (!window.location.pathname.startsWith('/restaurante/')) {
+    history.replaceState(null, '', `/restaurante/${_cs(restaurant.city)}/${restaurant.slug}`)
+  }
+
   // ── SEO & META ───────────────────────────────────────────
-  document.title = `${restaurant.name} — Reservar Mesa em Lisboa | Da Mesa`
-  document.querySelector('meta[name="description"]').content = `Reserva mesa no ${restaurant.name} em Lisboa. ${restaurant.cuisine_type ?? 'Restaurante'} em ${restaurant.address ?? 'Lisboa'}. Sem taxas de reserva — Da Mesa.`
+  document.title = `${restaurant.name} — Reservar Mesa em ${restaurant.city ?? 'Lisboa'} | Da Mesa`
+  document.querySelector('meta[name="description"]').content = `Reserva mesa no ${restaurant.name} em ${restaurant.city ?? 'Lisboa'}. ${restaurant.cuisine_type ?? 'Restaurante'} em ${restaurant.address ?? 'Lisboa'}. Sem taxas de reserva — Da Mesa.`
   document.getElementById('og-title').content = `${restaurant.name} — Da Mesa`
   document.getElementById('og-description').content = `Reserva mesa no ${restaurant.name}. ${restaurant.cuisine_type ?? ''} · ${restaurant.price_range ?? ''} · ${restaurant.address ?? 'Lisboa'}`
-  document.getElementById('og-url').content = `https://damesa.pt/restaurant.html?slug=${slug}`
+  document.getElementById('og-url').content = cleanUrl
+
+  // Update canonical link if present
+  const canonical = document.querySelector('link[rel="canonical"]')
+  if (canonical) canonical.href = cleanUrl
 
   const schema = {
     "@context": "https://schema.org", "@type": "Restaurant",
     "name": restaurant.name,
     "description": restaurant.description ?? `Restaurante ${restaurant.cuisine_type ?? ''} em Lisboa.`,
-    "address": { "@type": "PostalAddress", "streetAddress": restaurant.address ?? '', "addressLocality": "Lisboa", "addressCountry": "PT" },
+    "address": { "@type": "PostalAddress", "streetAddress": restaurant.address ?? '', "addressLocality": restaurant.city ?? 'Lisboa', "addressCountry": "PT" },
     "servesCuisine": restaurant.cuisine_type ?? '',
     "priceRange": restaurant.price_range ?? '€€',
     "telephone": restaurant.phone ?? '',
-    "url": `https://damesa.pt/restaurant.html?slug=${slug}`,
-    "potentialAction": { "@type": "ReserveAction", "target": { "@type": "EntryPoint", "urlTemplate": `https://damesa.pt/restaurant.html?slug=${slug}`, "inLanguage": "pt-PT", "actionPlatform": ["https://schema.org/DesktopWebPlatform","https://schema.org/MobileWebPlatform"] }, "result": { "@type": "FoodEstablishmentReservation", "name": `Reserva no ${restaurant.name}` } }
+    "url": cleanUrl,
+    "potentialAction": { "@type": "ReserveAction", "target": { "@type": "EntryPoint", "urlTemplate": cleanUrl, "inLanguage": "pt-PT", "actionPlatform": ["https://schema.org/DesktopWebPlatform","https://schema.org/MobileWebPlatform"] }, "result": { "@type": "FoodEstablishmentReservation", "name": `Reserva no ${restaurant.name}` } }
   }
   const schemaEl = document.createElement('script')
   schemaEl.type = 'application/ld+json'

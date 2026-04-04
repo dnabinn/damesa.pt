@@ -336,7 +336,8 @@
   }
 
   document.getElementById('nav-rest-name').textContent = restaurant.name
-  document.getElementById('view-site-link').href = `restaurant.html?slug=${restaurant.slug}`
+  const _citySlug = (city) => (city ?? 'portugal').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-')
+  document.getElementById('view-site-link').href = `/restaurante/${_citySlug(restaurant.city)}/${restaurant.slug}`
   document.title = `${restaurant.name} — Da Mesa`
 
   // ── TABS ──────────────────────────────────────────────────
