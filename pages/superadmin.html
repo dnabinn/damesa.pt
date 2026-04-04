@@ -234,6 +234,7 @@
   import { guardRoute, signOut } from '/src/js/auth.js'
   import { supabase } from '/src/js/supabase.js'
 
+  ;(async () => {
   // ── SECONDARY PIN LOCK (runs before auth, synchronous) ────
   const ADMIN_PIN = 'DaMesa@2026'
   const PIN_KEY = 'damesa_admin_unlocked'
@@ -494,6 +495,7 @@
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLb() })
 
   window.handleSignOut = signOut
+  })() // end async IIFE
 </script>
 
 </body>
