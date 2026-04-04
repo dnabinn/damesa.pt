@@ -96,6 +96,23 @@
     .save-btn:disabled { opacity:0.5; cursor:not-allowed; }
     .saved-msg { font-size:13px; color:var(--green); margin-top:8px; display:none; }
 
+    /* Photo gallery */
+    .fotos-owner-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:12px; }
+    .foto-card { position:relative; aspect-ratio:1; border-radius:10px; overflow:hidden; background:var(--border); }
+    .foto-card img { width:100%; height:100%; object-fit:cover; transition:transform 0.3s; display:block; }
+    .foto-card:hover img { transform:scale(1.05); }
+    .foto-card::after { content:'damesa.pt'; position:absolute; bottom:6px; right:8px; font-family:Georgia,serif; font-style:italic; font-size:10px; color:rgba(255,255,255,0.55); text-shadow:0 1px 4px rgba(0,0,0,0.45); pointer-events:none; z-index:2; }
+    .foto-overlay { position:absolute; inset:0; background:rgba(0,0,0,0); transition:background 0.2s; display:flex; flex-direction:column; justify-content:space-between; padding:8px; }
+    .foto-card:hover .foto-overlay { background:rgba(0,0,0,0.35); }
+    .foto-badge { font-size:10px; font-weight:600; padding:3px 8px; border-radius:4px; align-self:flex-start; }
+    .foto-badge.approved { background:rgba(46,125,50,0.8); color:#fff; }
+    .foto-badge.pending { background:rgba(245,127,23,0.9); color:#fff; }
+    .foto-actions { display:flex; gap:5px; opacity:0; transition:opacity 0.2s; }
+    .foto-card:hover .foto-actions { opacity:1; }
+    .foto-btn { border:none; padding:4px 8px; border-radius:5px; font-size:11px; cursor:pointer; font-weight:600; }
+    .foto-approve { background:rgba(46,125,50,0.9); color:#fff; }
+    .foto-delete { background:rgba(198,40,40,0.9); color:#fff; }
+
     /* MENU MANAGEMENT */
     .menu-cat-block { border:1px solid var(--border); border-radius:10px; margin-bottom:16px; overflow:hidden; }
     .menu-cat-header { display:flex; align-items:center; padding:14px 16px; background:var(--bg); gap:12px; }
@@ -161,6 +178,7 @@
     <button class="tab-btn active" data-tab="reservas">Reservas</button>
     <button class="tab-btn" data-tab="ementa">Ementa</button>
     <button class="tab-btn" data-tab="horarios">Horários</button>
+    <button class="tab-btn" data-tab="fotos">Fotos</button>
     <button class="tab-btn" data-tab="definicoes">Definições</button>
   </div>
 </div>
@@ -280,6 +298,38 @@
 
     <button class="save-btn" onclick="saveDefinicoes()">Guardar definições</button>
     <div class="saved-msg" id="def-saved">✓ Definições guardadas</div>
+  </div>
+
+  <!-- FOTOS TAB -->
+  <div class="tab-panel" id="tab-fotos">
+    <div class="section-card">
+      <div class="section-title" style="margin-bottom:16px;">Adicionar foto</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+        <div class="field" style="flex:1;min-width:220px;margin:0;">
+          <label>URL da foto</label>
+          <input type="url" id="fotos-url-input" placeholder="https://..." />
+        </div>
+        <button class="btn-primary" onclick="addPhotoByUrl()" style="height:42px;white-space:nowrap;">Adicionar por URL</button>
+        <label class="btn-secondary" for="fotos-file-input" style="height:42px;display:flex;align-items:center;cursor:pointer;padding:0 16px;border-radius:8px;border:1px solid var(--border);font-size:13px;white-space:nowrap;">
+          📷 Upload de ficheiro
+        </label>
+        <input type="file" id="fotos-file-input" accept="image/*" style="display:none;" />
+      </div>
+      <div id="fotos-upload-progress" style="margin-top:10px;font-size:13px;color:var(--muted);display:none;">A enviar...</div>
+    </div>
+
+    <div class="section-card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+        <div class="section-title" style="margin:0;">Galeria</div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn-secondary" onclick="filterPhotos('all')" id="filter-all" style="font-size:12px;padding:5px 12px;border-radius:6px;">Todas</button>
+          <button class="btn-secondary" onclick="filterPhotos('pending')" id="filter-pending" style="font-size:12px;padding:5px 12px;border-radius:6px;">Pendentes</button>
+        </div>
+      </div>
+      <div id="fotos-grid" class="fotos-owner-grid">
+        <p style="color:var(--muted);font-size:14px;">A carregar...</p>
+      </div>
+    </div>
   </div>
 
 </div><!-- /page-wrap -->
@@ -671,6 +721,86 @@
   }
 
   window.handleSignOut = signOut
+
+  // ── FOTOS TAB ─────────────────────────────────────────────
+  let _allPhotos = []
+
+  async function loadFotos() {
+    const { data } = await supabase
+      .from('restaurant_photos').select('*')
+      .eq('restaurant_id', restaurant.id)
+      .order('created_at', { ascending: false })
+    _allPhotos = data ?? []
+    renderFotos(_allPhotos)
+  }
+
+  function renderFotos(list) {
+    const grid = document.getElementById('fotos-grid')
+    if (!list.length) {
+      grid.innerHTML = '<p style="color:var(--muted);font-size:14px;">Nenhuma foto ainda.</p>'
+      return
+    }
+    grid.innerHTML = list.map(p => `
+      <div class="foto-card">
+        <img src="${p.photo_url}" alt="" loading="lazy" onerror="this.parentElement.style.display='none'" />
+        <div class="foto-overlay">
+          <span class="foto-badge ${p.approved ? 'approved' : 'pending'}">${p.approved ? '✓ Aprovada' : '⏳ Pendente'}</span>
+          <div class="foto-actions">
+            ${!p.approved ? `<button class="foto-btn foto-approve" onclick="approveOwnerPhoto('${p.id}')">Aprovar</button>` : ''}
+            <button class="foto-btn foto-delete" onclick="deleteOwnerPhoto('${p.id}')">Apagar</button>
+          </div>
+        </div>
+      </div>
+    `).join('')
+  }
+
+  window.filterPhotos = function(type) {
+    if (type === 'pending') renderFotos(_allPhotos.filter(p => !p.approved))
+    else renderFotos(_allPhotos)
+  }
+
+  window.addPhotoByUrl = async function() {
+    const url = document.getElementById('fotos-url-input').value.trim()
+    if (!url || !url.startsWith('http')) { alert('Insere um URL válido.'); return }
+    await supabase.from('restaurant_photos').insert({ restaurant_id: restaurant.id, photo_url: url, approved: true, diner_name: restaurant.name })
+    document.getElementById('fotos-url-input').value = ''
+    await loadFotos()
+  }
+
+  document.getElementById('fotos-file-input').addEventListener('change', async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    const progress = document.getElementById('fotos-upload-progress')
+    progress.style.display = 'block'
+    const ext = file.name.split('.').pop()
+    const path = `${restaurant.id}/${Date.now()}.${ext}`
+    const { error } = await supabase.storage.from('restaurant-photos').upload(path, file, { contentType: file.type })
+    if (error) { alert('Erro ao enviar: ' + error.message); progress.style.display = 'none'; return }
+    const { data: { publicUrl } } = supabase.storage.from('restaurant-photos').getPublicUrl(path)
+    await supabase.from('restaurant_photos').insert({ restaurant_id: restaurant.id, photo_url: publicUrl, approved: true, diner_name: restaurant.name })
+    e.target.value = ''
+    progress.style.display = 'none'
+    await loadFotos()
+  })
+
+  window.approveOwnerPhoto = async function(id) {
+    await supabase.from('restaurant_photos').update({ approved: true }).eq('id', id)
+    await loadFotos()
+  }
+
+  window.deleteOwnerPhoto = async function(id) {
+    if (!confirm('Apagar esta foto?')) return
+    await supabase.from('restaurant_photos').delete().eq('id', id)
+    await loadFotos()
+  }
+
+  // Load fotos when tab activated
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (btn.dataset.tab === 'fotos') loadFotos()
+    })
+  })
+
   })() // end async IIFE
 </script>
 
