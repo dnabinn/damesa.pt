@@ -164,9 +164,12 @@
 
   function redirectByRole(profile) {
     if (!profile) return
-    if (profile.role === 'super_admin') window.location.href = 'superadmin.html'
-    else if (profile.role === 'restaurant_owner') window.location.href = 'owner-dashboard.html'
-    else window.location.href = 'dashboard.html'
+    // If there's a ?return= param, go there instead
+    const returnUrl = new URLSearchParams(window.location.search).get('return')
+    if (returnUrl) { window.location.href = decodeURIComponent(returnUrl); return }
+    if (profile.role === 'super_admin') window.location.href = '/superadmin.html'
+    else if (profile.role === 'restaurant_owner') window.location.href = '/owner-dashboard.html'
+    else window.location.href = '/dashboard.html'
   }
 </script>
 

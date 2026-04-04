@@ -50,22 +50,33 @@ export async function getCurrentProfile() {
 // Sign out
 export async function signOut() {
   await supabase.auth.signOut()
-  window.location.href = '/pages/login.html'
+  window.location.replace('/login.html')
 }
 
-// Route guard — redirect based on role
+// Route guard — hides body until auth confirmed, then redirects if needed
 export async function guardRoute() {
+  // Hide page content while checking auth (prevents flash of protected UI)
+  document.body.style.visibility = 'hidden'
+
   const profile = await getCurrentProfile()
+
   if (!profile) {
-    window.location.href = '/pages/login.html'
-    return
+    const returnUrl = encodeURIComponent(window.location.pathname)
+    window.location.replace(`/login.html?return=${returnUrl}`)
+    return null
   }
+
   const path = window.location.pathname
   if (path.includes('superadmin') && profile.role !== 'super_admin') {
-    window.location.href = '/pages/dashboard.html'
+    window.location.replace('/dashboard.html')
+    return null
   }
   if (path.includes('owner-dashboard') && profile.role !== 'restaurant_owner' && profile.role !== 'super_admin') {
-    window.location.href = '/pages/dashboard.html'
+    window.location.replace('/dashboard.html')
+    return null
   }
+
+  // Auth confirmed — show page
+  document.body.style.visibility = 'visible'
   return profile
 }
