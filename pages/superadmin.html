@@ -231,21 +231,64 @@
 <footer><strong>Da Mesa</strong> — Painel Super Admin</footer>
 
 <script type="module">
-  import { guardRoute, signOut } from '/src/js/auth.js'
-  import { supabase } from '/src/js/supabase.js'
+  import { guardRoute, signOut } from '/src/js/auth.js?v=2'
+  import { supabase } from '/src/js/supabase.js?v=2'
 
   ;(async () => {
-  // ── SECONDARY PIN LOCK (runs before auth, synchronous) ────
+  // ── SECONDARY PIN LOCK — overlay form (prompt() blocked by Chrome) ────
   const ADMIN_PIN = 'DaMesa@2026'
   const PIN_KEY = 'damesa_admin_unlocked'
-  if (sessionStorage.getItem(PIN_KEY) !== '1') {
-    const pin = prompt('🔐 Da Mesa Admin — Palavra-passe:')
-    if (pin !== ADMIN_PIN) {
-      document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:Georgia,serif;color:#7a6a5e;font-size:18px;">Acesso negado.</div>'
-      throw new Error('PIN inválido')
-    }
-    sessionStorage.setItem(PIN_KEY, '1')
+
+  async function checkPin() {
+    return new Promise((resolve) => {
+      if (sessionStorage.getItem(PIN_KEY) === '1') { resolve(true); return }
+
+      // Build overlay
+      const overlay = document.createElement('div')
+      overlay.style.cssText = 'position:fixed;inset:0;background:#1c1612;z-index:9999;display:flex;align-items:center;justify-content:center;'
+      overlay.innerHTML = `
+        <div style="background:#fff;border-radius:14px;padding:40px 48px;max-width:380px;width:90%;text-align:center;box-shadow:0 24px 80px rgba(0,0,0,0.4);">
+          <div style="font-family:Georgia,serif;font-size:28px;margin-bottom:6px;">Da <span style="color:#c0392b">Mesa</span></div>
+          <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#7a6a5e;margin-bottom:28px;">Admin</div>
+          <input id="pin-input" type="password" placeholder="Palavra-passe"
+            style="width:100%;padding:12px 16px;border:1.5px solid #e8dfd4;border-radius:8px;font-size:15px;outline:none;margin-bottom:10px;box-sizing:border-box;"
+            autocomplete="current-password" />
+          <div id="pin-error" style="color:#c0392b;font-size:13px;margin-bottom:10px;min-height:18px;"></div>
+          <button id="pin-btn"
+            style="width:100%;background:#1c1612;color:#fff;border:none;padding:13px;border-radius:8px;font-size:15px;cursor:pointer;">
+            Entrar
+          </button>
+        </div>
+      `
+      document.body.appendChild(overlay)
+      document.body.style.overflow = 'hidden'
+
+      const input = overlay.querySelector('#pin-input')
+      const btn = overlay.querySelector('#pin-btn')
+      const err = overlay.querySelector('#pin-error')
+      input.focus()
+
+      function attempt() {
+        if (input.value === ADMIN_PIN) {
+          sessionStorage.setItem(PIN_KEY, '1')
+          overlay.remove()
+          document.body.style.overflow = ''
+          resolve(true)
+        } else {
+          err.textContent = 'Palavra-passe incorreta.'
+          input.value = ''
+          input.style.borderColor = '#c0392b'
+          setTimeout(() => { input.style.borderColor = '#e8dfd4'; err.textContent = '' }, 2000)
+          input.focus()
+        }
+      }
+
+      btn.addEventListener('click', attempt)
+      input.addEventListener('keydown', e => { if (e.key === 'Enter') attempt() })
+    })
   }
+
+  await checkPin()
 
   // ── AUTH GUARD ────────────────────────────────────────────
   const profile = await guardRoute()
