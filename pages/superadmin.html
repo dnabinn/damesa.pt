@@ -64,6 +64,53 @@
     .search-input { padding:9px 14px; border:1px solid var(--border); border-radius:8px; font-size:14px; background:#fff; outline:none; width:260px; }
     .search-input:focus { border-color:var(--text); }
 
+    .btn-enter { background:#1c1612; color:#fff; border:none; padding:5px 12px; border-radius:6px; font-size:12px; cursor:pointer; transition:opacity 0.15s; }
+    .btn-enter:hover { opacity:0.75; }
+
+    /* GALLERY */
+    .gallery-toolbar { display:flex; gap:12px; align-items:center; margin-bottom:24px; flex-wrap:wrap; }
+    .gallery-select { padding:9px 14px; border:1px solid var(--border); border-radius:8px; font-size:14px; background:#fff; outline:none; min-width:240px; cursor:pointer; }
+    .gallery-select:focus { border-color:var(--text); }
+    .url-input { flex:1; min-width:200px; padding:9px 14px; border:1px solid var(--border); border-radius:8px; font-size:14px; background:#fff; outline:none; }
+    .url-input:focus { border-color:var(--text); }
+    .gallery-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:14px; }
+    .g-thumb {
+      aspect-ratio:1; border-radius:10px; overflow:hidden;
+      position:relative; background:var(--border); cursor:pointer;
+    }
+    .g-thumb img { width:100%; height:100%; object-fit:cover; transition:transform 0.3s; display:block; }
+    .g-thumb:hover img { transform:scale(1.05); }
+    /* watermark */
+    .g-thumb::after {
+      content: 'damesa.pt';
+      position:absolute; bottom:7px; right:9px;
+      font-family:Georgia,serif; font-style:italic; font-size:10px;
+      color:rgba(255,255,255,0.55);
+      text-shadow:0 1px 4px rgba(0,0,0,0.45);
+      pointer-events:none; letter-spacing:0.2px; z-index:2;
+    }
+    .g-thumb .g-overlay {
+      position:absolute; inset:0; background:rgba(0,0,0,0);
+      display:flex; flex-direction:column; justify-content:space-between;
+      padding:10px; transition:background 0.2s;
+    }
+    .g-thumb:hover .g-overlay { background:rgba(0,0,0,0.3); }
+    .g-badge { background:rgba(255,255,255,0.18); color:#fff; font-size:10px; border-radius:4px; padding:2px 7px; align-self:flex-start; backdrop-filter:blur(4px); }
+    .g-badge.approved { background:rgba(46,125,50,0.7); }
+    .g-badge.pending { background:rgba(245,127,23,0.8); }
+    .g-actions { display:flex; gap:6px; opacity:0; transition:opacity 0.2s; }
+    .g-thumb:hover .g-actions { opacity:1; }
+    .g-btn { border:none; border-radius:5px; padding:4px 9px; font-size:11px; cursor:pointer; font-weight:500; }
+    .g-approve { background:rgba(46,125,50,0.85); color:#fff; }
+    .g-delete { background:rgba(198,40,40,0.85); color:#fff; }
+    .gallery-empty { color:var(--muted); font-size:14px; padding:48px; text-align:center; background:#fff; border:1px solid var(--border); border-radius:var(--radius); }
+    /* Lightbox */
+    .lb { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.88); z-index:9999; align-items:center; justify-content:center; cursor:zoom-out; }
+    .lb.open { display:flex; }
+    .lb img { max-width:90vw; max-height:86vh; border-radius:8px; object-fit:contain; }
+    .lb-wm { position:absolute; bottom:18px; right:22px; font-family:Georgia,serif; font-style:italic; font-size:14px; color:rgba(255,255,255,0.4); pointer-events:none; }
+    .lb-close { position:absolute; top:18px; right:22px; color:#fff; font-size:28px; cursor:pointer; opacity:0.6; line-height:1; }
+
     footer { text-align:center; padding:40px 24px; color:var(--muted); font-size:13px; border-top:1px solid var(--border); }
   </style>
 </head>
@@ -82,6 +129,7 @@
   <div class="tnav" onclick="switchTab('restaurants')">Restaurantes</div>
   <div class="tnav" onclick="switchTab('bookings')">Reservas</div>
   <div class="tnav" onclick="switchTab('users')">Utilizadores</div>
+  <div class="tnav" onclick="switchTab('gallery')">Galeria</div>
 </div>
 
 <!-- OVERVIEW -->
@@ -106,7 +154,7 @@
     <div class="table-wrap">
       <table>
         <thead>
-          <tr><th>Nome</th><th>Cozinha</th><th>Proprietário</th><th>Estado</th><th>Subscrição</th><th>Ações</th></tr>
+          <tr><th>Nome</th><th>Cozinha</th><th>Proprietário</th><th>Estado</th><th>Subscrição</th><th>Ações</th><th></th></tr>
         </thead>
         <tbody id="restaurants-tbody">
           <tr><td colspan="6" style="padding:32px;text-align:center;color:var(--muted)">A carregar...</td></tr>
@@ -154,6 +202,32 @@
   </div>
 </div>
 
+<!-- GALLERY TAB -->
+<div class="tab-pane" id="tab-gallery">
+  <div class="page-wrap">
+    <div class="section-header" style="margin-bottom:20px">
+      <div class="section-title">Galeria de Fotos</div>
+    </div>
+    <div class="gallery-toolbar">
+      <select class="gallery-select" id="gallery-rest-select" onchange="loadGallery()">
+        <option value="">— Seleciona um restaurante —</option>
+      </select>
+      <input class="url-input" id="gallery-url" placeholder="URL da foto (https://...)" />
+      <button class="btn-primary" onclick="addPhoto()">Adicionar foto</button>
+    </div>
+    <div id="gallery-container">
+      <div class="gallery-empty">Seleciona um restaurante para ver as fotos.</div>
+    </div>
+  </div>
+</div>
+
+<!-- Lightbox -->
+<div class="lb" id="admin-lb" onclick="closeLb()">
+  <span class="lb-close" onclick="closeLb()">✕</span>
+  <img id="admin-lb-img" src="" alt="" />
+  <div class="lb-wm">damesa.pt</div>
+</div>
+
 <footer><strong>Da Mesa</strong> — Painel Super Admin</footer>
 
 <script type="module">
@@ -196,10 +270,13 @@
         <td>${r.cuisine_type ?? '—'}</td>
         <td style="font-size:12px;color:var(--muted)">${r.profiles?.full_name ?? '—'}<br>${r.profiles?.email ?? ''}</td>
         <td><span class="status status-${r.status}">${r.status}</span></td>
-        <td><span class="sub-${r.subscription}">${r.subscription}</span></td>
+        <td><span class="sub-${r.subscription ?? 'free'}">${r.subscription ?? 'free'}</span></td>
         <td>
           ${r.status !== 'active' ? `<button class="action-btn btn-activate" onclick="setRestStatus('${r.id}','active')">Ativar</button>` : ''}
           ${r.status !== 'suspended' ? `<button class="action-btn btn-suspend" onclick="setRestStatus('${r.id}','suspended')">Suspender</button>` : ''}
+        </td>
+        <td>
+          <button class="btn-enter" onclick="enterAs('${r.id}','${r.name.replace(/'/g,"\\'")}')">Entrar como →</button>
         </td>
       </tr>
     `).join('')
@@ -255,8 +332,9 @@
   }
 
   window.switchTab = function(tab) {
+    const tabs = ['overview','restaurants','bookings','users','gallery']
     document.querySelectorAll('.tnav').forEach((t, i) => {
-      t.classList.toggle('active', ['overview','restaurants','bookings','users'][i] === tab)
+      t.classList.toggle('active', tabs[i] === tab)
     })
     document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'))
     document.getElementById(`tab-${tab}`).classList.add('active')
@@ -264,7 +342,95 @@
     if (tab === 'restaurants') loadRestaurants()
     if (tab === 'bookings') loadAllBookings()
     if (tab === 'users') loadUsers()
+    if (tab === 'gallery') initGalleryTab()
   }
+
+  // ── ENTER AS RESTAURANT (impersonation) ───────────────────
+  window.enterAs = function(id, name) {
+    localStorage.setItem('damesa_impersonate', JSON.stringify({ id, name }))
+    window.location.href = 'owner-dashboard.html'
+  }
+
+  // ── GALLERY TAB ───────────────────────────────────────────
+  let _galleryRestaurants = []
+
+  async function initGalleryTab() {
+    if (_galleryRestaurants.length) return  // already loaded
+    const { data } = await supabase.from('restaurants').select('id, name').order('name')
+    _galleryRestaurants = data ?? []
+    const sel = document.getElementById('gallery-rest-select')
+    sel.innerHTML = '<option value="">— Seleciona um restaurante —</option>' +
+      _galleryRestaurants.map(r => `<option value="${r.id}">${r.name}</option>`).join('')
+  }
+
+  window.loadGallery = async function() {
+    const rid = document.getElementById('gallery-rest-select').value
+    const container = document.getElementById('gallery-container')
+    if (!rid) { container.innerHTML = '<div class="gallery-empty">Seleciona um restaurante para ver as fotos.</div>'; return }
+
+    container.innerHTML = '<div class="gallery-empty">A carregar...</div>'
+    const { data } = await supabase
+      .from('restaurant_photos').select('*')
+      .eq('restaurant_id', rid)
+      .order('created_at', { ascending: false })
+
+    if (!data?.length) {
+      container.innerHTML = '<div class="gallery-empty">Nenhuma foto ainda. Adiciona uma URL acima.</div>'
+      return
+    }
+
+    container.innerHTML = `<div class="gallery-grid">${data.map(p => `
+      <div class="g-thumb" onclick="openAdminLb('${p.photo_url}')">
+        <img src="${p.photo_url}" alt="" loading="lazy" onerror="this.parentElement.style.display='none'" />
+        <div class="g-overlay">
+          <span class="g-badge ${p.approved ? 'approved' : 'pending'}">${p.approved ? '✓ Aprovada' : '⏳ Pendente'}</span>
+          <div class="g-actions">
+            ${!p.approved ? `<button class="g-btn g-approve" onclick="event.stopPropagation();approvePhoto('${p.id}')">Aprovar</button>` : ''}
+            <button class="g-btn g-delete" onclick="event.stopPropagation();deletePhoto('${p.id}')">Apagar</button>
+          </div>
+        </div>
+      </div>
+    `).join('')}</div>`
+  }
+
+  window.addPhoto = async function() {
+    const rid = document.getElementById('gallery-rest-select').value
+    const url = document.getElementById('gallery-url').value.trim()
+    if (!rid) { alert('Seleciona um restaurante primeiro.'); return }
+    if (!url || !url.startsWith('http')) { alert('Insere um URL válido.'); return }
+
+    await supabase.from('restaurant_photos').insert({
+      restaurant_id: rid,
+      photo_url: url,
+      approved: true,
+      diner_name: 'Da Mesa'
+    })
+    document.getElementById('gallery-url').value = ''
+    await loadGallery()
+  }
+
+  window.approvePhoto = async function(id) {
+    await supabase.from('restaurant_photos').update({ approved: true }).eq('id', id)
+    await loadGallery()
+  }
+
+  window.deletePhoto = async function(id) {
+    if (!confirm('Apagar esta foto?')) return
+    await supabase.from('restaurant_photos').delete().eq('id', id)
+    await loadGallery()
+  }
+
+  // Lightbox
+  window.openAdminLb = function(src) {
+    document.getElementById('admin-lb-img').src = src
+    document.getElementById('admin-lb').classList.add('open')
+    document.body.style.overflow = 'hidden'
+  }
+  window.closeLb = function() {
+    document.getElementById('admin-lb').classList.remove('open')
+    document.body.style.overflow = ''
+  }
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLb() })
 
   window.handleSignOut = signOut
 </script>

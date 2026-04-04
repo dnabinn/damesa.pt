@@ -3,57 +3,143 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dashboard Restaurante — Da Mesa</title>
+  <title>Dashboard — Da Mesa</title>
   <link rel="manifest" href="../assets/manifest.json" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root { --bg:#faf7f2; --card:#fff; --text:#1c1612; --muted:#7a6a5e; --accent:#c0392b; --border:#e8dfd4; --radius:12px; --green:#2e7d32; --amber:#f57f17; }
+    :root {
+      --bg:#faf7f2; --card:#fff; --text:#1c1612; --muted:#7a6a5e;
+      --accent:#c0392b; --border:#e8dfd4; --radius:12px;
+      --green:#2e7d32; --amber:#f57f17;
+    }
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); }
     a { color: inherit; text-decoration: none; }
 
-    nav { display:flex; align-items:center; justify-content:space-between; padding:16px 24px; background:#fff; border-bottom:1px solid var(--border); }
+    /* NAV */
+    nav { display:flex; align-items:center; justify-content:space-between; padding:14px 24px; background:#fff; border-bottom:1px solid var(--border); position:sticky; top:0; z-index:100; }
     .logo { font-family:Georgia,serif; font-size:22px; font-weight:normal; }
     .logo span { color:var(--accent); }
-    .nav-right { display:flex; gap:16px; align-items:center; font-size:14px; color:var(--muted); }
-    .rest-name { font-weight:600; color:var(--text); }
-    .btn-sm { background:none; border:1px solid var(--border); padding:7px 14px; border-radius:8px; cursor:pointer; font-size:13px; color:var(--muted); }
+    .nav-right { display:flex; gap:12px; align-items:center; font-size:14px; color:var(--muted); }
+    .rest-badge { font-weight:600; color:var(--text); background:var(--bg); border:1px solid var(--border); padding:6px 14px; border-radius:100px; font-size:13px; }
+    .btn-sm { background:none; border:1px solid var(--border); padding:7px 14px; border-radius:8px; cursor:pointer; font-size:13px; color:var(--muted); transition:all 0.15s; }
     .btn-sm:hover { border-color:var(--text); color:var(--text); }
+    .view-site-btn { color:var(--accent); border-color:var(--accent); }
 
-    .page-wrap { max-width: 1100px; margin: 0 auto; padding: 32px 24px 60px; }
+    /* TABS */
+    .tabs-bar { background:#fff; border-bottom:1px solid var(--border); padding:0 24px; }
+    .tabs-inner { max-width:1100px; margin:0 auto; display:flex; }
+    .tab-btn { padding:14px 22px; font-size:14px; font-weight:500; color:var(--muted); border:none; background:none; cursor:pointer; border-bottom:2px solid transparent; transition:all 0.2s; }
+    .tab-btn:hover { color:var(--text); }
+    .tab-btn.active { color:var(--accent); border-bottom-color:var(--accent); }
+
+    /* PAGE */
+    .page-wrap { max-width:1100px; margin:0 auto; padding:32px 24px 80px; }
+    .tab-panel { display:none; }
+    .tab-panel.active { display:block; }
 
     /* STATS */
-    .stats { display:grid; grid-template-columns:repeat(auto-fill, minmax(180px, 1fr)); gap:16px; margin-bottom:36px; }
+    .stats { display:grid; grid-template-columns:repeat(auto-fill, minmax(180px, 1fr)); gap:16px; margin-bottom:32px; }
     .stat-card { background:#fff; border:1px solid var(--border); border-radius:var(--radius); padding:20px; }
-    .stat-label { font-size:12px; text-transform:uppercase; letter-spacing:1px; color:var(--muted); margin-bottom:8px; }
+    .stat-label { font-size:11px; text-transform:uppercase; letter-spacing:1px; color:var(--muted); margin-bottom:8px; }
     .stat-value { font-family:Georgia,serif; font-size:32px; font-weight:normal; }
 
-    /* DATE PICKER */
-    .toolbar { display:flex; align-items:center; gap:16px; margin-bottom:24px; flex-wrap:wrap; }
+    /* TOOLBAR */
+    .toolbar { display:flex; align-items:center; gap:16px; margin-bottom:20px; flex-wrap:wrap; }
     .toolbar h2 { font-family:Georgia,serif; font-size:22px; font-weight:normal; flex:1; }
     .toolbar input[type=date] { padding:9px 14px; border:1px solid var(--border); border-radius:8px; font-size:14px; background:#fff; outline:none; }
-    .live-dot { width:8px; height:8px; border-radius:50%; background:#4caf50; display:inline-block; margin-right:6px; animation: pulse 2s infinite; }
+    .live-dot { width:8px; height:8px; border-radius:50%; background:#4caf50; display:inline-block; margin-right:6px; animation:pulse 2s infinite; }
     @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
 
-    /* BOOKINGS TABLE */
+    /* TABLE */
     .table-wrap { background:#fff; border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; }
     table { width:100%; border-collapse:collapse; }
-    thead th { padding:12px 16px; text-align:left; font-size:12px; text-transform:uppercase; letter-spacing:1px; color:var(--muted); border-bottom:1px solid var(--border); background:var(--bg); }
+    thead th { padding:12px 16px; text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:1px; color:var(--muted); border-bottom:1px solid var(--border); background:var(--bg); }
     tbody td { padding:14px 16px; font-size:14px; border-bottom:1px solid var(--border); }
     tbody tr:last-child td { border-bottom:none; }
-    tbody tr:hover td { background: #faf7f2; }
-
+    tbody tr:hover td { background:#faf7f2; }
     .status { padding:3px 10px; border-radius:100px; font-size:12px; font-weight:500; }
     .status-confirmed { background:#e8f5e9; color:var(--green); }
     .status-pending { background:#fff8e1; color:var(--amber); }
     .status-cancelled { background:#fce4ec; color:#c62828; }
     .status-completed { background:#e3f2fd; color:#1565c0; }
     .status-no_show { background:#f3e5f5; color:#6a1b9a; }
-
-    .action-btn { border:none; border-radius:6px; padding:5px 10px; font-size:12px; cursor:pointer; margin-right:4px; }
+    .action-btn { border:none; border-radius:6px; padding:5px 10px; font-size:12px; cursor:pointer; margin-right:4px; transition:opacity 0.15s; }
+    .action-btn:hover { opacity:0.8; }
     .btn-confirm { background:#e8f5e9; color:var(--green); }
     .btn-cancel { background:#fce4ec; color:#c62828; }
-
     .empty { text-align:center; padding:48px; color:var(--muted); }
+
+    /* SECTION CARDS */
+    .section-card { background:#fff; border:1px solid var(--border); border-radius:var(--radius); padding:24px; margin-bottom:24px; }
+    .section-title { font-family:Georgia,serif; font-size:20px; font-weight:normal; margin-bottom:20px; display:flex; align-items:center; justify-content:space-between; }
+    .section-title span { font-size:13px; font-weight:400; color:var(--muted); font-family:inherit; }
+
+    /* FORM FIELDS */
+    .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    @media(max-width:600px) { .form-grid { grid-template-columns:1fr; } }
+    .form-grid.full { grid-template-columns:1fr; }
+    .field { display:flex; flex-direction:column; gap:6px; }
+    .field label { font-size:12px; text-transform:uppercase; letter-spacing:0.5px; color:var(--muted); font-weight:500; }
+    .field input, .field textarea, .field select {
+      padding:11px 14px; border:1px solid var(--border); border-radius:10px;
+      font-size:14px; outline:none; background:#faf7f2; font-family:inherit;
+      transition:border-color 0.15s, background 0.15s;
+    }
+    .field input:focus, .field textarea:focus, .field select:focus { border-color:var(--text); background:#fff; }
+    .field textarea { resize:vertical; min-height:80px; }
+    .save-btn {
+      background:var(--accent); color:#fff; border:none;
+      padding:12px 28px; border-radius:10px; font-size:14px; font-weight:600;
+      cursor:pointer; transition:opacity 0.15s; margin-top:8px;
+    }
+    .save-btn:hover { opacity:0.85; }
+    .save-btn:disabled { opacity:0.5; cursor:not-allowed; }
+    .saved-msg { font-size:13px; color:var(--green); margin-top:8px; display:none; }
+
+    /* MENU MANAGEMENT */
+    .menu-cat-block { border:1px solid var(--border); border-radius:10px; margin-bottom:16px; overflow:hidden; }
+    .menu-cat-header { display:flex; align-items:center; padding:14px 16px; background:var(--bg); gap:12px; }
+    .menu-cat-name { font-weight:600; font-size:15px; flex:1; }
+    .icon-btn { background:none; border:none; cursor:pointer; font-size:16px; padding:4px; opacity:0.6; transition:opacity 0.15s; }
+    .icon-btn:hover { opacity:1; }
+    .menu-items-list { padding:0; }
+    .menu-item-row { display:flex; align-items:center; padding:12px 16px; border-top:1px solid var(--border); gap:12px; }
+    .menu-item-row:hover { background:#faf7f2; }
+    .item-info { flex:1; }
+    .item-info .name { font-size:14px; font-weight:500; }
+    .item-info .desc { font-size:12px; color:var(--muted); margin-top:2px; }
+    .item-price-tag { font-size:14px; font-weight:700; color:var(--text); margin-right:8px; white-space:nowrap; }
+    .add-cat-btn, .add-item-btn {
+      display:inline-flex; align-items:center; gap:6px;
+      padding:9px 18px; border:1px dashed var(--border); border-radius:8px;
+      font-size:13px; color:var(--muted); background:#fff; cursor:pointer;
+      transition:all 0.15s;
+    }
+    .add-cat-btn:hover, .add-item-btn:hover { border-color:var(--accent); color:var(--accent); }
+
+    /* MODAL */
+    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:500; align-items:center; justify-content:center; }
+    .modal-overlay.open { display:flex; }
+    .modal { background:#fff; border-radius:var(--radius); padding:28px; width:100%; max-width:480px; max-height:90vh; overflow-y:auto; box-shadow:0 16px 48px rgba(0,0,0,0.18); }
+    .modal h3 { font-family:Georgia,serif; font-size:20px; font-weight:normal; margin-bottom:20px; }
+    .modal-actions { display:flex; gap:10px; margin-top:20px; }
+    .modal-actions button { flex:1; padding:11px; border-radius:8px; font-size:14px; cursor:pointer; border:none; font-weight:500; }
+    .btn-primary { background:var(--accent); color:#fff; }
+    .btn-secondary { background:var(--bg); color:var(--muted); border:1px solid var(--border) !important; }
+    .btn-danger { background:#fce4ec; color:#c62828; }
+    .checkbox-row { display:flex; align-items:center; gap:8px; margin-bottom:12px; font-size:14px; }
+    .checkbox-row input[type=checkbox] { width:16px; height:16px; cursor:pointer; }
+
+    /* OPENING HOURS */
+    .hours-grid { display:flex; flex-direction:column; gap:0; }
+    .hours-row { display:grid; grid-template-columns:120px 1fr 1fr 80px; gap:16px; align-items:center; padding:14px 0; border-bottom:1px solid var(--border); }
+    .hours-row:last-child { border-bottom:none; }
+    .day-name { font-size:14px; font-weight:500; }
+    .hours-row input[type=time] { padding:9px 12px; border:1px solid var(--border); border-radius:8px; font-size:14px; outline:none; background:var(--bg); }
+    .hours-row input[type=time]:focus { border-color:var(--text); background:#fff; }
+    .closed-toggle { display:flex; align-items:center; gap:6px; font-size:13px; color:var(--muted); }
+    .closed-toggle input { cursor:pointer; width:15px; height:15px; }
+    @media(max-width:600px) { .hours-row { grid-template-columns:1fr 1fr; gap:8px; } .day-name { grid-column:1/-1; } }
 
     footer { text-align:center; padding:40px 24px; color:var(--muted); font-size:13px; border-top:1px solid var(--border); }
     footer strong { color:var(--text); font-family:Georgia,serif; }
@@ -64,47 +150,173 @@
 <nav>
   <a href="index.html" class="logo">Da <span>Mesa</span></a>
   <div class="nav-right">
-    <span class="rest-name" id="nav-rest-name">A carregar...</span>
+    <span class="rest-badge" id="nav-rest-name">A carregar...</span>
+    <a href="#" id="view-site-link" class="btn-sm view-site-btn" target="_blank">Ver página pública ↗</a>
     <button class="btn-sm" onclick="handleSignOut()">Sair</button>
   </div>
 </nav>
 
-<div class="page-wrap">
-  <div class="stats" id="stats-row">
-    <div class="stat-card"><div class="stat-label">Hoje</div><div class="stat-value" id="stat-today">—</div></div>
-    <div class="stat-card"><div class="stat-label">Esta semana</div><div class="stat-value" id="stat-week">—</div></div>
-    <div class="stat-card"><div class="stat-label">Confirmadas</div><div class="stat-value" id="stat-confirmed">—</div></div>
-    <div class="stat-card"><div class="stat-label">Pessoas hoje</div><div class="stat-value" id="stat-covers">—</div></div>
-  </div>
-
-  <div class="toolbar">
-    <h2><span class="live-dot"></span>Reservas</h2>
-    <input type="date" id="date-picker" onchange="loadBookings()" />
-  </div>
-
-  <div class="table-wrap">
-    <table>
-      <thead>
-        <tr>
-          <th>Hora</th>
-          <th>Nome</th>
-          <th>Pessoas</th>
-          <th>Contacto</th>
-          <th>Pedidos</th>
-          <th>Estado</th>
-          <th>Ações</th>
-        </tr>
-      </thead>
-      <tbody id="bookings-tbody">
-        <tr><td colspan="7" class="empty">A carregar...</td></tr>
-      </tbody>
-    </table>
+<div class="tabs-bar">
+  <div class="tabs-inner">
+    <button class="tab-btn active" data-tab="reservas">Reservas</button>
+    <button class="tab-btn" data-tab="ementa">Ementa</button>
+    <button class="tab-btn" data-tab="horarios">Horários</button>
+    <button class="tab-btn" data-tab="definicoes">Definições</button>
   </div>
 </div>
 
-<footer>
-  <strong>Da Mesa</strong> — Painel do Restaurante
-</footer>
+<div class="page-wrap">
+
+  <!-- ── RESERVAS ─────────────────────────────── -->
+  <div class="tab-panel active" id="tab-reservas">
+    <div class="stats">
+      <div class="stat-card"><div class="stat-label">Hoje</div><div class="stat-value" id="stat-today">—</div></div>
+      <div class="stat-card"><div class="stat-label">Esta semana</div><div class="stat-value" id="stat-week">—</div></div>
+      <div class="stat-card"><div class="stat-label">Confirmadas</div><div class="stat-value" id="stat-confirmed">—</div></div>
+      <div class="stat-card"><div class="stat-label">Pessoas hoje</div><div class="stat-value" id="stat-covers">—</div></div>
+    </div>
+    <div class="toolbar">
+      <h2><span class="live-dot"></span>Reservas</h2>
+      <input type="date" id="date-picker" onchange="loadBookings()" />
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Hora</th><th>Nome</th><th>Pessoas</th>
+            <th>Contacto</th><th>Pedidos</th><th>Estado</th><th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="bookings-tbody">
+          <tr><td colspan="7" class="empty">A carregar...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── EMENTA ──────────────────────────────── -->
+  <div class="tab-panel" id="tab-ementa">
+    <div class="section-card">
+      <div class="section-title">
+        Ementa
+        <button class="add-cat-btn" onclick="openCatModal()">+ Adicionar categoria</button>
+      </div>
+      <div id="menu-editor">
+        <p style="color:var(--muted)">A carregar ementa...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── HORÁRIOS ────────────────────────────── -->
+  <div class="tab-panel" id="tab-horarios">
+    <div class="section-card">
+      <div class="section-title">Horário de Funcionamento</div>
+      <div class="hours-grid" id="hours-grid">
+        <p style="color:var(--muted)">A carregar horários...</p>
+      </div>
+      <br/>
+      <button class="save-btn" onclick="saveHours()">Guardar horário</button>
+      <div class="saved-msg" id="hours-saved">✓ Horário guardado</div>
+    </div>
+  </div>
+
+  <!-- ── DEFINIÇÕES ──────────────────────────── -->
+  <div class="tab-panel" id="tab-definicoes">
+
+    <!-- Basic info -->
+    <div class="section-card">
+      <div class="section-title">Informação do restaurante</div>
+      <div class="form-grid full" style="margin-bottom:16px;">
+        <div class="field">
+          <label>Descrição</label>
+          <textarea id="def-description" placeholder="Descreve o teu restaurante..."></textarea>
+        </div>
+      </div>
+      <div class="form-grid">
+        <div class="field"><label>Tipo de cozinha</label><input type="text" id="def-cuisine" placeholder="Ex: Portuguesa, Italiana..." /></div>
+        <div class="field"><label>Preço médio</label>
+          <select id="def-price">
+            <option value="€">€ — Económico</option>
+            <option value="€€">€€ — Moderado</option>
+            <option value="€€€">€€€ — Sofisticado</option>
+            <option value="€€€€">€€€€ — Fine dining</option>
+          </select>
+        </div>
+        <div class="field"><label>Capacidade total</label><input type="number" id="def-capacity" placeholder="Ex: 60" min="1" /></div>
+        <div class="field"><label>Morada</label><input type="text" id="def-address" placeholder="Rua, número, código postal" /></div>
+      </div>
+    </div>
+
+    <!-- Contact -->
+    <div class="section-card">
+      <div class="section-title">Contactos</div>
+      <div class="form-grid">
+        <div class="field"><label>Telefone</label><input type="tel" id="def-phone" placeholder="+351 2XX XXX XXX" /></div>
+        <div class="field"><label>Email do restaurante</label><input type="email" id="def-email" placeholder="reservas@restaurante.pt" /></div>
+        <div class="field"><label>Website</label><input type="url" id="def-website" placeholder="https://www.restaurante.pt" /></div>
+        <div class="field"><label>Link Google Maps</label><input type="url" id="def-maps" placeholder="https://maps.google.com/..." /></div>
+      </div>
+    </div>
+
+    <!-- Social -->
+    <div class="section-card">
+      <div class="section-title">Redes Sociais</div>
+      <div class="form-grid">
+        <div class="field"><label>Instagram</label><input type="text" id="def-instagram" placeholder="@restaurante ou URL completo" /></div>
+        <div class="field"><label>Facebook</label><input type="text" id="def-facebook" placeholder="facebook.com/restaurante ou URL" /></div>
+      </div>
+    </div>
+
+    <!-- Cover image -->
+    <div class="section-card">
+      <div class="section-title">Imagem de capa</div>
+      <div class="form-grid full">
+        <div class="field"><label>URL da imagem de capa</label><input type="url" id="def-cover" placeholder="https://..." /></div>
+      </div>
+      <div id="cover-preview" style="margin-top:12px;display:none;">
+        <img id="cover-preview-img" src="" alt="Preview" style="width:100%;max-height:200px;object-fit:cover;border-radius:10px;border:1px solid var(--border);" />
+      </div>
+    </div>
+
+    <button class="save-btn" onclick="saveDefinicoes()">Guardar definições</button>
+    <div class="saved-msg" id="def-saved">✓ Definições guardadas</div>
+  </div>
+
+</div><!-- /page-wrap -->
+
+<!-- MODALS -->
+<!-- Category modal -->
+<div class="modal-overlay" id="cat-modal">
+  <div class="modal">
+    <h3 id="cat-modal-title">Nova categoria</h3>
+    <div class="field"><label>Nome da categoria</label><input type="text" id="cat-name-input" placeholder="Ex: Entradas, Pratos principais..." /></div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal('cat-modal')">Cancelar</button>
+      <button class="btn-primary" onclick="saveCat()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Item modal -->
+<div class="modal-overlay" id="item-modal">
+  <div class="modal">
+    <h3 id="item-modal-title">Novo prato</h3>
+    <input type="hidden" id="item-cat-id" />
+    <input type="hidden" id="item-id" />
+    <div class="field" style="margin-bottom:12px;"><label>Nome do prato</label><input type="text" id="item-name-input" placeholder="Ex: Bacalhau à Brás" /></div>
+    <div class="field" style="margin-bottom:12px;"><label>Descrição (opcional)</label><textarea id="item-desc-input" placeholder="Ingredientes, notas..."></textarea></div>
+    <div class="field" style="margin-bottom:12px;"><label>Preço (€)</label><input type="number" id="item-price-input" placeholder="0.00" step="0.01" min="0" /></div>
+    <div class="checkbox-row"><input type="checkbox" id="item-veg" /><label for="item-veg">Vegetariano</label></div>
+    <div class="checkbox-row"><input type="checkbox" id="item-vegan" /><label for="item-vegan">Vegan</label></div>
+    <div class="checkbox-row"><input type="checkbox" id="item-available" checked /><label for="item-available">Disponível</label></div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal('item-modal')">Cancelar</button>
+      <button class="btn-primary" onclick="saveItem()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<footer><strong>Da Mesa</strong> — Painel do Restaurante</footer>
 
 <script type="module">
   import { guardRoute, signOut } from '../src/js/auth.js'
@@ -115,38 +327,65 @@
   const profile = await guardRoute()
   if (!profile) return
 
-  // Get this owner's restaurant
-  const { data: restaurant } = await supabase
-    .from('restaurants')
-    .select('*')
-    .eq('owner_id', profile.id)
-    .single()
+  // ── SUPERADMIN IMPERSONATION ───────────────────────────────
+  let restaurant = null
+  const _imp = localStorage.getItem('damesa_impersonate')
+  const impersonate = _imp && profile.role === 'super_admin' ? JSON.parse(_imp) : null
+
+  if (impersonate) {
+    // Show impersonation banner
+    const banner = document.createElement('div')
+    banner.style.cssText = 'background:#1c1612;color:#fff;padding:10px 24px;display:flex;align-items:center;justify-content:space-between;font-size:13px;gap:16px;'
+    banner.innerHTML = `
+      <span>👁 A simular acesso como: <strong>${impersonate.name}</strong></span>
+      <button onclick="localStorage.removeItem('damesa_impersonate'); window.location.href='superadmin.html'"
+        style="background:#c0392b;color:#fff;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;">
+        ← Voltar ao Admin
+      </button>
+    `
+    document.body.insertBefore(banner, document.body.firstChild)
+
+    const { data } = await supabase.from('restaurants').select('*').eq('id', impersonate.id).single()
+    restaurant = data
+  } else {
+    const { data } = await supabase.from('restaurants').select('*').eq('owner_id', profile.id).single()
+    restaurant = data
+  }
 
   if (!restaurant) {
-    document.querySelector('.page-wrap').innerHTML = '<p style="color:var(--muted);padding:40px 0">Nenhum restaurante associado à tua conta. Contacta o suporte.</p>'
+    document.querySelector('.page-wrap').innerHTML = '<p style="color:var(--muted);padding:40px">Nenhum restaurante associado. Contacta o suporte.</p>'
     return
   }
 
   document.getElementById('nav-rest-name').textContent = restaurant.name
+  const _citySlug = (city) => (city ?? 'portugal').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-')
+  document.getElementById('view-site-link').href = `/restaurante/${_citySlug(restaurant.city)}/${restaurant.slug}`
   document.title = `${restaurant.name} — Da Mesa`
 
-  // Set date picker to today
+  // ── TABS ──────────────────────────────────────────────────
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'))
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'))
+      btn.classList.add('active')
+      document.getElementById('tab-' + btn.dataset.tab).classList.add('active')
+    })
+  })
+
+  // ── RESERVAS ──────────────────────────────────────────────
   const today = new Date().toISOString().split('T')[0]
   document.getElementById('date-picker').value = today
 
-  // Load stats
   const { stats } = await getRestaurantStats(restaurant.id, 7)
   if (stats) {
     document.getElementById('stat-week').textContent = stats.total
     document.getElementById('stat-confirmed').textContent = stats.confirmed
   }
 
-  // Load today bookings for stat cards
-  const { bookings: todayBookings } = await getRestaurantBookings(restaurant.id, today)
-  document.getElementById('stat-today').textContent = todayBookings?.length ?? 0
-  document.getElementById('stat-covers').textContent = todayBookings?.reduce((s, b) => s + b.party_size, 0) ?? 0
+  const { bookings: todayB } = await getRestaurantBookings(restaurant.id, today)
+  document.getElementById('stat-today').textContent = todayB?.length ?? 0
+  document.getElementById('stat-covers').textContent = todayB?.reduce((s, b) => s + b.party_size, 0) ?? 0
 
-  // Load bookings for selected date
   window.loadBookings = async function() {
     const date = document.getElementById('date-picker').value
     const { bookings } = await getRestaurantBookings(restaurant.id, date)
@@ -155,10 +394,7 @@
 
   function renderBookings(bookings) {
     const tbody = document.getElementById('bookings-tbody')
-    if (!bookings.length) {
-      tbody.innerHTML = '<tr><td colspan="7" class="empty">Sem reservas para este dia.</td></tr>'
-      return
-    }
+    if (!bookings.length) { tbody.innerHTML = '<tr><td colspan="7" class="empty">Sem reservas para este dia.</td></tr>'; return }
     tbody.innerHTML = bookings.map(b => `
       <tr id="row-${b.id}">
         <td><strong>${b.booking_time?.slice(0,5)}</strong></td>
@@ -175,19 +411,263 @@
     `).join('')
   }
 
-  window.updateStatus = async function(bookingId, status) {
-    await updateBookingStatus(bookingId, status)
-    loadBookings()
-  }
+  window.updateStatus = async function(id, status) { await updateBookingStatus(id, status); loadBookings() }
 
   function translateStatus(s) {
     return { pending:'Pendente', confirmed:'Confirmada', cancelled:'Cancelada', completed:'Concluída', no_show:'Não apareceu' }[s] ?? s
   }
 
-  // Real-time updates
   subscribeToBookings(restaurant.id, () => loadBookings())
-
   await loadBookings()
+
+  // ── EMENTA ────────────────────────────────────────────────
+  let menuData = []
+  let editingCatId = null
+  let editingItemId = null
+
+  async function loadMenu() {
+    const { data: cats } = await supabase
+      .from('menu_categories').select('*, menu_items(*)')
+      .eq('restaurant_id', restaurant.id).order('sort_order')
+    menuData = cats ?? []
+    renderMenu()
+  }
+  await loadMenu()
+
+  function renderMenu() {
+    const el = document.getElementById('menu-editor')
+    if (!menuData.length) {
+      el.innerHTML = '<p style="color:var(--muted);margin-bottom:16px;">Nenhuma categoria ainda.</p>'
+      return
+    }
+    el.innerHTML = menuData.map(cat => `
+      <div class="menu-cat-block">
+        <div class="menu-cat-header">
+          <span class="menu-cat-name">${cat.name}</span>
+          <button class="icon-btn" onclick="openItemModal('${cat.id}')">+ Prato</button>
+          <button class="icon-btn" onclick="openCatModal('${cat.id}','${cat.name}')">✏️</button>
+          <button class="icon-btn" onclick="deleteCat('${cat.id}')">🗑️</button>
+        </div>
+        <div class="menu-items-list">
+          ${(cat.menu_items ?? []).length === 0 ? '<div style="padding:12px 16px;font-size:13px;color:var(--muted)">Sem pratos ainda.</div>' : ''}
+          ${(cat.menu_items ?? []).map(item => `
+            <div class="menu-item-row">
+              <div class="item-info">
+                <div class="name">${item.name}${!item.is_available ? ' <span style="font-size:11px;color:#c62828;">(indisponível)</span>' : ''}</div>
+                ${item.description ? `<div class="desc">${item.description}</div>` : ''}
+              </div>
+              ${item.price ? `<div class="item-price-tag">${Number(item.price).toFixed(2)} €</div>` : ''}
+              <button class="icon-btn" onclick="openItemModal('${cat.id}', ${JSON.stringify(item).replace(/"/g,'&quot;')})">✏️</button>
+              <button class="icon-btn" onclick="deleteItem('${item.id}')">🗑️</button>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `).join('')
+  }
+
+  // Category modal
+  window.openCatModal = function(id, name) {
+    editingCatId = id ?? null
+    document.getElementById('cat-modal-title').textContent = id ? 'Editar categoria' : 'Nova categoria'
+    document.getElementById('cat-name-input').value = name ?? ''
+    document.getElementById('cat-modal').classList.add('open')
+  }
+
+  window.saveCat = async function() {
+    const name = document.getElementById('cat-name-input').value.trim()
+    if (!name) return
+    if (editingCatId) {
+      await supabase.from('menu_categories').update({ name }).eq('id', editingCatId)
+    } else {
+      await supabase.from('menu_categories').insert({ restaurant_id: restaurant.id, name, sort_order: menuData.length })
+    }
+    closeModal('cat-modal')
+    await loadMenu()
+  }
+
+  window.deleteCat = async function(id) {
+    if (!confirm('Eliminar categoria e todos os pratos?')) return
+    await supabase.from('menu_categories').delete().eq('id', id)
+    await loadMenu()
+  }
+
+  // Item modal
+  window.openItemModal = function(catId, item) {
+    editingItemId = item?.id ?? null
+    document.getElementById('item-modal-title').textContent = item ? 'Editar prato' : 'Novo prato'
+    document.getElementById('item-cat-id').value = catId
+    document.getElementById('item-id').value = item?.id ?? ''
+    document.getElementById('item-name-input').value = item?.name ?? ''
+    document.getElementById('item-desc-input').value = item?.description ?? ''
+    document.getElementById('item-price-input').value = item?.price ?? ''
+    document.getElementById('item-veg').checked = item?.is_vegetarian ?? false
+    document.getElementById('item-vegan').checked = item?.is_vegan ?? false
+    document.getElementById('item-available').checked = item?.is_available ?? true
+    document.getElementById('item-modal').classList.add('open')
+  }
+
+  window.saveItem = async function() {
+    const name = document.getElementById('item-name-input').value.trim()
+    if (!name) return
+    const payload = {
+      category_id: document.getElementById('item-cat-id').value,
+      name,
+      description: document.getElementById('item-desc-input').value.trim() || null,
+      price: parseFloat(document.getElementById('item-price-input').value) || null,
+      is_vegetarian: document.getElementById('item-veg').checked,
+      is_vegan: document.getElementById('item-vegan').checked,
+      is_available: document.getElementById('item-available').checked
+    }
+    if (editingItemId) {
+      await supabase.from('menu_items').update(payload).eq('id', editingItemId)
+    } else {
+      await supabase.from('menu_items').insert(payload)
+    }
+    closeModal('item-modal')
+    await loadMenu()
+  }
+
+  window.deleteItem = async function(id) {
+    if (!confirm('Eliminar este prato?')) return
+    await supabase.from('menu_items').delete().eq('id', id)
+    await loadMenu()
+  }
+
+  window.closeModal = function(id) {
+    document.getElementById(id).classList.remove('open')
+  }
+
+  // Close modal on overlay click
+  document.querySelectorAll('.modal-overlay').forEach(m => {
+    m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open') })
+  })
+
+  // ── HORÁRIOS ──────────────────────────────────────────────
+  const DAYS = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado']
+  let hoursData = []
+
+  async function loadHours() {
+    const { data } = await supabase
+      .from('opening_hours').select('*')
+      .eq('restaurant_id', restaurant.id).order('day_of_week')
+    hoursData = data ?? []
+    renderHours()
+  }
+  await loadHours()
+
+  function renderHours() {
+    const grid = document.getElementById('hours-grid')
+    grid.innerHTML = DAYS.map((day, i) => {
+      const h = hoursData.find(d => d.day_of_week === i)
+      const closed = h?.is_closed ?? false
+      return `
+        <div class="hours-row" id="hours-row-${i}">
+          <div class="day-name">${day}</div>
+          <div class="field">
+            <label style="font-size:11px;">Abre</label>
+            <input type="time" id="open-${i}" value="${h?.open_time?.slice(0,5) ?? '12:00'}" ${closed ? 'disabled' : ''} />
+          </div>
+          <div class="field">
+            <label style="font-size:11px;">Fecha</label>
+            <input type="time" id="close-${i}" value="${h?.close_time?.slice(0,5) ?? '23:00'}" ${closed ? 'disabled' : ''} />
+          </div>
+          <div class="closed-toggle">
+            <input type="checkbox" id="closed-${i}" ${closed ? 'checked' : ''} onchange="toggleClosed(${i})" />
+            <label for="closed-${i}">Fechado</label>
+          </div>
+        </div>
+      `
+    }).join('')
+  }
+
+  window.toggleClosed = function(i) {
+    const closed = document.getElementById(`closed-${i}`).checked
+    document.getElementById(`open-${i}`).disabled = closed
+    document.getElementById(`close-${i}`).disabled = closed
+  }
+
+  window.saveHours = async function() {
+    const btn = document.querySelector('.save-btn')
+    btn.disabled = true; btn.textContent = 'A guardar...'
+
+    for (let i = 0; i < 7; i++) {
+      const is_closed = document.getElementById(`closed-${i}`).checked
+      const open_time = document.getElementById(`open-${i}`).value || null
+      const close_time = document.getElementById(`close-${i}`).value || null
+      const existing = hoursData.find(d => d.day_of_week === i)
+
+      if (existing) {
+        await supabase.from('opening_hours').update({ is_closed, open_time, close_time }).eq('id', existing.id)
+      } else {
+        await supabase.from('opening_hours').insert({ restaurant_id: restaurant.id, day_of_week: i, is_closed, open_time, close_time })
+      }
+    }
+
+    btn.disabled = false; btn.textContent = 'Guardar horário'
+    const msg = document.getElementById('hours-saved')
+    msg.style.display = 'block'
+    setTimeout(() => { msg.style.display = 'none' }, 3000)
+    await loadHours()
+  }
+
+  // ── DEFINIÇÕES ────────────────────────────────────────────
+  function populateDefinicoes(r) {
+    document.getElementById('def-description').value = r.description ?? ''
+    document.getElementById('def-cuisine').value = r.cuisine_type ?? ''
+    document.getElementById('def-price').value = r.price_range ?? '€€'
+    document.getElementById('def-capacity').value = r.capacity ?? ''
+    document.getElementById('def-address').value = r.address ?? ''
+    document.getElementById('def-phone').value = r.phone ?? ''
+    document.getElementById('def-email').value = r.email ?? ''
+    document.getElementById('def-website').value = r.website ?? ''
+    document.getElementById('def-maps').value = r.google_maps_url ?? ''
+    document.getElementById('def-instagram').value = r.instagram ?? ''
+    document.getElementById('def-facebook').value = r.facebook ?? ''
+    document.getElementById('def-cover').value = r.cover_image ?? ''
+    updateCoverPreview(r.cover_image)
+  }
+  populateDefinicoes(restaurant)
+
+  document.getElementById('def-cover').addEventListener('input', e => updateCoverPreview(e.target.value))
+
+  function updateCoverPreview(url) {
+    const wrap = document.getElementById('cover-preview')
+    const img = document.getElementById('cover-preview-img')
+    if (url) { img.src = url; wrap.style.display = 'block' }
+    else { wrap.style.display = 'none' }
+  }
+
+  window.saveDefinicoes = async function() {
+    const btn = document.querySelector('#tab-definicoes .save-btn')
+    btn.disabled = true; btn.textContent = 'A guardar...'
+
+    const { error } = await supabase.from('restaurants').update({
+      description: document.getElementById('def-description').value.trim() || null,
+      cuisine_type: document.getElementById('def-cuisine').value.trim() || null,
+      price_range: document.getElementById('def-price').value,
+      capacity: parseInt(document.getElementById('def-capacity').value) || null,
+      address: document.getElementById('def-address').value.trim() || null,
+      phone: document.getElementById('def-phone').value.trim() || null,
+      email: document.getElementById('def-email').value.trim() || null,
+      website: document.getElementById('def-website').value.trim() || null,
+      google_maps_url: document.getElementById('def-maps').value.trim() || null,
+      instagram: document.getElementById('def-instagram').value.trim() || null,
+      facebook: document.getElementById('def-facebook').value.trim() || null,
+      cover_image: document.getElementById('def-cover').value.trim() || null,
+      updated_at: new Date().toISOString()
+    }).eq('id', restaurant.id)
+
+    btn.disabled = false; btn.textContent = 'Guardar definições'
+
+    if (!error) {
+      const msg = document.getElementById('def-saved')
+      msg.style.display = 'block'
+      setTimeout(() => { msg.style.display = 'none' }, 3000)
+    } else {
+      alert('Erro ao guardar: ' + error.message)
+    }
+  }
 
   window.handleSignOut = signOut
 </script>
