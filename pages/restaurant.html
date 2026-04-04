@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <base href="/" />
   <title>Restaurante — Da Mesa</title>
   <meta name="description" content="Reserva a tua mesa online. Sem taxas de reserva." />
   <meta name="robots" content="index, follow" />
@@ -450,7 +451,7 @@
   <a href="index.html" class="logo">Da <span>Mesa</span></a>
   <div class="nav-links">
     <a href="restaurantes.html" class="nav-back">← Restaurantes</a>
-    <a href="login.html" class="nav-cta">Entrar</a>
+    <a href="login.html" class="nav-cta" id="nav-auth-btn">Entrar</a>
   </div>
 </nav>
 
@@ -635,11 +636,11 @@
 </footer>
 
 <script type="module">
-  import { getRestaurantBySlug, getAvailableSlots } from '../src/js/restaurants.js'
-  import { createBooking } from '../src/js/bookings.js'
-  import { trackEvent } from '../src/js/analytics.js'
-  import { initCookieBanner } from '../src/js/cookies.js'
-  import { supabase } from '../src/js/supabase.js'
+  import { getRestaurantBySlug, getAvailableSlots } from '/src/js/restaurants.js'
+  import { createBooking } from '/src/js/bookings.js'
+  import { trackEvent } from '/src/js/analytics.js'
+  import { initCookieBanner } from '/src/js/cookies.js'
+  import { supabase } from '/src/js/supabase.js'
   initCookieBanner()
 
   const slug = new URLSearchParams(window.location.search).get('slug')
@@ -760,7 +761,32 @@
     el.classList.add('sel')
   }
 
+  // Check if user is logged in — update nav
+  const { data: { session: _session } } = await supabase.auth.getSession()
+  if (_session) {
+    const authBtn = document.getElementById('nav-auth-btn')
+    authBtn.textContent = _session.user.email?.split('@')[0] ?? 'Conta'
+    authBtn.href = '/dashboard.html'
+  }
+
+  // Pre-fill booking form if logged in
+  if (_session?.user) {
+    const { data: _profile } = await supabase.from('profiles').select('full_name, email').eq('id', _session.user.id).single()
+    if (_profile) {
+      const nameEl = document.getElementById('diner-name')
+      const emailEl = document.getElementById('diner-email')
+      if (nameEl && _profile.full_name) nameEl.value = _profile.full_name
+      if (emailEl && _profile.email) emailEl.value = _profile.email
+    }
+  }
+
   window.goS = function(n) {
+    // Gate step 2 (contact details) behind login
+    if (n === 2 && !_session) {
+      const returnUrl = encodeURIComponent(window.location.href)
+      window.location.href = `/login.html?return=${returnUrl}`
+      return
+    }
     document.querySelectorAll('.step').forEach(s => s.classList.remove('active'))
     document.getElementById(`bs${n}`).classList.add('active')
   }

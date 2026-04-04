@@ -231,52 +231,87 @@
 <footer><strong>Da Mesa</strong> — Painel Super Admin</footer>
 
 <script type="module">
-  import { guardRoute, signOut } from '../src/js/auth.js'
-  import { getPlatformStats } from '../src/js/analytics.js'
-  import { supabase } from '../src/js/supabase.js'
+  import { guardRoute, signOut } from '/src/js/auth.js'
+  import { supabase } from '/src/js/supabase.js'
 
+  // ── SECONDARY PIN LOCK (runs before auth, synchronous) ────
+  const ADMIN_PIN = 'DaMesa@2026'
+  const PIN_KEY = 'damesa_admin_unlocked'
+  if (sessionStorage.getItem(PIN_KEY) !== '1') {
+    const pin = prompt('🔐 Da Mesa Admin — Palavra-passe:')
+    if (pin !== ADMIN_PIN) {
+      document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:Georgia,serif;color:#7a6a5e;font-size:18px;">Acesso negado.</div>'
+      throw new Error('PIN inválido')
+    }
+    sessionStorage.setItem(PIN_KEY, '1')
+  }
+
+  // ── AUTH GUARD ────────────────────────────────────────────
   const profile = await guardRoute()
-  if (!profile || profile.role !== 'super_admin') {
-    window.location.href = 'dashboard.html'
+  if (!profile) return  // guardRoute handles redirect
+
+  if (profile.role !== 'super_admin') {
+    window.location.replace('/dashboard.html')
     return
   }
 
   document.getElementById('nav-name').textContent = profile.full_name ?? profile.email
 
-  // Platform stats
-  const { totalRestaurants, totalBookings, activeOwners } = await getPlatformStats()
-  document.getElementById('s-restaurants').textContent = totalRestaurants ?? 0
-  document.getElementById('s-bookings').textContent = totalBookings ?? 0
-  document.getElementById('s-owners').textContent = activeOwners ?? 0
+  // ── PLATFORM STATS ────────────────────────────────────────
+  async function loadStats() {
+    try {
+      const [r1, r2, r3, r4] = await Promise.all([
+        supabase.from('restaurants').select('*', { count: 'exact', head: true }).eq('status', 'active'),
+        supabase.from('bookings').select('*', { count: 'exact', head: true }),
+        supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'restaurant_owner'),
+        supabase.from('profiles').select('*', { count: 'exact', head: true })
+      ])
+      document.getElementById('s-restaurants').textContent = r1.count ?? 0
+      document.getElementById('s-bookings').textContent = r2.count ?? 0
+      document.getElementById('s-owners').textContent = r3.count ?? 0
+      document.getElementById('s-users').textContent = r4.count ?? 0
+    } catch(e) { console.warn('Stats error:', e) }
+  }
+  loadStats()
 
-  const { count: totalUsers } = await supabase.from('profiles').select('*', { count: 'exact', head: true })
-  document.getElementById('s-users').textContent = totalUsers ?? 0
-
-  // Restaurants
+  // ── RESTAURANTS ───────────────────────────────────────────
   let allRestaurants = []
   async function loadRestaurants() {
-    const { data } = await supabase
-      .from('restaurants')
-      .select('*, profiles(full_name, email)')
-      .order('created_at', { ascending: false })
-    allRestaurants = data ?? []
-    renderRestaurants(allRestaurants)
+    document.getElementById('restaurants-tbody').innerHTML =
+      '<tr><td colspan="7" style="padding:32px;text-align:center;color:var(--muted)">A carregar...</td></tr>'
+    try {
+      const { data, error } = await supabase
+        .from('restaurants')
+        .select('id, name, slug, cuisine_type, status, subscription, owner_id, city, created_at')
+        .order('created_at', { ascending: false })
+      if (error) throw error
+      allRestaurants = data ?? []
+      renderRestaurants(allRestaurants)
+    } catch(e) {
+      document.getElementById('restaurants-tbody').innerHTML =
+        `<tr><td colspan="7" style="padding:32px;text-align:center;color:var(--accent)">Erro: ${e.message}</td></tr>`
+    }
   }
 
   function renderRestaurants(list) {
+    if (!list.length) {
+      document.getElementById('restaurants-tbody').innerHTML =
+        '<tr><td colspan="7" style="padding:32px;text-align:center;color:var(--muted)">Nenhum restaurante.</td></tr>'
+      return
+    }
     document.getElementById('restaurants-tbody').innerHTML = list.map(r => `
       <tr>
-        <td><strong>${r.name}</strong><br><span style="font-size:11px;color:var(--muted)">${r.slug}</span></td>
+        <td><strong>${r.name}</strong><br><span style="font-size:11px;color:var(--muted)">${r.city ?? ''} · ${r.slug}</span></td>
         <td>${r.cuisine_type ?? '—'}</td>
-        <td style="font-size:12px;color:var(--muted)">${r.profiles?.full_name ?? '—'}<br>${r.profiles?.email ?? ''}</td>
-        <td><span class="status status-${r.status}">${r.status}</span></td>
+        <td style="font-size:12px;color:var(--muted)">${r.owner_id ? r.owner_id.slice(0,8)+'…' : '—'}</td>
+        <td><span class="status status-${r.status ?? 'pending'}">${r.status ?? 'pending'}</span></td>
         <td><span class="sub-${r.subscription ?? 'free'}">${r.subscription ?? 'free'}</span></td>
         <td>
           ${r.status !== 'active' ? `<button class="action-btn btn-activate" onclick="setRestStatus('${r.id}','active')">Ativar</button>` : ''}
           ${r.status !== 'suspended' ? `<button class="action-btn btn-suspend" onclick="setRestStatus('${r.id}','suspended')">Suspender</button>` : ''}
         </td>
         <td>
-          <button class="btn-enter" onclick="enterAs('${r.id}','${r.name.replace(/'/g,"\\'")}')">Entrar como →</button>
+          <button class="btn-enter" onclick="enterAs('${r.id}','${r.name.replace(/'/g,"\\'").replace(/"/g,'&quot;')}')">Entrar como →</button>
         </td>
       </tr>
     `).join('')
@@ -294,41 +329,64 @@
     await loadRestaurants()
   }
 
-  // Bookings
+  // ── BOOKINGS ──────────────────────────────────────────────
   async function loadAllBookings() {
-    const { data } = await supabase
-      .from('bookings')
-      .select('*, restaurants(name)')
-      .order('booking_date', { ascending: false })
-      .limit(200)
-    document.getElementById('bookings-tbody').innerHTML = (data ?? []).map(b => `
-      <tr>
-        <td>${b.booking_date}</td>
-        <td>${b.booking_time?.slice(0,5)}</td>
-        <td>${b.restaurants?.name ?? '—'}</td>
-        <td style="font-size:12px">${b.diner_name}<br><span style="color:var(--muted)">${b.diner_email}</span></td>
-        <td>${b.party_size}</td>
-        <td><span class="status status-${b.status}">${b.status}</span></td>
-        <td style="font-size:11px;color:var(--muted)">#${b.reference_code}</td>
-      </tr>
-    `).join('')
+    document.getElementById('bookings-tbody').innerHTML =
+      '<tr><td colspan="7" style="padding:32px;text-align:center;color:var(--muted)">A carregar...</td></tr>'
+    try {
+      const { data, error } = await supabase
+        .from('bookings')
+        .select('*, restaurants(name)')
+        .order('booking_date', { ascending: false })
+        .limit(200)
+      if (error) throw error
+      if (!data?.length) {
+        document.getElementById('bookings-tbody').innerHTML =
+          '<tr><td colspan="7" style="padding:32px;text-align:center;color:var(--muted)">Nenhuma reserva ainda.</td></tr>'
+        return
+      }
+      document.getElementById('bookings-tbody').innerHTML = data.map(b => `
+        <tr>
+          <td>${b.booking_date}</td>
+          <td>${(b.booking_time ?? '').slice(0,5)}</td>
+          <td>${b.restaurants?.name ?? '—'}</td>
+          <td style="font-size:12px">${b.diner_name ?? '—'}<br><span style="color:var(--muted)">${b.diner_email ?? ''}</span></td>
+          <td>${b.party_size ?? '—'}</td>
+          <td><span class="status status-${b.status}">${b.status}</span></td>
+          <td style="font-size:11px;color:var(--muted)">#${b.reference_code ?? ''}</td>
+        </tr>
+      `).join('')
+    } catch(e) {
+      document.getElementById('bookings-tbody').innerHTML =
+        `<tr><td colspan="7" style="padding:32px;text-align:center;color:var(--accent)">Erro: ${e.message}</td></tr>`
+    }
   }
 
-  // Users
+  // ── USERS ─────────────────────────────────────────────────
   async function loadUsers() {
-    const { data } = await supabase
-      .from('profiles')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(100)
-    document.getElementById('users-tbody').innerHTML = (data ?? []).map(u => `
-      <tr>
-        <td>${u.full_name ?? '—'}</td>
-        <td style="font-size:13px;color:var(--muted)">${u.email ?? ''}</td>
-        <td><span class="status status-${u.role === 'super_admin' ? 'suspended' : u.role === 'restaurant_owner' ? 'active' : 'pending'}">${u.role}</span></td>
-        <td style="font-size:12px;color:var(--muted)">${new Date(u.created_at).toLocaleDateString('pt-PT')}</td>
-      </tr>
-    `).join('')
+    document.getElementById('users-tbody').innerHTML =
+      '<tr><td colspan="4" style="padding:32px;text-align:center;color:var(--muted)">A carregar...</td></tr>'
+    try {
+      const { data, error } = await supabase
+        .from('profiles').select('*').order('created_at', { ascending: false }).limit(100)
+      if (error) throw error
+      if (!data?.length) {
+        document.getElementById('users-tbody').innerHTML =
+          '<tr><td colspan="4" style="padding:32px;text-align:center;color:var(--muted)">Nenhum utilizador.</td></tr>'
+        return
+      }
+      document.getElementById('users-tbody').innerHTML = data.map(u => `
+        <tr>
+          <td>${u.full_name ?? '—'}</td>
+          <td style="font-size:13px;color:var(--muted)">${u.email ?? ''}</td>
+          <td><span class="status status-${u.role === 'super_admin' ? 'suspended' : u.role === 'restaurant_owner' ? 'active' : 'pending'}">${u.role ?? 'user'}</span></td>
+          <td style="font-size:12px;color:var(--muted)">${u.created_at ? new Date(u.created_at).toLocaleDateString('pt-PT') : '—'}</td>
+        </tr>
+      `).join('')
+    } catch(e) {
+      document.getElementById('users-tbody').innerHTML =
+        `<tr><td colspan="4" style="padding:32px;text-align:center;color:var(--accent)">Erro: ${e.message}</td></tr>`
+    }
   }
 
   window.switchTab = function(tab) {
@@ -345,10 +403,13 @@
     if (tab === 'gallery') initGalleryTab()
   }
 
+  // Load restaurants immediately (default tab is overview but preload data)
+  loadRestaurants()
+
   // ── ENTER AS RESTAURANT (impersonation) ───────────────────
   window.enterAs = function(id, name) {
     localStorage.setItem('damesa_impersonate', JSON.stringify({ id, name }))
-    window.location.href = 'owner-dashboard.html'
+    window.location.href = '/owner-dashboard.html'
   }
 
   // ── GALLERY TAB ───────────────────────────────────────────
