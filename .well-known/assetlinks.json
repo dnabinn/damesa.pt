@@ -2,9 +2,9 @@
   "relation": ["delegate_permission/common.handle_all_urls"],
   "target": {
     "namespace": "android_app",
-    "package_name": "pt.damesa.app",
+    "package_name": "pt.damesa.pwa",
     "sha256_cert_fingerprints": [
-      "PLACEHOLDER_REPLACE_WITH_YOUR_SIGNING_KEY_FINGERPRINT"
+      "54:8F:E2:0D:1A:C7:30:55:30:F6:21:52:FA:14:89:F1:CF:EF:16:B9:29:4D:00:AC:AC:56:70:E7:98:B7:95:9B"
     ]
   }
 }]
