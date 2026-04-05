@@ -1,32 +1,27 @@
 {
-  "packageId": "pt.damesa.app",
+  "packageId": "pt.damesa.pwa",
   "host": "damesa.pt",
   "name": "Da Mesa",
   "launcherName": "Da Mesa",
   "display": "standalone",
-  "orientation": "portrait",
-  "themeColor": "#1c1612",
-  "backgroundColor": "#faf7f2",
-  "startUrl": "/",
+  "themeColor": "#1C1612",
+  "themeColorDark": "#000000",
+  "navigationColor": "#000000",
+  "navigationColorDark": "#000000",
+  "navigationDividerColor": "#000000",
+  "navigationDividerColorDark": "#000000",
+  "backgroundColor": "#FAF7F2",
+  "enableNotifications": true,
+  "startUrl": "/index.html",
   "iconUrl": "https://damesa.pt/assets/icons/icon-512.png",
-  "maskableIconUrl": "https://damesa.pt/assets/icons/icon-512.png",
-  "monochromeIconUrl": "https://damesa.pt/assets/icons/icon-512.png",
-  "appVersion": "1.0.0",
-  "appVersionCode": 1,
-  "signingKey": {
-    "path": "./damesa-release-key.jks",
-    "alias": "damesa"
-  },
   "splashScreenFadeOutDuration": 300,
-  "enableNotifications": false,
-  "shortcuts": [
-    {
-      "name": "Restaurantes",
-      "shortName": "Restaurantes",
-      "url": "/restaurantes.html",
-      "chosenIconUrl": "https://damesa.pt/assets/icons/icon-96.png"
-    }
-  ],
+  "signingKey": {
+    "path": "C:\\Users\\DNABINN\\Desktop\\Websites\\Da Mesa\\android.keystore",
+    "alias": "android"
+  },
+  "appVersionName": "1",
+  "appVersionCode": 1,
+  "shortcuts": [],
   "generatorApp": "bubblewrap-cli",
   "webManifestUrl": "https://damesa.pt/assets/manifest.json",
   "fallbackType": "customtabs",
@@ -37,7 +32,15 @@
   "enableSiteSettingsShortcut": true,
   "isChromeOSOnly": false,
   "isMetaQuest": false,
-  "fullScopeUrl": "https://damesa.pt/",
-  "minSdkVersion": 19,
-  "pwaCompatEnabled": true
+  "fullScopeUrl": "https://damesa.pt/assets/",
+  "minSdkVersion": 21,
+  "orientation": "portrait",
+  "fingerprints": [],
+  "additionalTrustedOrigins": [],
+  "retainedBundles": [],
+  "protocolHandlers": [],
+  "fileHandlers": [],
+  "launchHandlerClientMode": "",
+  "displayOverride": [],
+  "appVersion": "1"
 }
