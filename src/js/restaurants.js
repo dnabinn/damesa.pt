@@ -4,11 +4,7 @@ import { supabase } from './supabase.js'
 export async function getRestaurants(filters = {}) {
   let query = supabase
     .from('restaurants')
-    .select(`
-      *,
-      opening_hours(*),
-      menu_categories(*, menu_items(*))
-    `)
+    .select('*')
     .eq('status', 'active')
     .order('name')
 

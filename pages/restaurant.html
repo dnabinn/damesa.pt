@@ -618,7 +618,7 @@
               <label>Nome completo</label>
               <input type="text" id="diner-name" placeholder="O seu nome" />
             </div>
-            <div class="form-group">
+            <div class="form-group" id="email-field-wrap">
               <label>Email</label>
               <input type="email" id="diner-email" placeholder="email@exemplo.pt" />
             </div>
@@ -802,13 +802,11 @@
 
   // Pre-fill booking form if logged in
   if (_session?.user) {
-    const { data: _profile } = await supabase.from('profiles').select('full_name, email').eq('id', _session.user.id).single()
-    if (_profile) {
-      const nameEl = document.getElementById('diner-name')
-      const emailEl = document.getElementById('diner-email')
-      if (nameEl && _profile.full_name) nameEl.value = _profile.full_name
-      if (emailEl && _profile.email) emailEl.value = _profile.email
-    }
+    // Hide email field — use session email directly at submit time
+    document.getElementById('email-field-wrap').style.display = 'none'
+    // Pre-fill name from profile
+    const { data: _profile } = await supabase.from('profiles').select('full_name').eq('id', _session.user.id).single()
+    if (_profile?.full_name) document.getElementById('diner-name').value = _profile.full_name
   }
 
   window.goS = function(n) {
@@ -833,7 +831,7 @@
     const selectedSlot = document.querySelector('.slot.sel')
     if (!selectedSlot) { alert('Selecione um horário.'); goS(1); return }
     const name = document.getElementById('diner-name').value.trim()
-    const email = document.getElementById('diner-email').value.trim()
+    const email = _session?.user?.email || document.getElementById('diner-email').value.trim()
     const phone = document.getElementById('diner-phone').value.trim()
     if (!name || !email || !phone) { alert('Preencha todos os campos obrigatórios.'); return }
     const btn = document.querySelector('#bs2 .bcta')

@@ -33,16 +33,11 @@ export async function createBooking(bookingData) {
 // Send confirmation emails to diner + restaurant
 async function sendBookingConfirmation(booking) {
   try {
-    await fetch('https://jdkbywroucgwrfpirloa.supabase.co/functions/v1/send-booking-emails', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer sb_publishable_rU5h79iwvA6wDozm72uvMg_zSFZAkkY'
-      },
-      body: JSON.stringify({ bookingId: booking.id })
+    const { error } = await supabase.functions.invoke('send-booking-emails', {
+      body: { bookingId: booking.id }
     })
+    if (error) console.error('Email notification failed:', error)
   } catch (e) {
-    // Non-fatal — booking was created, email just failed silently
     console.error('Email notification failed:', e)
   }
 }
