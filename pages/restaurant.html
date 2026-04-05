@@ -13,7 +13,7 @@
   <meta id="og-title" property="og:title" content="Restaurante — Da Mesa" />
   <meta id="og-description" property="og:description" content="Reserva a tua mesa online. Sem taxas de reserva." />
   <meta id="og-url" property="og:url" content="https://damesa.pt/restaurant.html" />
-  <link rel="manifest" href="../assets/manifest.json" />
+  <link rel="manifest" href="/assets/manifest.json" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -450,8 +450,8 @@
 <nav>
   <a href="index.html" class="logo">Da <span>Mesa</span></a>
   <div class="nav-links">
-    <a href="restaurantes.html" class="nav-back">← Restaurantes</a>
-    <a href="login.html" class="nav-cta" id="nav-auth-btn">Entrar</a>
+    <a href="/pages/restaurantes.html" class="nav-back">← Restaurantes</a>
+    <a href="/pages/login.html" class="nav-cta" id="nav-auth-btn">Entrar</a>
   </div>
 </nav>
 
@@ -533,18 +533,30 @@
           </div>
         </div>
         <div class="review-list" id="review-list"></div>
-        <div class="review-form">
-          <div class="review-form-title">Deixa a tua avaliação</div>
-          <input type="text" id="review-name" placeholder="O teu nome" />
-          <div class="star-picker" id="star-picker">
-            <span data-v="1">★</span>
-            <span data-v="2">★</span>
-            <span data-v="3">★</span>
-            <span data-v="4">★</span>
-            <span data-v="5">★</span>
+        <!-- Review form: shown only to users with a past confirmed/completed booking -->
+        <div id="review-form-section" style="display:none;">
+          <div class="review-form">
+            <div class="review-form-title">Deixa a tua avaliação</div>
+            <input type="text" id="review-name" placeholder="O teu nome" />
+            <div class="star-picker" id="star-picker">
+              <span data-v="1">★</span>
+              <span data-v="2">★</span>
+              <span data-v="3">★</span>
+              <span data-v="4">★</span>
+              <span data-v="5">★</span>
+            </div>
+            <textarea id="review-comment" placeholder="Conta-nos a tua experiência..."></textarea>
+            <button class="bcta" id="review-submit-btn" onclick="submitReview()">Publicar avaliação</button>
           </div>
-          <textarea id="review-comment" placeholder="Conta-nos a tua experiência..."></textarea>
-          <button class="bcta" id="review-submit-btn" onclick="submitReview()">Publicar avaliação</button>
+        </div>
+        <!-- Message for users without a qualifying booking -->
+        <div id="review-no-booking" style="display:none; background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:24px; text-align:center; color:var(--muted); font-size:14px; line-height:1.6;">
+          <p>Só podes deixar uma avaliação após teres visitado este restaurante.</p>
+          <p style="margin-top:8px;"><a href="#booking-widget" style="color:var(--accent);">Reserva uma mesa</a> para poderes avaliar.</p>
+        </div>
+        <!-- Message for unauthenticated users -->
+        <div id="review-login-required" style="display:none; background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:24px; text-align:center; color:var(--muted); font-size:14px; line-height:1.6;">
+          <p>Tens de <a href="/pages/login.html" style="color:var(--accent);">iniciar sessão</a> para deixar uma avaliação.</p>
         </div>
       </div>
 
@@ -622,7 +634,7 @@
               <div class="conf-icon">🎉</div>
               <div class="conf-ref" id="conf-ref">REF #--------</div>
               <p class="conf-msg">Mesa reservada! Enviámos a confirmação para o seu email.</p>
-              <a href="restaurantes.html" class="conf-back">← Ver outros restaurantes</a>
+              <a href="/pages/restaurantes.html" class="conf-back">← Ver outros restaurantes</a>
             </div>
           </div>
 
@@ -639,7 +651,7 @@
 </button>
 
 <footer>
-  <strong>Da Mesa</strong> — Reservas de restaurantes em Lisboa · <a href="mailto:ola@damesa.pt">ola@damesa.pt</a> · <a href="login.html">Entrar como restaurante</a> · <a href="privacy.html">Privacidade</a> · <a href="terms.html">Termos</a>
+  <strong>Da Mesa</strong> — Reservas de restaurantes em Lisboa · <a href="mailto:ola@damesa.pt">ola@damesa.pt</a> · <a href="/pages/login.html">Entrar como restaurante</a> · <a href="/pages/privacy.html">Privacidade</a> · <a href="/pages/terms.html">Termos</a>
 </footer>
 
 <script type="module">
@@ -657,10 +669,10 @@
     const parts = window.location.pathname.split('/').filter(Boolean)
     if (parts[0] === 'restaurante' && parts.length >= 3) slug = parts[2]
   }
-  if (!slug) { window.location.href = '/restaurantes.html'; throw new Error('no slug') }
+  if (!slug) { window.location.href = '/pages/restaurantes.html'; throw new Error('no slug') }
 
   const { restaurant, error } = await getRestaurantBySlug(slug)
-  if (error || !restaurant) { window.location.href = '/restaurantes.html'; throw new Error('not found') }
+  if (error || !restaurant) { window.location.href = '/pages/restaurantes.html'; throw new Error('not found') }
 
   // Build clean canonical URL: /restaurante/lisboa/lumbini
   const _cs = (city) => (city ?? 'portugal').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-')
@@ -779,7 +791,7 @@
   if (_session) {
     const authBtn = document.getElementById('nav-auth-btn')
     authBtn.textContent = _session.user.email?.split('@')[0] ?? 'Conta'
-    authBtn.href = '/dashboard.html'
+    authBtn.href = '/pages/dashboard.html'
   }
 
   // Pre-fill booking form if logged in
@@ -794,11 +806,18 @@
   }
 
   window.goS = function(n) {
-    // Gate step 2 (contact details) behind login
-    if (n === 2 && !_session) {
-      const returnUrl = encodeURIComponent(window.location.href)
-      window.location.href = `/login.html?return=${returnUrl}`
-      return
+    // Gate step 2 (contact details): must select a time slot and be logged in
+    if (n === 2) {
+      const selectedSlot = document.querySelector('.slot.sel')
+      if (!selectedSlot) {
+        alert('Seleciona um horário antes de continuar.')
+        return
+      }
+      if (!_session) {
+        const returnUrl = encodeURIComponent(window.location.href)
+        window.location.href = `/pages/login.html?return=${returnUrl}`
+        return
+      }
     }
     document.querySelectorAll('.step').forEach(s => s.classList.remove('active'))
     document.getElementById(`bs${n}`).classList.add('active')
@@ -848,7 +867,7 @@
   }
   await loadPhotos()
 
-  // Check if this logged-in diner has a past booking — only they can upload photos
+  // Check if this logged-in diner has a past confirmed/completed booking — only they can upload photos
   async function checkCanUploadPhoto() {
     if (!_session?.user?.email) {
       document.getElementById('photo-no-booking').style.display = 'block'
@@ -860,6 +879,7 @@
       .eq('restaurant_id', restaurant.id)
       .eq('diner_email', _session.user.email)
       .lte('booking_date', today)
+      .in('status', ['confirmed', 'completed'])
       .limit(1)
     if (data?.length) {
       document.getElementById('photo-upload-section').style.display = 'block'
@@ -932,6 +952,28 @@
   }
   await loadReviews()
 
+  // Check if user can leave a review (must have past confirmed/completed booking)
+  async function checkCanReview() {
+    if (!_session?.user?.email) {
+      document.getElementById('review-login-required').style.display = 'block'
+      return
+    }
+    const today = new Date().toISOString().split('T')[0]
+    const { data } = await supabase
+      .from('bookings').select('id')
+      .eq('restaurant_id', restaurant.id)
+      .eq('diner_email', _session.user.email)
+      .lte('booking_date', today)
+      .in('status', ['confirmed', 'completed'])
+      .limit(1)
+    if (data?.length) {
+      document.getElementById('review-form-section').style.display = 'block'
+    } else {
+      document.getElementById('review-no-booking').style.display = 'block'
+    }
+  }
+  await checkCanReview()
+
   let selectedRating = 0
   const starEls = document.querySelectorAll('#star-picker span')
   starEls.forEach(s => {
@@ -941,13 +983,24 @@
   })
 
   window.submitReview = async function() {
+    // Double-check eligibility before submitting
+    if (!_session?.user?.email) {
+      alert('Tens de iniciar sessão para avaliar.')
+      return
+    }
     const name = document.getElementById('review-name').value.trim()
     const comment = document.getElementById('review-comment').value.trim()
     if (!name) { alert('Indica o teu nome.'); return }
     if (!selectedRating) { alert('Seleciona uma classificação.'); return }
     const btn = document.getElementById('review-submit-btn')
     btn.textContent = 'A publicar...'; btn.disabled = true
-    const { error } = await supabase.from('reviews').insert({ restaurant_id: restaurant.id, diner_name: name, rating: selectedRating, comment: comment || null })
+    const { error } = await supabase.from('reviews').insert({
+      restaurant_id: restaurant.id,
+      diner_name: name,
+      rating: selectedRating,
+      comment: comment || null,
+      user_id: _session.user.id
+    })
     if (error) { alert('Erro ao publicar avaliação.'); btn.textContent = 'Publicar avaliação'; btn.disabled = false; return }
     document.getElementById('review-name').value = ''
     document.getElementById('review-comment').value = ''
