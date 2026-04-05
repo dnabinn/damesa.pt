@@ -18,9 +18,15 @@ ErrorDocument 404 /pages/404.html
     ExpiresDefault "access plus 0 seconds"
     Header set Cache-Control "no-cache, no-store, must-revalidate"
   </FilesMatch>
+  # JS modules — short cache so deploys propagate quickly
+  ExpiresByType text/javascript "access plus 1 hour"
 </IfModule>
 
 <IfModule mod_headers.c>
+  # Force JS files to revalidate — prevents stale module cache after deploy
+  <FilesMatch "\.js$">
+    Header set Cache-Control "no-cache, must-revalidate"
+  </FilesMatch>
   # Allow TWA / browser to verify assetlinks
   <FilesMatch "assetlinks\.json$">
     Header set Content-Type "application/json"
