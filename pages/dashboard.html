@@ -42,7 +42,7 @@
 <body>
 
 <nav>
-  <a href="index.html" class="logo">Da <span>Mesa</span></a>
+  <a href="/pages/index.html" class="logo">Da <span>Mesa</span></a>
   <div class="nav-right">
     <span id="nav-name"></span>
     <button class="btn-logout" onclick="handleSignOut()">Sair</button>
@@ -59,63 +59,69 @@
   </div>
 
   <div style="text-align:center;margin-top:32px;">
-    <a href="restaurantes.html" style="display:inline-block;padding:13px 28px;background:var(--text);color:#fff;border-radius:10px;font-size:14px;">Reservar mesa</a>
+    <a href="/pages/restaurantes.html" style="display:inline-block;padding:13px 28px;background:var(--text);color:#fff;border-radius:10px;font-size:14px;">Reservar mesa</a>
   </div>
 </div>
 
 <footer>
-  <strong>Da Mesa</strong> — <a href="index.html">Início</a> · <a href="restaurantes.html">Restaurantes</a>
+  <strong>Da Mesa</strong> — <a href="/pages/index.html">Início</a> · <a href="/pages/restaurantes.html">Restaurantes</a>
 </footer>
 
 <script type="module">
-  import { guardRoute, signOut } from '../src/js/auth.js'
-  import { supabase } from '../src/js/supabase.js'
+  import { guardRoute, signOut } from '/src/js/auth.js'
+  import { supabase } from '/src/js/supabase.js'
 
-  const profile = await guardRoute()
-  if (!profile) return
+  ;(async () => {
+    const profile = await guardRoute()
+    if (!profile) return
 
-  document.getElementById('greeting').textContent = `Olá, ${profile.full_name?.split(' ')[0] ?? 'Bem-vindo'}!`
-  document.getElementById('nav-name').textContent = profile.full_name ?? profile.email
+    document.getElementById('greeting').textContent = `Olá, ${profile.full_name?.split(' ')[0] ?? 'Bem-vindo'}!`
+    document.getElementById('nav-name').textContent = profile.full_name ?? profile.email
 
-  // Fetch this user's bookings
-  const today = new Date().toISOString().split('T')[0]
-  const { data: bookings } = await supabase
-    .from('bookings')
-    .select('*, restaurants(name, address)')
-    .eq('diner_email', profile.email)
-    .gte('booking_date', today)
-    .order('booking_date')
-    .order('booking_time')
+    // Fetch this user's bookings by user_id (more reliable than email)
+    const { data: { session } } = await supabase.auth.getSession()
+    const userId = session?.user?.id
+    if (!userId) return
 
-  const list = document.getElementById('booking-list')
-  if (!bookings?.length) {
-    list.innerHTML = `
-      <div class="empty-state">
-        <p>Ainda não tens reservas.</p>
-        <p style="margin-top:12px;"><a href="restaurantes.html">Explora os restaurantes →</a></p>
-      </div>`
-  } else {
-    list.innerHTML = bookings.map(b => `
-      <div class="booking-card">
-        <div class="booking-info">
-          <h3>${b.restaurants?.name ?? 'Restaurante'}</h3>
-          <div class="booking-meta">
-            <span>${b.booking_date}</span>
-            <span>${b.booking_time?.slice(0,5)}</span>
-            <span>${b.party_size} pessoas</span>
-            <span style="color:var(--muted);font-size:11px">REF #${b.reference_code}</span>
+    const today = new Date().toISOString().split('T')[0]
+    const { data: bookings } = await supabase
+      .from('bookings')
+      .select('*, restaurants(name, address)')
+      .eq('user_id', userId)
+      .gte('booking_date', today)
+      .order('booking_date')
+      .order('booking_time')
+
+    const list = document.getElementById('booking-list')
+    if (!bookings?.length) {
+      list.innerHTML = `
+        <div class="empty-state">
+          <p>Ainda não tens reservas.</p>
+          <p style="margin-top:12px;"><a href="/pages/restaurantes.html">Explora os restaurantes →</a></p>
+        </div>`
+    } else {
+      list.innerHTML = bookings.map(b => `
+        <div class="booking-card">
+          <div class="booking-info">
+            <h3>${b.restaurants?.name ?? 'Restaurante'}</h3>
+            <div class="booking-meta">
+              <span>${b.booking_date}</span>
+              <span>${b.booking_time?.slice(0,5)}</span>
+              <span>${b.party_size} pessoas</span>
+              <span style="color:var(--muted);font-size:11px">REF #${b.reference_code}</span>
+            </div>
           </div>
+          <span class="status status-${b.status}">${translateStatus(b.status)}</span>
         </div>
-        <span class="status status-${b.status}">${translateStatus(b.status)}</span>
-      </div>
-    `).join('')
-  }
+      `).join('')
+    }
 
-  function translateStatus(s) {
-    return { pending: 'Pendente', confirmed: 'Confirmada', cancelled: 'Cancelada', completed: 'Concluída', no_show: 'Não apareceu' }[s] ?? s
-  }
+    function translateStatus(s) {
+      return { pending: 'Pendente', confirmed: 'Confirmada', cancelled: 'Cancelada', completed: 'Concluída', no_show: 'Não apareceu' }[s] ?? s
+    }
 
-  window.handleSignOut = signOut
+    window.handleSignOut = signOut
+  })()
 </script>
 
 </body>

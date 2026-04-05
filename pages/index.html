@@ -139,13 +139,22 @@
 <body>
 
 <nav>
-  <a href="index.html" class="logo">Da <span>Mesa</span></a>
+  <a href="/pages/index.html" class="logo">Da <span>Mesa</span></a>
   <div class="nav-links">
-    <a href="restaurantes.html">Restaurantes</a>
-    <a href="cozinhas.html">Cozinhas</a>
-    <a href="login.html" class="nav-cta">Entrar</a>
+    <a href="/pages/restaurantes.html">Restaurantes</a>
+    <a href="/pages/cozinhas.html">Cozinhas</a>
+    <a href="/pages/login.html" class="nav-cta" id="nav-login-btn">Entrar</a>
   </div>
 </nav>
+<script type="module">
+  import { supabase } from '/src/js/supabase.js'
+  const { data: { session } } = await supabase.auth.getSession()
+  if (session) {
+    const btn = document.getElementById('nav-login-btn')
+    btn.textContent = 'A minha conta'
+    btn.href = '/pages/dashboard.html'
+  }
+</script>
 
 <div class="hero">
   <h1>Reserva a tua mesa.<br>Sem taxas.</h1>
@@ -202,16 +211,16 @@
   <h2>Restaurantes por bairro em Lisboa</h2>
   <p class="lead">Descobre os melhores restaurantes em todos os bairros de Lisboa — do Chiado à Mouraria, de Belém ao Parque das Nações.</p>
   <div class="bairros">
-    <a class="bairro-tag" href="restaurantes.html?bairro=chiado">Chiado</a>
-    <a class="bairro-tag" href="restaurantes.html?bairro=bairro-alto">Bairro Alto</a>
-    <a class="bairro-tag" href="restaurantes.html?bairro=alfama">Alfama</a>
-    <a class="bairro-tag" href="restaurantes.html?bairro=belem">Belém</a>
-    <a class="bairro-tag" href="restaurantes.html?bairro=intendente">Intendente</a>
-    <a class="bairro-tag" href="restaurantes.html?bairro=mouraria">Mouraria</a>
-    <a class="bairro-tag" href="restaurantes.html?bairro=campo-de-ourique">Campo de Ourique</a>
-    <a class="bairro-tag" href="restaurantes.html?bairro=lx-factory">LX Factory</a>
-    <a class="bairro-tag" href="restaurantes.html?bairro=parque-das-nacoes">Parque das Nações</a>
-    <a class="bairro-tag" href="restaurantes.html?bairro=principe-real">Príncipe Real</a>
+    <a class="bairro-tag" href="/pages/restaurantes.html?bairro=chiado">Chiado</a>
+    <a class="bairro-tag" href="/pages/restaurantes.html?bairro=bairro-alto">Bairro Alto</a>
+    <a class="bairro-tag" href="/pages/restaurantes.html?bairro=alfama">Alfama</a>
+    <a class="bairro-tag" href="/pages/restaurantes.html?bairro=belem">Belém</a>
+    <a class="bairro-tag" href="/pages/restaurantes.html?bairro=intendente">Intendente</a>
+    <a class="bairro-tag" href="/pages/restaurantes.html?bairro=mouraria">Mouraria</a>
+    <a class="bairro-tag" href="/pages/restaurantes.html?bairro=campo-de-ourique">Campo de Ourique</a>
+    <a class="bairro-tag" href="/pages/restaurantes.html?bairro=lx-factory">LX Factory</a>
+    <a class="bairro-tag" href="/pages/restaurantes.html?bairro=parque-das-nacoes">Parque das Nações</a>
+    <a class="bairro-tag" href="/pages/restaurantes.html?bairro=principe-real">Príncipe Real</a>
   </div>
 </div>
 
@@ -240,13 +249,13 @@
 </div>
 
 <footer>
-  <strong>Da Mesa</strong> — Reservas de restaurantes em Lisboa · <a href="mailto:ola@damesa.pt">ola@damesa.pt</a> · <a href="login.html">Entrar como restaurante</a> · <a href="privacy.html">Privacidade</a> · <a href="terms.html">Termos</a>
+  <strong>Da Mesa</strong> — Reservas de restaurantes em Lisboa · <a href="mailto:ola@damesa.pt">ola@damesa.pt</a> · <a href="/pages/login.html">Entrar como restaurante</a> · <a href="/pages/privacy.html">Privacidade</a> · <a href="/pages/terms.html">Termos</a>
 </footer>
 
 <script type="module">
-  import { getRestaurants } from '../src/js/restaurants.js'
-  import { trackEvent } from '../src/js/analytics.js'
-  import { initCookieBanner } from '../src/js/cookies.js'
+  import { getRestaurants } from '/src/js/restaurants.js'
+  import { trackEvent } from '/src/js/analytics.js'
+  import { initCookieBanner } from '/src/js/cookies.js'
   initCookieBanner()
 
   let allRestaurants = []

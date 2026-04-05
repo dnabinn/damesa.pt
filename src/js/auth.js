@@ -50,7 +50,7 @@ export async function getCurrentProfile() {
 // Sign out
 export async function signOut() {
   await supabase.auth.signOut()
-  window.location.replace('/login.html')
+  window.location.replace('/pages/login.html')
 }
 
 // Route guard — hides body until auth confirmed, then redirects if needed
@@ -61,18 +61,18 @@ export async function guardRoute() {
   const profile = await getCurrentProfile()
 
   if (!profile) {
-    const returnUrl = encodeURIComponent(window.location.pathname)
-    window.location.replace(`/login.html?return=${returnUrl}`)
+    const returnUrl = encodeURIComponent(window.location.pathname + window.location.search)
+    window.location.replace(`/pages/login.html?return=${returnUrl}`)
     return null
   }
 
   const path = window.location.pathname
   if (path.includes('superadmin') && profile.role !== 'super_admin') {
-    window.location.replace('/dashboard.html')
+    window.location.replace('/pages/dashboard.html')
     return null
   }
   if (path.includes('owner-dashboard') && profile.role !== 'restaurant_owner' && profile.role !== 'super_admin') {
-    window.location.replace('/dashboard.html')
+    window.location.replace('/pages/dashboard.html')
     return null
   }
 
