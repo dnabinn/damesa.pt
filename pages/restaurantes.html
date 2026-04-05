@@ -52,9 +52,18 @@
   <div class="nav-links">
     <a href="restaurantes.html">Restaurantes</a>
     <a href="cozinhas.html">Cozinhas</a>
-    <a href="login.html" class="nav-cta">Entrar</a>
+    <a href="login.html" class="nav-cta" id="nav-login-btn">Entrar</a>
   </div>
 </nav>
+<script type="module">
+  import { supabase } from '/src/js/supabase.js'
+  const { data: { session } } = await supabase.auth.getSession()
+  if (session) {
+    const btn = document.getElementById('nav-login-btn')
+    btn.textContent = 'A minha conta'
+    btn.href = '/dashboard.html'
+  }
+</script>
 
 <div class="page-header">
   <h1>Restaurantes em Lisboa</h1>
