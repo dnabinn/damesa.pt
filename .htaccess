@@ -1,4 +1,5 @@
 Options -Indexes
+ErrorDocument 404 /pages/404.html
 
 # Correct MIME types for PWA
 <IfModule mod_mime.c>

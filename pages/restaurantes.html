@@ -5,7 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Restaurantes em Lisboa — Da Mesa</title>
   <meta name="description" content="Todos os restaurantes em Lisboa com reserva instantânea. Filtra por cozinha, preço e localização." />
-  <link rel="manifest" href="../assets/manifest.json" />
+  <link rel="manifest" href="/assets/manifest.json" />
+  <link rel="icon" type="image/png" href="/assets/icons/icon-192.png" />
+  <link rel="apple-touch-icon" href="/assets/icons/icon-192.png" />
+  <link rel="canonical" href="https://damesa.pt/restaurantes.html" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root { --bg:#faf7f2; --card:#fff; --text:#1c1612; --muted:#7a6a5e; --accent:#c0392b; --border:#e8dfd4; --radius:12px; }
@@ -43,6 +46,10 @@
 
     footer { text-align:center; padding:40px 24px; color:var(--muted); font-size:13px; border-top:1px solid var(--border); }
     footer strong { color:var(--text); font-family:Georgia,serif; }
+    /* Loading */
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text { display:inline-flex; align-items:center; gap:8px; opacity:0.7; }
+    .loading-text::after { content:''; display:inline-block; width:12px; height:12px; border:1.5px solid currentColor; border-top-color:transparent; border-radius:50%; animation:spin 0.7s linear infinite; flex-shrink:0; }
   </style>
 </head>
 <body>
@@ -97,7 +104,7 @@
 <div class="grid-wrap">
   <div class="results-count" id="results-count"></div>
   <div class="grid" id="restaurants-grid">
-    <p style="color:var(--muted)">A carregar...</p>
+    <p style="color:var(--muted)"><span class="loading-text">A carregar</span></p>
   </div>
 </div>
 

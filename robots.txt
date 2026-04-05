@@ -1,0 +1,15 @@
+User-agent: *
+Allow: /
+
+# Private/auth pages — no value to index
+Disallow: /pages/superadmin.html
+Disallow: /pages/owner-dashboard.html
+Disallow: /pages/dashboard.html
+Disallow: /pages/login.html
+Disallow: /pages/404.html
+
+# Android build artifacts
+Disallow: /app/
+Disallow: /.github/
+
+Sitemap: https://damesa.pt/sitemap.xml

@@ -4,7 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Super Admin — Da Mesa</title>
-  <link rel="manifest" href="../assets/manifest.json" />
+  <link rel="manifest" href="/assets/manifest.json" />
+  <link rel="icon" type="image/png" href="/assets/icons/icon-192.png" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root { --bg:#faf7f2; --card:#fff; --text:#1c1612; --muted:#7a6a5e; --accent:#c0392b; --border:#e8dfd4; --radius:12px; }
@@ -112,6 +113,10 @@
     .lb-close { position:absolute; top:18px; right:22px; color:#fff; font-size:28px; cursor:pointer; opacity:0.6; line-height:1; }
 
     footer { text-align:center; padding:40px 24px; color:var(--muted); font-size:13px; border-top:1px solid var(--border); }
+    /* Loading */
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text { display:inline-flex; align-items:center; gap:8px; opacity:0.7; }
+    .loading-text::after { content:''; display:inline-block; width:12px; height:12px; border:1.5px solid currentColor; border-top-color:transparent; border-radius:50%; animation:spin 0.7s linear infinite; flex-shrink:0; }
   </style>
 </head>
 <body>
@@ -157,7 +162,7 @@
           <tr><th>Nome</th><th>Cozinha</th><th>Proprietário</th><th>Estado</th><th>Subscrição</th><th>Ações</th><th></th></tr>
         </thead>
         <tbody id="restaurants-tbody">
-          <tr><td colspan="6" style="padding:32px;text-align:center;color:var(--muted)">A carregar...</td></tr>
+          <tr><td colspan="6" style="padding:32px;text-align:center;color:var(--muted)"><span class="loading-text">A carregar</span></td></tr>
         </tbody>
       </table>
     </div>
@@ -176,7 +181,7 @@
           <tr><th>Data</th><th>Hora</th><th>Restaurante</th><th>Cliente</th><th>Pessoas</th><th>Estado</th><th>Ref</th></tr>
         </thead>
         <tbody id="bookings-tbody">
-          <tr><td colspan="7" style="padding:32px;text-align:center;color:var(--muted)">A carregar...</td></tr>
+          <tr><td colspan="7" style="padding:32px;text-align:center;color:var(--muted)"><span class="loading-text">A carregar</span></td></tr>
         </tbody>
       </table>
     </div>
@@ -195,7 +200,7 @@
           <tr><th>Nome</th><th>Email</th><th>Role</th><th>Registado</th></tr>
         </thead>
         <tbody id="users-tbody">
-          <tr><td colspan="4" style="padding:32px;text-align:center;color:var(--muted)">A carregar...</td></tr>
+          <tr><td colspan="4" style="padding:32px;text-align:center;color:var(--muted)"><span class="loading-text">A carregar</span></td></tr>
         </tbody>
       </table>
     </div>
@@ -322,7 +327,7 @@
   let allRestaurants = []
   async function loadRestaurants() {
     document.getElementById('restaurants-tbody').innerHTML =
-      '<tr><td colspan="7" style="padding:32px;text-align:center;color:var(--muted)">A carregar...</td></tr>'
+      '<tr><td colspan="7" style="padding:32px;text-align:center;color:var(--muted)"><span class="loading-text">A carregar</span></td></tr>'
     try {
       const { data, error } = await supabase
         .from('restaurants')
@@ -376,7 +381,7 @@
   // ── BOOKINGS ──────────────────────────────────────────────
   async function loadAllBookings() {
     document.getElementById('bookings-tbody').innerHTML =
-      '<tr><td colspan="7" style="padding:32px;text-align:center;color:var(--muted)">A carregar...</td></tr>'
+      '<tr><td colspan="7" style="padding:32px;text-align:center;color:var(--muted)"><span class="loading-text">A carregar</span></td></tr>'
     try {
       const { data, error } = await supabase
         .from('bookings')
@@ -409,7 +414,7 @@
   // ── USERS ─────────────────────────────────────────────────
   async function loadUsers() {
     document.getElementById('users-tbody').innerHTML =
-      '<tr><td colspan="4" style="padding:32px;text-align:center;color:var(--muted)">A carregar...</td></tr>'
+      '<tr><td colspan="4" style="padding:32px;text-align:center;color:var(--muted)"><span class="loading-text">A carregar</span></td></tr>'
     try {
       const { data, error } = await supabase
         .from('profiles').select('*').order('created_at', { ascending: false }).limit(100)
@@ -473,7 +478,7 @@
     const container = document.getElementById('gallery-container')
     if (!rid) { container.innerHTML = '<div class="gallery-empty">Seleciona um restaurante para ver as fotos.</div>'; return }
 
-    container.innerHTML = '<div class="gallery-empty">A carregar...</div>'
+    container.innerHTML = '<div class="gallery-empty"><span class="loading-text">A carregar</span></div>'
     const { data } = await supabase
       .from('restaurant_photos').select('*')
       .eq('restaurant_id', rid)

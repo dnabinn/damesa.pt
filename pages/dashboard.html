@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>A minha conta — Da Mesa</title>
   <link rel="manifest" href="/assets/manifest.json" />
+  <link rel="icon" type="image/png" href="/assets/icons/icon-192.png" />
   <link rel="apple-touch-icon" href="/assets/icons/icon-192.png" />
   <meta name="theme-color" content="#1c1612" />
   <style>
@@ -109,6 +110,10 @@
       .booking-card { flex-wrap:wrap; }
       .booking-actions { flex-direction:row; align-items:center; width:100%; }
     }
+    /* Loading */
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text { display:inline-flex; align-items:center; gap:8px; opacity:0.7; }
+    .loading-text::after { content:''; display:inline-block; width:12px; height:12px; border:1.5px solid currentColor; border-top-color:transparent; border-radius:50%; animation:spin 0.7s linear infinite; flex-shrink:0; }
   </style>
 </head>
 <body>
@@ -126,7 +131,7 @@
   <!-- Greeting -->
   <div class="greeting-block">
     <div class="greeting" id="greeting">Olá!</div>
-    <div class="greeting-sub" id="greeting-sub">A carregar as tuas reservas...</div>
+    <div class="greeting-sub" id="greeting-sub"><span class="loading-text">A carregar as tuas reservas</span></div>
   </div>
 
   <!-- Stats -->
@@ -152,7 +157,7 @@
       <a href="/pages/restaurantes.html" class="section-link">Reservar mesa →</a>
     </div>
     <div class="booking-list" id="upcoming-list">
-      <p style="color:var(--muted);padding:16px 0;">A carregar...</p>
+      <p style="color:var(--muted);padding:16px 0;"><span class="loading-text">A carregar</span></p>
     </div>
   </div>
 

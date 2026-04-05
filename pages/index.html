@@ -134,6 +134,10 @@
     /* FOOTER */
     footer { text-align: center; padding: 40px 24px; color: var(--muted); font-size: 13px; border-top: 1px solid var(--border); margin-top: 60px; }
     footer strong { color: var(--text); font-family: Georgia, serif; }
+    /* Loading */
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text { display:inline-flex; align-items:center; gap:8px; opacity:0.7; }
+    .loading-text::after { content:''; display:inline-block; width:12px; height:12px; border:1.5px solid currentColor; border-top-color:transparent; border-radius:50%; animation:spin 0.7s linear infinite; flex-shrink:0; }
   </style>
 </head>
 <body>
@@ -179,7 +183,7 @@
 
   <h2 class="section-title">Restaurantes em Lisboa</h2>
   <div class="grid" id="restaurants-grid">
-    <p style="color:var(--muted)">A carregar restaurantes...</p>
+    <p style="color:var(--muted)"><span class="loading-text">A carregar restaurantes</span></p>
   </div>
 </div>
 

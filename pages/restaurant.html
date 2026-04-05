@@ -14,6 +14,9 @@
   <meta id="og-description" property="og:description" content="Reserva a tua mesa online. Sem taxas de reserva." />
   <meta id="og-url" property="og:url" content="https://damesa.pt/restaurant.html" />
   <link rel="manifest" href="/assets/manifest.json" />
+  <link rel="icon" type="image/png" href="/assets/icons/icon-192.png" />
+  <link rel="apple-touch-icon" href="/assets/icons/icon-192.png" />
+  <link rel="canonical" href="https://damesa.pt/restaurante/lisboa/" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -50,6 +53,9 @@
     }
     .fade-up { animation: fadeUp 0.45s ease both; }
     .fade-in { animation: fadeIn 0.3s ease both; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text { display:inline-flex; align-items:center; gap:8px; opacity:0.7; }
+    .loading-text::after { content:''; display:inline-block; width:12px; height:12px; border:1.5px solid currentColor; border-top-color:transparent; border-radius:50%; animation:spin 0.7s linear infinite; flex-shrink:0; }
 
     /* ── SKELETON ───────────────────────────────── */
     .skeleton {
@@ -460,7 +466,7 @@
   <div class="cover-img skeleton" id="cover-img"></div>
   <div class="hero-gradient"></div>
   <div class="hero-content">
-    <div class="hero-badge" id="rest-cuisine">A carregar...</div>
+    <div class="hero-badge" id="rest-cuisine"><span class="loading-text">A carregar</span></div>
     <h1 class="hero-name" id="rest-name"> </h1>
     <div class="hero-meta">
       <span class="price-pill" id="rest-price"></span>

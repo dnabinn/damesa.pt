@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
+  <!-- Core pages -->
+  <url>
+    <loc>https://damesa.pt/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+    <lastmod>2026-04-05</lastmod>
+  </url>
+  <url>
+    <loc>https://damesa.pt/restaurantes.html</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+    <lastmod>2026-04-05</lastmod>
+  </url>
+  <url>
+    <loc>https://damesa.pt/cozinhas.html</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <lastmod>2026-04-05</lastmod>
+  </url>
+
+  <!-- Restaurant pages -->
+  <url>
+    <loc>https://damesa.pt/restaurante/lisboa/lumbini</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <lastmod>2026-04-05</lastmod>
+  </url>
+  <url>
+    <loc>https://damesa.pt/restaurante/lisboa/namaste-curry-house</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <lastmod>2026-04-05</lastmod>
+  </url>
+  <url>
+    <loc>https://damesa.pt/restaurante/lisboa/ola-nepal-house</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <lastmod>2026-04-05</lastmod>
+  </url>
+  <url>
+    <loc>https://damesa.pt/restaurante/lisboa/bhetghat-restaurante</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <lastmod>2026-04-05</lastmod>
+  </url>
+  <url>
+    <loc>https://damesa.pt/restaurante/lisboa/lisbon-sekuwa-corner</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <lastmod>2026-04-05</lastmod>
+  </url>
+  <url>
+    <loc>https://damesa.pt/restaurante/lisboa/mandala-house</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <lastmod>2026-04-05</lastmod>
+  </url>
+  <url>
+    <loc>https://damesa.pt/restaurante/lisboa/darshan-nepal</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <lastmod>2026-04-05</lastmod>
+  </url>
+  <url>
+    <loc>https://damesa.pt/restaurante/lisboa/chwassa-momo-grill</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <lastmod>2026-04-05</lastmod>
+  </url>
+  <url>
+    <loc>https://damesa.pt/restaurante/lisboa/sabor-do-nepal</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <lastmod>2026-04-05</lastmod>
+  </url>
+
+</urlset>
