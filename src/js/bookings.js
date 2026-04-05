@@ -4,13 +4,14 @@ import { supabase } from './supabase.js'
 export async function createBooking(bookingData) {
   const {
     restaurantId, dinerName, dinerEmail, dinerPhone,
-    bookingDate, bookingTime, partySize, specialRequests
+    bookingDate, bookingTime, partySize, specialRequests, dinerId
   } = bookingData
 
   const { data, error } = await supabase
     .from('bookings')
     .insert({
       restaurant_id: restaurantId,
+      diner_id: dinerId || null,
       diner_name: dinerName,
       diner_email: dinerEmail,
       diner_phone: dinerPhone,

@@ -839,7 +839,8 @@
       bookingDate: document.getElementById('bdate').value,
       bookingTime: selectedSlot.dataset.time,
       partySize: parseInt(document.getElementById('bparty').value),
-      specialRequests: document.getElementById('special-requests').value
+      specialRequests: document.getElementById('special-requests').value,
+      dinerId: _session?.user?.id || null
     })
     if (error) {
       alert('Erro ao criar reserva: ' + error.message)
