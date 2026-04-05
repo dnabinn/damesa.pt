@@ -30,21 +30,21 @@ export async function createBooking(bookingData) {
   return { booking: data }
 }
 
-// Send confirmation (email only — SMS coming soon)
+// Send confirmation emails to diner + restaurant
 async function sendBookingConfirmation(booking) {
-  await fetch('https://jdkbywroucgwrfpirloa.supabase.co/functions/v1/send-notification', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer sb_publishable_rU5h79iwvA6wDozm72uvMg_zSFZAkkY'
-    },
-    body: JSON.stringify({
-      type: 'email',
-      to: booking.diner_email,
-      subject: `Reserva confirmada — ${booking.reference_code}`,
-      bookingId: booking.id
+  try {
+    await fetch('https://jdkbywroucgwrfpirloa.supabase.co/functions/v1/send-booking-emails', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer sb_publishable_rU5h79iwvA6wDozm72uvMg_zSFZAkkY'
+      },
+      body: JSON.stringify({ bookingId: booking.id })
     })
-  })
+  } catch (e) {
+    // Non-fatal — booking was created, email just failed silently
+    console.error('Email notification failed:', e)
+  }
 }
 
 // Get bookings for a restaurant (owner dashboard)
