@@ -255,6 +255,7 @@
       z-index: 2;
     }
     .photos-empty { color: var(--muted); font-size: 14px; grid-column: 1/-1; padding: 40px 0; text-align: center; }
+    .photos-section-header { font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
     /* Lightbox */
     .lightbox { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.88); z-index:1000; align-items:center; justify-content:center; cursor:zoom-out; }
     .lightbox.open { display:flex; animation: fadeIn 0.2s ease; }
@@ -312,6 +313,14 @@
     .review-stars { font-size: 14px; color: #f0c040; letter-spacing: 1px; }
     .review-text { font-size: 14px; color: var(--muted); line-height: 1.65; }
     .review-empty { color: var(--muted); font-size: 14px; padding: 24px 0; }
+    .google-review-btn {
+      display: inline-flex; align-items: center; gap: 10px;
+      padding: 13px 22px; border-radius: var(--radius);
+      border: 1px solid var(--border); background: var(--card);
+      font-size: 14px; font-weight: 600; color: var(--text);
+      transition: box-shadow 0.2s, border-color 0.2s;
+    }
+    .google-review-btn:hover { border-color: #4285F4; box-shadow: 0 2px 12px rgba(66,133,244,0.15); }
 
     /* Review form */
     .review-form {
@@ -507,22 +516,48 @@
 
       <!-- PHOTOS TAB -->
       <div class="tab-panel" id="tab-photos">
-        <div class="photos-grid" id="photos-grid">
+
+        <!-- RESTAURANT PHOTOS section -->
+        <div class="photos-section-header">Fotos do Restaurante</div>
+        <div class="photos-grid" id="photos-grid-restaurant">
           <p class="photos-empty">Nenhuma foto ainda.</p>
         </div>
-        <!-- Upload area: shown only to diners who have a past booking here -->
-        <div id="photo-upload-section" style="display:none;">
-          <label class="upload-area" for="photo-input">
+
+        <!-- DINER PHOTOS section -->
+        <div class="photos-section-header" style="margin-top:32px;">Fotos dos Clientes</div>
+        <div class="photos-grid" id="photos-grid-diner">
+          <p class="photos-empty">Nenhuma foto ainda.</p>
+        </div>
+
+        <!-- Upload area: shown to restaurant owner (auto-approved, tagged as 'restaurant') -->
+        <div id="photo-upload-owner" style="display:none; margin-top:24px;">
+          <div class="photos-section-header">Adicionar fotos do restaurante</div>
+          <label class="upload-area" for="photo-input-owner">
+            <div class="upload-icon">📷</div>
+            <p><strong>Adicionar foto do restaurante</strong></p>
+            <p style="margin-top:4px;font-size:12px;">Publicada imediatamente</p>
+          </label>
+          <input type="file" id="photo-input-owner" accept="image/*" />
+          <div class="upload-confirm" id="photo-upload-confirm-owner">
+            <button id="photo-submit-owner" class="bcta">Publicar foto</button>
+          </div>
+        </div>
+
+        <!-- Upload area: shown to verified diners (past confirmed booking) -->
+        <div id="photo-upload-diner" style="display:none; margin-top:24px;">
+          <div class="photos-section-header">Partilhar a tua foto</div>
+          <label class="upload-area" for="photo-input-diner">
             <div class="upload-icon">📷</div>
             <p><strong>Partilhar uma foto</strong></p>
             <p style="margin-top:4px;font-size:12px;">Clica para escolher do dispositivo</p>
           </label>
-          <input type="file" id="photo-input" accept="image/*" />
-          <div class="upload-confirm" id="photo-upload-name">
+          <input type="file" id="photo-input-diner" accept="image/*" />
+          <div class="upload-confirm" id="photo-upload-confirm-diner">
             <input type="text" id="photo-diner-name" placeholder="O teu nome (opcional)" />
-            <button id="photo-submit-btn" class="bcta">Enviar foto</button>
+            <button id="photo-submit-diner" class="bcta">Enviar foto</button>
           </div>
         </div>
+
         <!-- Message for users without a booking -->
         <div id="photo-no-booking" style="display:none; text-align:center; padding:24px 0; color:var(--muted); font-size:14px;">
           📷 <a href="#booking-widget" style="color:var(--accent);">Reserva uma mesa</a> para poderes partilhar fotos deste restaurante.
@@ -563,6 +598,14 @@
         <!-- Message for unauthenticated users -->
         <div id="review-login-required" style="display:none; background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:24px; text-align:center; color:var(--muted); font-size:14px; line-height:1.6;">
           <p>Tens de <a href="/pages/login.html" style="color:var(--accent);">iniciar sessão</a> para deixar uma avaliação.</p>
+        </div>
+
+        <!-- Review on Google -->
+        <div id="google-review-section" style="display:none; margin-top:32px;">
+          <a id="google-review-link" href="#" target="_blank" rel="noopener" class="google-review-btn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style="flex-shrink:0"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+            Avaliar no Google
+          </a>
         </div>
       </div>
 
@@ -699,6 +742,13 @@
   // Update canonical link if present
   const canonical = document.querySelector('link[rel="canonical"]')
   if (canonical) canonical.href = cleanUrl
+
+  // Show "Review on Google" button if restaurant has a Maps URL
+  if (restaurant.google_maps_url) {
+    const sec = document.getElementById('google-review-section')
+    document.getElementById('google-review-link').href = restaurant.google_maps_url
+    sec.style.display = 'block'
+  }
 
   const schema = {
     "@context": "https://schema.org", "@type": "Restaurant",
@@ -856,28 +906,44 @@
   }
 
   // ── PHOTOS ───────────────────────────────────────────────
-  async function loadPhotos() {
-    const { data } = await supabase
-      .from('restaurant_photos').select('*')
-      .eq('restaurant_id', restaurant.id).eq('approved', true)
-      .order('created_at', { ascending: false })
-    const grid = document.getElementById('photos-grid')
-    if (!data?.length) return
-    grid.innerHTML = data.map(p => `
+  function renderPhotoGrid(gridId, photos) {
+    const grid = document.getElementById(gridId)
+    if (!photos?.length) { grid.innerHTML = '<p class="photos-empty">Nenhuma foto ainda.</p>'; return }
+    grid.innerHTML = photos.map(p => `
       <div class="photo-thumb" onclick="openLightbox('${p.photo_url}', 'Foto de ${p.diner_name ?? 'cliente'}')">
         <img src="${p.photo_url}" alt="Foto de ${p.diner_name ?? 'cliente'}" loading="lazy" />
         ${p.diner_name ? `<div class="photo-author">${p.diner_name}</div>` : ''}
       </div>
     `).join('')
   }
+
+  async function loadPhotos() {
+    const { data } = await supabase
+      .from('restaurant_photos').select('*')
+      .eq('restaurant_id', restaurant.id).eq('approved', true)
+      .order('created_at', { ascending: false })
+    const rest = data?.filter(p => p.source_type === 'restaurant') ?? []
+    const diners = data?.filter(p => p.source_type !== 'restaurant') ?? []
+    renderPhotoGrid('photos-grid-restaurant', rest)
+    renderPhotoGrid('photos-grid-diner', diners)
+  }
   await loadPhotos()
 
-  // Check if this logged-in diner has a past confirmed/completed booking — only they can upload photos
+  // Determine what upload UI to show:
+  // - restaurant owner → owner upload (auto-approved, source_type: 'restaurant')
+  // - verified diner (past confirmed booking) → diner upload (pending approval)
+  // - anyone else → "reserve first" message
   async function checkCanUploadPhoto() {
-    if (!_session?.user?.email) {
+    if (!_session?.user) {
       document.getElementById('photo-no-booking').style.display = 'block'
       return
     }
+    // Owner check
+    if (_session.user.id === restaurant.owner_id) {
+      document.getElementById('photo-upload-owner').style.display = 'block'
+      return
+    }
+    // Verified diner check
     const today = new Date().toISOString().split('T')[0]
     const { data } = await supabase
       .from('bookings').select('id')
@@ -887,31 +953,52 @@
       .in('status', ['confirmed', 'completed'])
       .limit(1)
     if (data?.length) {
-      document.getElementById('photo-upload-section').style.display = 'block'
+      document.getElementById('photo-upload-diner').style.display = 'block'
     } else {
       document.getElementById('photo-no-booking').style.display = 'block'
     }
   }
   checkCanUploadPhoto()
 
-  document.getElementById('photo-input').addEventListener('change', (e) => {
-    if (e.target.files[0]) document.getElementById('photo-upload-name').classList.add('show')
+  // Owner upload handler
+  document.getElementById('photo-input-owner').addEventListener('change', (e) => {
+    if (e.target.files[0]) document.getElementById('photo-upload-confirm-owner').classList.add('show')
+  })
+  document.getElementById('photo-submit-owner').addEventListener('click', async () => {
+    const file = document.getElementById('photo-input-owner').files[0]
+    if (!file) return
+    const btn = document.getElementById('photo-submit-owner')
+    btn.textContent = 'A publicar...'; btn.disabled = true
+    const ext = file.name.split('.').pop()
+    const path = `${restaurant.id}/owner-${Date.now()}.${ext}`
+    const { error: uploadErr } = await supabase.storage.from('restaurant-photos').upload(path, file, { contentType: file.type })
+    if (uploadErr) { alert('Erro ao enviar foto.'); btn.textContent = 'Publicar foto'; btn.disabled = false; return }
+    const { data: { publicUrl } } = supabase.storage.from('restaurant-photos').getPublicUrl(path)
+    await supabase.from('restaurant_photos').insert({ restaurant_id: restaurant.id, diner_name: restaurant.name, photo_url: publicUrl, approved: true, source_type: 'restaurant' })
+    document.getElementById('photo-input-owner').value = ''
+    document.getElementById('photo-upload-confirm-owner').classList.remove('show')
+    btn.textContent = 'Publicar foto'; btn.disabled = false
+    await loadPhotos()
   })
 
-  document.getElementById('photo-submit-btn').addEventListener('click', async () => {
-    const file = document.getElementById('photo-input').files[0]
+  // Diner upload handler
+  document.getElementById('photo-input-diner').addEventListener('change', (e) => {
+    if (e.target.files[0]) document.getElementById('photo-upload-confirm-diner').classList.add('show')
+  })
+  document.getElementById('photo-submit-diner').addEventListener('click', async () => {
+    const file = document.getElementById('photo-input-diner').files[0]
     if (!file) return
-    const btn = document.getElementById('photo-submit-btn')
+    const btn = document.getElementById('photo-submit-diner')
     btn.textContent = 'A enviar...'; btn.disabled = true
     const ext = file.name.split('.').pop()
-    const path = `${restaurant.id}/${Date.now()}.${ext}`
+    const path = `${restaurant.id}/diner-${Date.now()}.${ext}`
     const { error: uploadErr } = await supabase.storage.from('restaurant-photos').upload(path, file, { contentType: file.type })
     if (uploadErr) { alert('Erro ao enviar foto.'); btn.textContent = 'Enviar foto'; btn.disabled = false; return }
     const { data: { publicUrl } } = supabase.storage.from('restaurant-photos').getPublicUrl(path)
     const dinerName = document.getElementById('photo-diner-name').value.trim() || _session?.user?.email?.split('@')[0] || null
-    await supabase.from('restaurant_photos').insert({ restaurant_id: restaurant.id, diner_name: dinerName, photo_url: publicUrl, approved: false })
-    document.getElementById('photo-input').value = ''
-    document.getElementById('photo-upload-name').classList.remove('show')
+    await supabase.from('restaurant_photos').insert({ restaurant_id: restaurant.id, diner_name: dinerName, photo_url: publicUrl, approved: false, source_type: 'diner' })
+    document.getElementById('photo-input-diner').value = ''
+    document.getElementById('photo-upload-confirm-diner').classList.remove('show')
     btn.textContent = 'Enviado! Aguarda aprovação 👍'; btn.disabled = true
     await loadPhotos()
   })
