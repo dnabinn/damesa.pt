@@ -496,7 +496,22 @@
     `).join('')
   }
 
-  window.updateStatus = async function(id, status) { await updateBookingStatus(id, status); loadBookings() }
+  window.updateStatus = async function(id, status) {
+    await updateBookingStatus(id, status)
+    // Notify diner by email when confirmed or cancelled
+    if (status === 'confirmed' || status === 'cancelled') {
+      fetch('https://jdkbywroucgwrfpirloa.supabase.co/functions/v1/send-booking-emails', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': 'sb_publishable_rU5h79iwvA6wDozm72uvMg_zSFZAkkY',
+          'Authorization': 'Bearer sb_publishable_rU5h79iwvA6wDozm72uvMg_zSFZAkkY'
+        },
+        body: JSON.stringify({ statusChange: { bookingId: id, newStatus: status } })
+      }).catch(() => {})
+    }
+    loadBookings()
+  }
 
   function translateStatus(s) {
     return { pending:'Pendente', confirmed:'Confirmada', cancelled:'Cancelada', completed:'Concluída', no_show:'Não apareceu' }[s] ?? s
