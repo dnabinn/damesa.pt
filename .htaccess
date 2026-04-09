@@ -50,6 +50,9 @@ ErrorDocument 404 /pages/404.html
   # Clean restaurant URLs: damesa.pt/restaurante/lisboa/lumbini
   RewriteRule ^restaurante/([^/]+)/([^/]+)/?$ pages/restaurant.html?slug=$2 [L,QSA]
 
+  # Booking widget: damesa.pt/reservar/{slug}
+  RewriteRule ^reservar/([^/]+)/?$ pages/reservar.html?slug=$1 [L,QSA]
+
   # *.html → pages/*.html (e.g. damesa.pt/restaurantes.html)
   RewriteRule ^([a-zA-Z0-9_-]+\.html)$ pages/$1 [L]
 </IfModule>

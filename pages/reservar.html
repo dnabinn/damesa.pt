@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reservar — Da Mesa</title>
+  <meta name="robots" content="noindex" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #faf7f2;
+      --card: #ffffff;
+      --text: #1c1612;
+      --muted: #7a6a5e;
+      --accent: #c0392b;
+      --accent-dark: #a93226;
+      --border: #e8dfd4;
+      --radius: 14px;
+    }
+    html, body { height: 100%; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg); color: var(--text);
+      display: flex; flex-direction: column; min-height: 100vh;
+    }
+
+    @keyframes fadeUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── HEADER ─── */
+    .w-header {
+      background: var(--card); border-bottom: 1px solid var(--border);
+      padding: 16px 20px; display: flex; align-items: center; gap: 14px;
+    }
+    .w-logo-wrap {
+      width: 48px; height: 48px; border-radius: 10px;
+      background: var(--border); overflow: hidden; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-family: Georgia, serif; font-size: 18px; color: var(--muted);
+    }
+    .w-logo-wrap img { width: 100%; height: 100%; object-fit: cover; }
+    .w-rest-name { font-size: 17px; font-weight: 700; line-height: 1.2; }
+    .w-rest-meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+    /* ── BODY ─── */
+    .w-body { flex: 1; padding: 24px 20px; max-width: 480px; margin: 0 auto; width: 100%; }
+
+    /* ── STEPS ─── */
+    .step { display: none; animation: fadeUp 0.3s ease both; }
+    .step.active { display: block; }
+
+    .step-label {
+      font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px;
+      color: var(--muted); margin-bottom: 20px;
+    }
+
+    /* ── FORM FIELDS ─── */
+    .field { margin-bottom: 16px; }
+    .field label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 6px; color: var(--muted); }
+    .field input, .field textarea, .field select {
+      width: 100%; padding: 11px 14px;
+      border: 1px solid var(--border); border-radius: 10px;
+      font-size: 15px; background: var(--card); color: var(--text);
+      outline: none; transition: border-color 0.15s;
+      font-family: inherit;
+    }
+    .field input:focus, .field textarea:focus, .field select:focus { border-color: var(--text); }
+    .field textarea { resize: vertical; min-height: 72px; }
+
+    /* ── TIME GRID ─── */
+    .time-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+      margin-top: 6px;
+    }
+    .time-btn {
+      padding: 10px 6px; border: 1px solid var(--border);
+      border-radius: 10px; background: var(--card); font-size: 14px;
+      font-weight: 500; cursor: pointer; transition: all 0.15s; text-align: center;
+    }
+    .time-btn:hover:not(.unavailable) { border-color: var(--accent); color: var(--accent); }
+    .time-btn.selected { background: var(--text); color: #fff; border-color: var(--text); }
+    .time-btn.unavailable { opacity: 0.35; cursor: not-allowed; text-decoration: line-through; }
+    .time-section-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1.2px; color: var(--muted); margin: 16px 0 8px; }
+
+    /* ── SUMMARY CARD ─── */
+    .summary-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 20px; margin-bottom: 20px;
+    }
+    .summary-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+    .summary-row:last-child { border-bottom: none; }
+    .summary-row span:first-child { color: var(--muted); }
+    .summary-row span:last-child { font-weight: 600; }
+
+    /* ── CTA BUTTON ─── */
+    .btn-cta {
+      width: 100%; padding: 14px; border: none; border-radius: 10px;
+      background: var(--accent); color: #fff; font-size: 15px; font-weight: 600;
+      cursor: pointer; transition: background 0.15s; margin-top: 8px;
+    }
+    .btn-cta:hover { background: var(--accent-dark); }
+    .btn-cta:disabled { opacity: 0.6; cursor: not-allowed; }
+    .btn-secondary {
+      width: 100%; padding: 12px; border: 1px solid var(--border);
+      border-radius: 10px; background: transparent; color: var(--muted);
+      font-size: 14px; cursor: pointer; margin-top: 8px; transition: border-color 0.15s;
+    }
+    .btn-secondary:hover { border-color: var(--text); color: var(--text); }
+
+    /* ── CONFIRMATION ─── */
+    .confirm-icon { font-size: 48px; text-align: center; margin-bottom: 16px; }
+    .confirm-title { font-family: Georgia, serif; font-size: 22px; text-align: center; margin-bottom: 8px; }
+    .confirm-sub { font-size: 14px; color: var(--muted); text-align: center; line-height: 1.6; margin-bottom: 24px; }
+    .ref-badge {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 16px 20px; text-align: center;
+      margin-bottom: 24px;
+    }
+    .ref-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1.2px; color: var(--muted); margin-bottom: 6px; }
+    .ref-code { font-family: Georgia, serif; font-size: 26px; letter-spacing: 3px; font-weight: normal; }
+
+    /* ── FOOTER ─── */
+    .w-footer {
+      text-align: center; padding: 16px 20px;
+      font-size: 12px; color: var(--muted);
+      border-top: 1px solid var(--border);
+    }
+    .w-footer a { color: var(--accent); text-decoration: none; }
+
+    /* ── ERROR ─── */
+    .error-msg { color: var(--accent); font-size: 13px; margin-top: 8px; }
+
+    /* ── SPINNER ─── */
+    .spinner {
+      width: 20px; height: 20px; border: 2px solid rgba(255,255,255,0.4);
+      border-top-color: #fff; border-radius: 50%;
+      animation: spin 0.7s linear infinite; display: inline-block;
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="w-header">
+  <div class="w-logo-wrap" id="w-logo">
+    <span id="w-logo-initial">?</span>
+  </div>
+  <div>
+    <div class="w-rest-name" id="w-rest-name">A carregar...</div>
+    <div class="w-rest-meta" id="w-rest-meta"></div>
+  </div>
+</div>
+
+<!-- BODY -->
+<div class="w-body">
+
+  <!-- STEP 1: Date / Time / Party -->
+  <div class="step active" id="step1">
+    <div class="step-label">1 de 2 — Quando e quantos?</div>
+
+    <div class="field">
+      <label>Data</label>
+      <input type="date" id="w-date" />
+    </div>
+
+    <div class="field">
+      <label>Número de pessoas</label>
+      <select id="w-party">
+        <option value="1">1 pessoa</option>
+        <option value="2" selected>2 pessoas</option>
+        <option value="3">3 pessoas</option>
+        <option value="4">4 pessoas</option>
+        <option value="5">5 pessoas</option>
+        <option value="6">6 pessoas</option>
+        <option value="7">7 pessoas</option>
+        <option value="8">8+ pessoas</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>Hora</label>
+      <div id="time-slots-wrap">
+        <div style="color:var(--muted);font-size:13px;">Seleciona uma data primeiro.</div>
+      </div>
+    </div>
+
+    <div id="step1-error" class="error-msg" style="display:none;"></div>
+    <button class="btn-cta" id="btn-next1">Continuar</button>
+  </div>
+
+  <!-- STEP 2: Contact details -->
+  <div class="step" id="step2">
+    <div class="step-label">2 de 2 — Os teus dados</div>
+
+    <div class="summary-card" id="step2-summary"></div>
+
+    <div class="field">
+      <label>Nome completo</label>
+      <input type="text" id="w-name" placeholder="Maria Silva" autocomplete="name" />
+    </div>
+    <div class="field">
+      <label>Email</label>
+      <input type="email" id="w-email" placeholder="maria@email.com" autocomplete="email" />
+    </div>
+    <div class="field">
+      <label>Telemóvel</label>
+      <input type="tel" id="w-phone" placeholder="+351 912 345 678" autocomplete="tel" />
+    </div>
+    <div class="field">
+      <label>Pedidos especiais <span style="color:var(--muted);font-weight:400;">(opcional)</span></label>
+      <textarea id="w-requests" placeholder="Alergias, cadeira de bebé, aniversário..."></textarea>
+    </div>
+
+    <div id="step2-error" class="error-msg" style="display:none;"></div>
+    <button class="btn-cta" id="btn-confirm">Confirmar reserva</button>
+    <button class="btn-secondary" onclick="goStep(1)">← Voltar</button>
+  </div>
+
+  <!-- STEP 3: Confirmation -->
+  <div class="step" id="step3">
+    <div class="confirm-icon">✅</div>
+    <div class="confirm-title">Reserva confirmada!</div>
+    <div class="confirm-sub">Enviámos um email de confirmação. Até breve!</div>
+    <div class="ref-badge">
+      <div class="ref-label">Referência</div>
+      <div class="ref-code" id="w-ref">—</div>
+    </div>
+    <div class="summary-card" id="step3-summary"></div>
+  </div>
+
+</div>
+
+<!-- FOOTER -->
+<div class="w-footer">
+  Reserva gerida por <a href="https://damesa.pt" target="_blank">Da Mesa</a> · Sem taxas de reserva
+</div>
+
+<script type="module">
+import { supabase } from '/src/js/supabase.js'
+
+// Read slug from path /reservar/{slug} or ?slug=
+let slug = new URLSearchParams(window.location.search).get('slug')
+if (!slug) {
+  const parts = window.location.pathname.split('/').filter(Boolean)
+  if (parts[0] === 'reservar' && parts.length >= 2) slug = parts[1]
+}
+
+if (!slug) {
+  document.getElementById('w-rest-name').textContent = 'Restaurante não encontrado'
+  throw new Error('no slug')
+}
+
+// Load restaurant
+const { data: restaurant, error } = await supabase
+  .from('restaurants').select('*').eq('slug', slug).eq('status', 'active').single()
+
+if (error || !restaurant) {
+  document.getElementById('w-rest-name').textContent = 'Restaurante não encontrado'
+  throw new Error('not found')
+}
+
+// Set header
+document.title = `Reservar no ${restaurant.name} — Da Mesa`
+document.getElementById('w-rest-name').textContent = restaurant.name
+document.getElementById('w-rest-meta').textContent = [restaurant.cuisine_type, restaurant.city].filter(Boolean).join(' · ')
+document.getElementById('w-logo-initial').textContent = restaurant.name.charAt(0)
+if (restaurant.logo_image || restaurant.cover_image) {
+  const img = document.createElement('img')
+  img.src = restaurant.logo_image || restaurant.cover_image
+  img.alt = restaurant.name
+  document.getElementById('w-logo').innerHTML = ''
+  document.getElementById('w-logo').appendChild(img)
+}
+
+// Min date = today
+const todayStr = new Date().toISOString().split('T')[0]
+document.getElementById('w-date').min = todayStr
+document.getElementById('w-date').value = todayStr
+
+// State
+let selectedTime = null
+
+// ── TIME SLOTS ────────────────────────────────────────
+const LUNCH_SLOTS  = ['12:00','12:30','13:00','13:30','14:00','14:30']
+const DINNER_SLOTS = ['19:00','19:30','20:00','20:30','21:00','21:30','22:00','22:30']
+
+async function renderTimeSlots(date) {
+  const wrap = document.getElementById('time-slots-wrap')
+  wrap.innerHTML = '<div style="color:var(--muted);font-size:13px;opacity:0.6;">A verificar disponibilidade...</div>'
+  selectedTime = null
+
+  const { data: bookings } = await supabase
+    .from('bookings').select('booking_time, party_size')
+    .eq('restaurant_id', restaurant.id).eq('booking_date', date)
+    .in('status', ['pending', 'confirmed'])
+
+  function takenAt(slot) {
+    return bookings?.filter(b => b.booking_time === slot + ':00' || b.booking_time === slot)
+      .reduce((s, b) => s + b.party_size, 0) || 0
+  }
+
+  function makeGrid(slots, label) {
+    const div = document.createElement('div')
+    div.innerHTML = `<div class="time-section-label">${label}</div><div class="time-grid">${
+      slots.map(t => {
+        const taken = takenAt(t)
+        const unavail = taken >= (restaurant.capacity || 50)
+        return `<button class="time-btn${unavail ? ' unavailable' : ''}" data-time="${t}" ${unavail ? 'disabled' : ''}>${t}</button>`
+      }).join('')
+    }</div>`
+    return div
+  }
+
+  wrap.innerHTML = ''
+  wrap.appendChild(makeGrid(LUNCH_SLOTS, 'Almoço'))
+  wrap.appendChild(makeGrid(DINNER_SLOTS, 'Jantar'))
+
+  wrap.querySelectorAll('.time-btn:not(.unavailable)').forEach(btn => {
+    btn.addEventListener('click', () => {
+      wrap.querySelectorAll('.time-btn').forEach(b => b.classList.remove('selected'))
+      btn.classList.add('selected')
+      selectedTime = btn.dataset.time
+    })
+  })
+}
+
+document.getElementById('w-date').addEventListener('change', e => {
+  if (e.target.value) renderTimeSlots(e.target.value)
+})
+renderTimeSlots(todayStr)
+
+// ── STEP NAVIGATION ──────────────────────────────────
+window.goStep = function(n) {
+  document.querySelectorAll('.step').forEach(s => s.classList.remove('active'))
+  document.getElementById('step' + n).classList.add('active')
+  window.scrollTo(0, 0)
+}
+
+// ── STEP 1 → STEP 2 ──────────────────────────────────
+document.getElementById('btn-next1').addEventListener('click', () => {
+  const date = document.getElementById('w-date').value
+  const party = document.getElementById('w-party').value
+  const errEl = document.getElementById('step1-error')
+  errEl.style.display = 'none'
+
+  if (!date) { errEl.textContent = 'Seleciona uma data.'; errEl.style.display = 'block'; return }
+  if (!selectedTime) { errEl.textContent = 'Seleciona um horário.'; errEl.style.display = 'block'; return }
+
+  const dateLabel = new Date(date + 'T12:00:00').toLocaleDateString('pt-PT', { weekday:'long', day:'numeric', month:'long', year:'numeric' })
+  document.getElementById('step2-summary').innerHTML = `
+    <div class="summary-row"><span>Restaurante</span><span>${restaurant.name}</span></div>
+    <div class="summary-row"><span>Data</span><span>${dateLabel}</span></div>
+    <div class="summary-row"><span>Hora</span><span>${selectedTime}</span></div>
+    <div class="summary-row"><span>Pessoas</span><span>${party}</span></div>
+  `
+  goStep(2)
+})
+
+// ── STEP 2 → CONFIRM ─────────────────────────────────
+document.getElementById('btn-confirm').addEventListener('click', async () => {
+  const name    = document.getElementById('w-name').value.trim()
+  const email   = document.getElementById('w-email').value.trim()
+  const phone   = document.getElementById('w-phone').value.trim()
+  const requests= document.getElementById('w-requests').value.trim()
+  const date    = document.getElementById('w-date').value
+  const party   = parseInt(document.getElementById('w-party').value)
+  const errEl   = document.getElementById('step2-error')
+  errEl.style.display = 'none'
+
+  if (!name)  { errEl.textContent = 'Indica o teu nome.'; errEl.style.display = 'block'; return }
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { errEl.textContent = 'Introduz um email válido.'; errEl.style.display = 'block'; return }
+  if (!phone) { errEl.textContent = 'Indica o teu telemóvel.'; errEl.style.display = 'block'; return }
+
+  const btn = document.getElementById('btn-confirm')
+  btn.disabled = true
+  btn.innerHTML = '<span class="spinner"></span>'
+
+  // Generate reference code
+  const ref = 'DM-' + Math.random().toString(36).slice(2, 7).toUpperCase()
+
+  const { data: booking, error: bookErr } = await supabase.from('bookings').insert({
+    restaurant_id: restaurant.id,
+    diner_name: name,
+    diner_email: email,
+    diner_phone: phone,
+    booking_date: date,
+    booking_time: selectedTime + ':00',
+    party_size: party,
+    special_requests: requests || null,
+    status: 'pending',
+    reference_code: ref
+  }).select().single()
+
+  if (bookErr) {
+    errEl.textContent = 'Erro ao criar reserva. Tenta novamente.'
+    errEl.style.display = 'block'
+    btn.disabled = false; btn.textContent = 'Confirmar reserva'
+    return
+  }
+
+  // Send confirmation email
+  try {
+    await fetch('https://jdkbywroucgwrfpirloa.supabase.co/functions/v1/send-booking-emails', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': 'sb_publishable_rU5h79iwvA6wDozm72uvMg_zSFZAkkY',
+        'Authorization': 'Bearer sb_publishable_rU5h79iwvA6wDozm72uvMg_zSFZAkkY'
+      },
+      body: JSON.stringify({ bookingId: booking.id })
+    })
+  } catch (e) { /* non-critical */ }
+
+  const dateLabel = new Date(date + 'T12:00:00').toLocaleDateString('pt-PT', { weekday:'long', day:'numeric', month:'long', year:'numeric' })
+  document.getElementById('w-ref').textContent = ref
+  document.getElementById('step3-summary').innerHTML = `
+    <div class="summary-row"><span>Nome</span><span>${name}</span></div>
+    <div class="summary-row"><span>Data</span><span>${dateLabel}</span></div>
+    <div class="summary-row"><span>Hora</span><span>${selectedTime}</span></div>
+    <div class="summary-row"><span>Pessoas</span><span>${party}</span></div>
+    <div class="summary-row"><span>Email</span><span>${email}</span></div>
+  `
+  goStep(3)
+})
+</script>
+</body>
+</html>

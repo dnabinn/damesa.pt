@@ -291,6 +291,28 @@
       </div>
     </div>
 
+    <!-- Booking Widget -->
+    <div class="section-card" id="widget-section">
+      <div class="section-title">Widget de reservas</div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.6;">Partilha o link direto nas redes sociais ou incorpora o widget no teu site para que os clientes possam reservar sem sair da tua página.</p>
+
+      <div style="margin-bottom:16px;">
+        <label style="font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);display:block;margin-bottom:6px;">Link direto (Instagram bio / WhatsApp)</label>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input type="text" id="widget-link" readonly style="flex:1;padding:10px 14px;border:1px solid var(--border);border-radius:10px;font-size:13px;background:var(--bg);color:var(--text);font-family:monospace;" />
+          <button onclick="copyWidget('widget-link', this)" style="padding:10px 16px;border:1px solid var(--border);border-radius:10px;background:var(--card);font-size:13px;cursor:pointer;white-space:nowrap;transition:border-color 0.15s;" onmouseover="this.style.borderColor='var(--text)'" onmouseout="this.style.borderColor='var(--border)'">Copiar</button>
+        </div>
+      </div>
+
+      <div>
+        <label style="font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);display:block;margin-bottom:6px;">Código para incorporar no website (iframe)</label>
+        <div style="display:flex;gap:8px;align-items:flex-start;">
+          <textarea id="widget-embed" readonly rows="3" style="flex:1;padding:10px 14px;border:1px solid var(--border);border-radius:10px;font-size:12px;background:var(--bg);color:var(--text);font-family:monospace;resize:none;line-height:1.5;"></textarea>
+          <button onclick="copyWidget('widget-embed', this)" style="padding:10px 16px;border:1px solid var(--border);border-radius:10px;background:var(--card);font-size:13px;cursor:pointer;white-space:nowrap;transition:border-color 0.15s;margin-top:0;" onmouseover="this.style.borderColor='var(--text)'" onmouseout="this.style.borderColor='var(--border)'">Copiar</button>
+        </div>
+      </div>
+    </div>
+
     <!-- Cover image -->
     <div class="section-card">
       <div class="section-title">Imagem de capa</div>
@@ -418,6 +440,12 @@
   const _citySlug = (city) => (city ?? 'portugal').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-')
   document.getElementById('view-site-link').href = `/restaurante/${_citySlug(restaurant.city)}/${restaurant.slug}`
   document.title = `${restaurant.name} — Da Mesa`
+
+  // ── BOOKING WIDGET LINKS ───────────────────────────────────
+  const widgetUrl = `https://damesa.pt/reservar/${restaurant.slug}`
+  const iframeCode = `<iframe src="${widgetUrl}" width="420" height="640" frameborder="0" style="border-radius:14px;border:1px solid #e8dfd4;"></iframe>`
+  document.getElementById('widget-link').value = widgetUrl
+  document.getElementById('widget-embed').value = iframeCode
 
   // ── TABS ──────────────────────────────────────────────────
   document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -808,6 +836,15 @@
   })
 
   })() // end async IIFE
+
+  window.copyWidget = function(inputId, btn) {
+    const val = document.getElementById(inputId).value
+    navigator.clipboard.writeText(val).then(() => {
+      const orig = btn.textContent
+      btn.textContent = 'Copiado!'
+      setTimeout(() => btn.textContent = orig, 2000)
+    })
+  }
 </script>
 
 </body>
