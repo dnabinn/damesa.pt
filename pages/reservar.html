@@ -375,44 +375,38 @@ document.getElementById('btn-confirm').addEventListener('click', async () => {
   btn.disabled = true
   btn.innerHTML = '<span class="spinner"></span>'
 
-  // Generate reference code
-  const ref = 'DM-' + Math.random().toString(36).slice(2, 7).toUpperCase()
+  // Create booking + send emails via edge function (bypasses RLS for anonymous users)
+  const res = await fetch('https://jdkbywroucgwrfpirloa.supabase.co/functions/v1/send-booking-emails', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': 'sb_publishable_rU5h79iwvA6wDozm72uvMg_zSFZAkkY',
+      'Authorization': 'Bearer sb_publishable_rU5h79iwvA6wDozm72uvMg_zSFZAkkY'
+    },
+    body: JSON.stringify({
+      bookingData: {
+        restaurant_id: restaurant.id,
+        diner_name: name,
+        diner_email: email,
+        diner_phone: phone,
+        booking_date: date,
+        booking_time: selectedTime + ':00',
+        party_size: party,
+        special_requests: requests || null
+      }
+    })
+  })
+  const result = await res.json()
 
-  const { data: booking, error: bookErr } = await supabase.from('bookings').insert({
-    restaurant_id: restaurant.id,
-    diner_name: name,
-    diner_email: email,
-    diner_phone: phone,
-    booking_date: date,
-    booking_time: selectedTime + ':00',
-    party_size: party,
-    special_requests: requests || null,
-    status: 'pending',
-    reference_code: ref
-  }).select().single()
-
-  if (bookErr) {
+  if (!res.ok || !result.referenceCode) {
     errEl.textContent = 'Erro ao criar reserva. Tenta novamente.'
     errEl.style.display = 'block'
     btn.disabled = false; btn.textContent = 'Confirmar reserva'
     return
   }
 
-  // Send confirmation email
-  try {
-    await fetch('https://jdkbywroucgwrfpirloa.supabase.co/functions/v1/send-booking-emails', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': 'sb_publishable_rU5h79iwvA6wDozm72uvMg_zSFZAkkY',
-        'Authorization': 'Bearer sb_publishable_rU5h79iwvA6wDozm72uvMg_zSFZAkkY'
-      },
-      body: JSON.stringify({ bookingId: booking.id })
-    })
-  } catch (e) { /* non-critical */ }
-
   const dateLabel = new Date(date + 'T12:00:00').toLocaleDateString('pt-PT', { weekday:'long', day:'numeric', month:'long', year:'numeric' })
-  document.getElementById('w-ref').textContent = ref
+  document.getElementById('w-ref').textContent = result.referenceCode
   document.getElementById('step3-summary').innerHTML = `
     <div class="summary-row"><span>Nome</span><span>${name}</span></div>
     <div class="summary-row"><span>Data</span><span>${dateLabel}</span></div>

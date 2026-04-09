@@ -17,19 +17,37 @@ serve(async (req) => {
   }
 
   try {
-    const { bookingId } = await req.json()
-    if (!bookingId) return new Response(JSON.stringify({ error: 'bookingId required' }), { status: 400 })
-
-    // Fetch booking + restaurant details
+    const body = await req.json()
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
-    const { data: booking, error } = await supabase
-      .from('bookings')
-      .select('*, restaurants(name, address, phone, email)')
-      .eq('id', bookingId)
-      .single()
 
-    if (error || !booking) {
-      return new Response(JSON.stringify({ error: 'Booking not found' }), { status: 404 })
+    let booking: any
+
+    if (body.bookingId) {
+      // Mode 1: existing booking — just send emails
+      const { data, error } = await supabase
+        .from('bookings')
+        .select('*, restaurants(name, address, phone, email)')
+        .eq('id', body.bookingId)
+        .single()
+      if (error || !data) {
+        return new Response(JSON.stringify({ error: 'Booking not found' }), { status: 404 })
+      }
+      booking = data
+    } else if (body.bookingData) {
+      // Mode 2: create booking then send emails (used by anonymous widget)
+      const ref = 'DM-' + Math.random().toString(36).slice(2, 7).toUpperCase()
+      const { data, error } = await supabase
+        .from('bookings')
+        .insert({ ...body.bookingData, reference_code: ref, status: 'pending' })
+        .select('*, restaurants(name, address, phone, email)')
+        .single()
+      if (error || !data) {
+        console.error('Booking insert error:', error)
+        return new Response(JSON.stringify({ error: 'Failed to create booking', details: error }), { status: 500 })
+      }
+      booking = data
+    } else {
+      return new Response(JSON.stringify({ error: 'bookingId or bookingData required' }), { status: 400 })
     }
 
     const restaurant = booking.restaurants
@@ -192,7 +210,7 @@ serve(async (req) => {
     const results = await Promise.allSettled(emails)
     console.log('Email results:', JSON.stringify(results))
 
-    return new Response(JSON.stringify({ success: true, results }), {
+    return new Response(JSON.stringify({ success: true, results, bookingId: booking.id, referenceCode: booking.reference_code }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
 
