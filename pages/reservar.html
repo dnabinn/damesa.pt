@@ -299,10 +299,21 @@ async function renderTimeSlots(date) {
       .reduce((s, b) => s + b.party_size, 0) || 0
   }
 
-  function makeGrid(slots, label) {
+  function isPast(slot, date) {
+    if (date !== todayStr) return false
+    const [h, m] = slot.split(':').map(Number)
+    const slotTime = new Date()
+    slotTime.setHours(h, m, 0, 0)
+    // Hide slots within the next 30 minutes
+    return slotTime <= new Date(Date.now() + 30 * 60 * 1000)
+  }
+
+  function makeGrid(slots, label, date) {
+    const visible = slots.filter(t => !isPast(t, date))
+    if (!visible.length) return document.createElement('div')
     const div = document.createElement('div')
     div.innerHTML = `<div class="time-section-label">${label}</div><div class="time-grid">${
-      slots.map(t => {
+      visible.map(t => {
         const taken = takenAt(t)
         const unavail = taken >= (restaurant.capacity || 50)
         return `<button class="time-btn${unavail ? ' unavailable' : ''}" data-time="${t}" ${unavail ? 'disabled' : ''}>${t}</button>`
@@ -312,8 +323,8 @@ async function renderTimeSlots(date) {
   }
 
   wrap.innerHTML = ''
-  wrap.appendChild(makeGrid(LUNCH_SLOTS, 'Almoço'))
-  wrap.appendChild(makeGrid(DINNER_SLOTS, 'Jantar'))
+  wrap.appendChild(makeGrid(LUNCH_SLOTS, 'Almoço', date))
+  wrap.appendChild(makeGrid(DINNER_SLOTS, 'Jantar', date))
 
   wrap.querySelectorAll('.time-btn:not(.unavailable)').forEach(btn => {
     btn.addEventListener('click', () => {

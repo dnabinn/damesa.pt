@@ -199,6 +199,14 @@
       <div class="stat-card"><div class="stat-label">Confirmadas</div><div class="stat-value" id="stat-confirmed">—</div></div>
       <div class="stat-card"><div class="stat-label">Pessoas hoje</div><div class="stat-value" id="stat-covers">—</div></div>
     </div>
+    <!-- Quick widget links -->
+    <div id="widget-quick" style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;margin-bottom:16px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;">
+      <span style="font-size:13px;font-weight:600;flex-shrink:0;">Link de reservas:</span>
+      <input type="text" id="widget-link-quick" readonly style="flex:1;min-width:180px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:12px;background:var(--bg);font-family:monospace;" />
+      <button onclick="copyWidget('widget-link-quick', this)" style="padding:8px 14px;border:1px solid var(--border);border-radius:8px;background:var(--card);font-size:12px;cursor:pointer;white-space:nowrap;">Copiar link</button>
+      <button onclick="copyWidget('widget-embed-quick', this)" style="padding:8px 14px;border:1px solid var(--border);border-radius:8px;background:var(--card);font-size:12px;cursor:pointer;white-space:nowrap;">Copiar iframe</button>
+      <textarea id="widget-embed-quick" readonly style="display:none;"></textarea>
+    </div>
     <div class="toolbar">
       <h2><span class="live-dot"></span>Reservas</h2>
       <input type="date" id="date-picker" onchange="loadBookings()" />
@@ -446,6 +454,8 @@
   const iframeCode = `<iframe src="${widgetUrl}" width="420" height="640" frameborder="0" style="border-radius:14px;border:1px solid #e8dfd4;"></iframe>`
   document.getElementById('widget-link').value = widgetUrl
   document.getElementById('widget-embed').value = iframeCode
+  document.getElementById('widget-link-quick').value = widgetUrl
+  document.getElementById('widget-embed-quick').value = iframeCode
 
   // ── TABS ──────────────────────────────────────────────────
   document.querySelectorAll('.tab-btn').forEach(btn => {
