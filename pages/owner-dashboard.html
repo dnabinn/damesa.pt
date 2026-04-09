@@ -151,14 +151,20 @@
 
     /* OPENING HOURS */
     .hours-grid { display:flex; flex-direction:column; gap:0; }
-    .hours-row { display:grid; grid-template-columns:120px 1fr 1fr 80px; gap:16px; align-items:center; padding:14px 0; border-bottom:1px solid var(--border); }
-    .hours-row:last-child { border-bottom:none; }
-    .day-name { font-size:14px; font-weight:500; }
-    .hours-row input[type=time] { padding:9px 12px; border:1px solid var(--border); border-radius:8px; font-size:14px; outline:none; background:var(--bg); }
-    .hours-row input[type=time]:focus { border-color:var(--text); background:#fff; }
-    .closed-toggle { display:flex; align-items:center; gap:6px; font-size:13px; color:var(--muted); }
-    .closed-toggle input { cursor:pointer; width:15px; height:15px; }
-    @media(max-width:600px) { .hours-row { grid-template-columns:1fr 1fr; gap:8px; } .day-name { grid-column:1/-1; } }
+    .hours-day { display:grid; grid-template-columns:120px 1fr; gap:16px; padding:16px 0; border-bottom:1px solid var(--border); align-items:start; }
+    .hours-day:last-child { border-bottom:none; }
+    .day-name { font-size:14px; font-weight:500; padding-top:2px; }
+    .day-closed-row { display:flex; align-items:center; gap:6px; margin-bottom:10px; font-size:13px; color:var(--muted); }
+    .day-closed-row input { cursor:pointer; width:15px; height:15px; }
+    .slot-row { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+    .slot-row input[type=time] { flex:1; padding:9px 12px; border:1px solid var(--border); border-radius:8px; font-size:14px; outline:none; background:var(--bg); }
+    .slot-row input[type=time]:focus { border-color:var(--text); background:#fff; }
+    .slot-sep { font-size:12px; color:var(--muted); flex-shrink:0; }
+    .slot-del { background:none; border:none; cursor:pointer; color:var(--muted); font-size:16px; padding:4px; flex-shrink:0; line-height:1; transition:color 0.15s; }
+    .slot-del:hover { color:var(--accent); }
+    .add-slot-btn { background:none; border:1px dashed var(--border); border-radius:8px; padding:7px 14px; font-size:13px; color:var(--muted); cursor:pointer; margin-top:2px; transition:border-color 0.15s,color 0.15s; }
+    .add-slot-btn:hover { border-color:var(--text); color:var(--text); }
+    @media(max-width:600px) { .hours-day { grid-template-columns:1fr; } }
 
     footer { text-align:center; padding:40px 24px; color:var(--muted); font-size:13px; border-top:1px solid var(--border); }
     footer strong { color:var(--text); font-family:Georgia,serif; }
@@ -655,64 +661,94 @@
 
   // ── HORÁRIOS ──────────────────────────────────────────────
   const DAYS = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado']
-  let hoursData = []
-
   async function loadHours() {
     const { data } = await supabase
       .from('opening_hours').select('*')
-      .eq('restaurant_id', restaurant.id).order('day_of_week')
-    hoursData = data ?? []
-    renderHours()
+      .eq('restaurant_id', restaurant.id).order('day_of_week').order('open_time')
+    renderHours(data ?? [])
   }
   await loadHours()
 
-  function renderHours() {
+  function renderHours(data) {
     const grid = document.getElementById('hours-grid')
     grid.innerHTML = DAYS.map((day, i) => {
-      const h = hoursData.find(d => d.day_of_week === i)
-      const closed = h?.is_closed ?? false
+      const dayRows = data.filter(d => d.day_of_week === i)
+      const closed = dayRows.length > 0 ? dayRows[0].is_closed : false
+      const slots = (!closed && dayRows.length > 0)
+        ? dayRows.map(d => ({ open: d.open_time?.slice(0,5) ?? '12:00', close: d.close_time?.slice(0,5) ?? '15:00' }))
+        : [{ open: '12:00', close: '15:00' }]
       return `
-        <div class="hours-row" id="hours-row-${i}">
-          <div class="day-name">${day}</div>
-          <div class="field">
-            <label style="font-size:11px;">Abre</label>
-            <input type="time" id="open-${i}" value="${h?.open_time?.slice(0,5) ?? '12:00'}" ${closed ? 'disabled' : ''} />
+        <div class="hours-day" id="hours-day-${i}">
+          <div>
+            <div class="day-name">${day}</div>
+            <div class="day-closed-row" style="margin-top:6px;">
+              <input type="checkbox" id="closed-${i}" ${closed ? 'checked' : ''} onchange="toggleClosed(${i})" />
+              <label for="closed-${i}">Fechado</label>
+            </div>
           </div>
-          <div class="field">
-            <label style="font-size:11px;">Fecha</label>
-            <input type="time" id="close-${i}" value="${h?.close_time?.slice(0,5) ?? '23:00'}" ${closed ? 'disabled' : ''} />
+          <div id="slots-${i}" style="${closed ? 'opacity:0.35;pointer-events:none;' : ''}">
+            ${slots.map((s, si) => slotRowHtml(i, si, s.open, s.close)).join('')}
+            <button class="add-slot-btn" onclick="addSlot(${i})">+ Adicionar período</button>
           </div>
-          <div class="closed-toggle">
-            <input type="checkbox" id="closed-${i}" ${closed ? 'checked' : ''} onchange="toggleClosed(${i})" />
-            <label for="closed-${i}">Fechado</label>
-          </div>
-        </div>
-      `
+        </div>`
     }).join('')
+  }
+
+  function slotRowHtml(dayIdx, slotIdx, open, close) {
+    return `<div class="slot-row" id="slot-${dayIdx}-${slotIdx}">
+      <input type="time" data-day="${dayIdx}" data-slot="${slotIdx}" data-type="open" value="${open}" />
+      <span class="slot-sep">até</span>
+      <input type="time" data-day="${dayIdx}" data-slot="${slotIdx}" data-type="close" value="${close}" />
+      <button class="slot-del" onclick="removeSlot(${dayIdx},${slotIdx})" title="Remover">🗑</button>
+    </div>`
   }
 
   window.toggleClosed = function(i) {
     const closed = document.getElementById(`closed-${i}`).checked
-    document.getElementById(`open-${i}`).disabled = closed
-    document.getElementById(`close-${i}`).disabled = closed
+    const wrap = document.getElementById(`slots-${i}`)
+    wrap.style.opacity = closed ? '0.35' : ''
+    wrap.style.pointerEvents = closed ? 'none' : ''
+  }
+
+  window.addSlot = function(dayIdx) {
+    const wrap = document.getElementById(`slots-${dayIdx}`)
+    const addBtn = wrap.querySelector('.add-slot-btn')
+    const slotIdx = wrap.querySelectorAll('.slot-row').length
+    addBtn.insertAdjacentHTML('beforebegin', slotRowHtml(dayIdx, slotIdx, '19:00', '23:00'))
+  }
+
+  window.removeSlot = function(dayIdx, slotIdx) {
+    const row = document.getElementById(`slot-${dayIdx}-${slotIdx}`)
+    const wrap = document.getElementById(`slots-${dayIdx}`)
+    if (wrap.querySelectorAll('.slot-row').length <= 1) return // keep at least one
+    row?.remove()
   }
 
   window.saveHours = async function() {
-    const btn = document.querySelector('.save-btn')
+    const btn = document.getElementById('hours-saved').previousElementSibling
     btn.disabled = true; btn.textContent = 'A guardar...'
 
+    // Delete all existing rows for this restaurant and re-insert
+    await supabase.from('opening_hours').delete().eq('restaurant_id', restaurant.id)
+
+    const inserts = []
     for (let i = 0; i < 7; i++) {
       const is_closed = document.getElementById(`closed-${i}`).checked
-      const open_time = document.getElementById(`open-${i}`).value || null
-      const close_time = document.getElementById(`close-${i}`).value || null
-      const existing = hoursData.find(d => d.day_of_week === i)
-
-      if (existing) {
-        await supabase.from('opening_hours').update({ is_closed, open_time, close_time }).eq('id', existing.id)
+      if (is_closed) {
+        inserts.push({ restaurant_id: restaurant.id, day_of_week: i, is_closed: true, open_time: null, close_time: null })
       } else {
-        await supabase.from('opening_hours').insert({ restaurant_id: restaurant.id, day_of_week: i, is_closed, open_time, close_time })
+        const slotRows = document.getElementById(`slots-${i}`).querySelectorAll('.slot-row')
+        slotRows.forEach(row => {
+          const open_time = row.querySelector('[data-type="open"]').value || null
+          const close_time = row.querySelector('[data-type="close"]').value || null
+          if (open_time && close_time) {
+            inserts.push({ restaurant_id: restaurant.id, day_of_week: i, is_closed: false, open_time, close_time })
+          }
+        })
       }
     }
+
+    if (inserts.length) await supabase.from('opening_hours').insert(inserts)
 
     btn.disabled = false; btn.textContent = 'Guardar horário'
     const msg = document.getElementById('hours-saved')
