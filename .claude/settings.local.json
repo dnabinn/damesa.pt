@@ -5,7 +5,11 @@
       "Bash(unzip -l files.zip)",
       "Bash(unzip -o files.zip -d /c/Users/DNABINN/Desktop/Websites/DaMesa_files_temp)",
       "Bash(gh repo:*)",
-      "mcp__Claude_Preview__preview_start"
+      "mcp__Claude_Preview__preview_start",
+      "Bash(gh run:*)",
+      "Bash(node -e \":*)",
+      "Bash(npx supabase:*)",
+      "WebFetch(domain:damesa.pt)"
     ]
   }
 }

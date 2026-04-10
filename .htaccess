@@ -14,8 +14,11 @@
   # Booking widget: damesa.pt/reservar/{slug}
   RewriteRule ^reservar/([^/]+)/?$ pages/reservar.html?slug=$1 [L,QSA]
 
+  # Contract signing: damesa.pt/contrato/{token}
+  RewriteRule ^contrato/([^/]+)/?$ pages/contrato.html [L]
+
   # Named page clean URLs (no .html needed)
-  RewriteRule ^(restaurantes|cozinhas|login|dashboard|owner-dashboard|superadmin|privacy|terms|offline)/?$ pages/$1.html [L]
+  RewriteRule ^(restaurantes|cozinhas|login|dashboard|owner-dashboard|superadmin|privacy|terms|offline|contrato)/?$ pages/$1.html [L]
 
   # *.html → pages/*.html
   RewriteRule ^([a-zA-Z0-9_-]+\.html)$ pages/$1 [L]

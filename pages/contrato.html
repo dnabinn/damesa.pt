@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Contrato — Da Mesa</title>
+  <link rel="icon" type="image/png" href="/assets/icons/icon-192.png" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #faf7f2;
+      --card: #fff;
+      --text: #1c1612;
+      --muted: #7a6a5e;
+      --accent: #c0392b;
+      --border: #e8dfd4;
+      --radius: 12px;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 24px;
+      background: #1c1612;
+      color: #fff;
+    }
+    .logo {
+      font-family: Georgia, serif;
+      font-size: 22px;
+      font-weight: normal;
+      text-decoration: none;
+      color: #fff;
+    }
+    .logo span { color: #e07060; }
+    .nav-right { font-size: 13px; color: #8a7a6a; }
+
+    .page-wrap {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 40px 24px 80px;
+    }
+
+    .page-title {
+      font-family: Georgia, serif;
+      font-size: 28px;
+      font-weight: normal;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+    .page-subtitle {
+      font-size: 14px;
+      color: var(--muted);
+      margin-bottom: 32px;
+    }
+
+    /* Contract display box */
+    .contract-box {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px 36px;
+      max-height: 600px;
+      overflow-y: auto;
+      margin-bottom: 32px;
+      scroll-behavior: smooth;
+    }
+    @media (max-width: 600px) {
+      .contract-box { padding: 20px 18px; max-height: 440px; }
+    }
+
+    /* Signing form */
+    .sign-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px 36px;
+      margin-bottom: 24px;
+    }
+    @media (max-width: 600px) {
+      .sign-card { padding: 22px 18px; }
+    }
+    .sign-title {
+      font-family: Georgia, serif;
+      font-size: 18px;
+      font-weight: normal;
+      margin-bottom: 20px;
+    }
+
+    .field-label {
+      display: block;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
+    .field-input {
+      width: 100%;
+      padding: 11px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-size: 15px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.15s;
+      background: var(--bg);
+    }
+    .field-input:focus { border-color: var(--text); background: #fff; }
+    .field-group { margin-bottom: 20px; }
+
+    .checkbox-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 24px;
+      cursor: pointer;
+    }
+    .checkbox-row input[type="checkbox"] {
+      flex-shrink: 0;
+      width: 18px;
+      height: 18px;
+      margin-top: 2px;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+    .checkbox-row span {
+      font-size: 14px;
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    .btn-sign {
+      width: 100%;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 14px;
+      font-size: 15px;
+      font-family: inherit;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s;
+      letter-spacing: 0.3px;
+    }
+    .btn-sign:hover:not(:disabled) { opacity: 0.88; }
+    .btn-sign:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    .eidas-note {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.6;
+      margin-top: 16px;
+    }
+
+    .msg-error {
+      background: #fce4ec;
+      color: #c62828;
+      border-radius: 8px;
+      padding: 14px 18px;
+      font-size: 14px;
+      margin-bottom: 20px;
+      display: none;
+    }
+    .msg-error.visible { display: block; }
+
+    /* State screens */
+    .state-box {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 48px 36px;
+      text-align: center;
+    }
+    .state-icon { font-size: 48px; margin-bottom: 16px; }
+    .state-title {
+      font-family: Georgia, serif;
+      font-size: 22px;
+      font-weight: normal;
+      margin-bottom: 10px;
+    }
+    .state-text { font-size: 15px; color: var(--muted); line-height: 1.6; }
+    .state-ref {
+      display: inline-block;
+      margin-top: 16px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 6px 14px;
+      font-size: 12px;
+      font-family: monospace;
+      color: var(--muted);
+      word-break: break-all;
+    }
+
+    /* Loading */
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading {
+      text-align: center;
+      padding: 64px 24px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .loading::before {
+      content: '';
+      display: block;
+      width: 32px;
+      height: 32px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin: 0 auto 16px;
+    }
+
+    footer {
+      text-align: center;
+      padding: 32px 24px;
+      color: var(--muted);
+      font-size: 12px;
+      border-top: 1px solid var(--border);
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="logo">Da <span>Mesa</span></a>
+  <div class="nav-right">Contrato Eletrónico</div>
+</nav>
+
+<div class="page-wrap">
+  <div id="main-content">
+    <div class="loading">A carregar contrato...</div>
+  </div>
+</div>
+
+<footer>Da Mesa · damesa.pt · Assinatura eletrónica ao abrigo do Regulamento eIDAS (UE) 2016/910</footer>
+
+<script type="module">
+  import { supabase } from '/src/js/supabase.js'
+
+  const SUPABASE_URL = 'https://jdkbywroucgwrfpirloa.supabase.co'
+
+  ;(async () => {
+    // Read token from last path segment
+    const pathParts = window.location.pathname.split('/').filter(Boolean)
+    const token = pathParts[pathParts.length - 1]
+
+    const container = document.getElementById('main-content')
+
+    if (!token || token === 'contrato') {
+      container.innerHTML = renderError('Token de contrato em falta. Verifique o link enviado por email.')
+      return
+    }
+
+    // Fetch contract from Supabase
+    const { data: contract, error } = await supabase
+      .from('contracts')
+      .select('id, contract_html, status, restaurant_id, signer_name, token')
+      .eq('token', token)
+      .single()
+
+    if (error || !contract) {
+      container.innerHTML = renderError('Contrato não encontrado. Verifique o link enviado por email.')
+      return
+    }
+
+    if (contract.status === 'signed') {
+      container.innerHTML = renderSigned(contract.signer_name, contract.token)
+      return
+    }
+
+    // Pending — show contract + signing form
+    container.innerHTML = `
+      <div class="page-title">Contrato de Prestação de Serviços</div>
+      <div class="page-subtitle">Leia o contrato na íntegra antes de assinar.</div>
+
+      <div class="contract-box" id="contract-body">
+        ${contract.contract_html}
+      </div>
+
+      <div class="sign-card">
+        <div class="sign-title">Assinar o Contrato</div>
+        <div class="msg-error" id="sign-error"></div>
+        <div class="field-group">
+          <label class="field-label" for="signer-name">O seu nome completo</label>
+          <input class="field-input" id="signer-name" type="text" placeholder="Ex: João Silva" autocomplete="name" required />
+        </div>
+        <label class="checkbox-row">
+          <input type="checkbox" id="agree-checkbox" />
+          <span>Li e concordo com todos os termos do contrato acima.</span>
+        </label>
+        <button class="btn-sign" id="sign-btn" onclick="handleSign()" disabled>Assinar o Contrato →</button>
+        <p class="eidas-note">
+          Ao assinar, aceita os termos e autoriza que o seu nome, endereço IP e data/hora sejam registados como prova de assinatura eletrónica ao abrigo do Regulamento eIDAS (UE) 2016/910.
+        </p>
+      </div>
+    `
+
+    // Enable button only when checkbox is checked
+    const checkbox = document.getElementById('agree-checkbox')
+    const btn = document.getElementById('sign-btn')
+    checkbox.addEventListener('change', () => {
+      btn.disabled = !checkbox.checked
+    })
+
+    window.handleSign = async function() {
+      const nameInput = document.getElementById('signer-name')
+      const errEl = document.getElementById('sign-error')
+      const signerName = nameInput.value.trim()
+
+      errEl.classList.remove('visible')
+
+      if (!signerName) {
+        errEl.textContent = 'Por favor, insira o seu nome completo.'
+        errEl.classList.add('visible')
+        nameInput.focus()
+        return
+      }
+
+      if (!checkbox.checked) {
+        errEl.textContent = 'Por favor, confirme que leu e aceita os termos do contrato.'
+        errEl.classList.add('visible')
+        return
+      }
+
+      btn.disabled = true
+      btn.textContent = 'A assinar...'
+
+      try {
+        const res = await fetch(`${SUPABASE_URL}/functions/v1/sign-contract`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token, signerName }),
+        })
+
+        const result = await res.json()
+
+        if (!res.ok || !result.success) {
+          throw new Error(result.error ?? 'Erro desconhecido. Tente novamente.')
+        }
+
+        // Success — replace form with success message
+        document.querySelector('.sign-card').outerHTML = renderSuccess(signerName)
+
+      } catch (e) {
+        errEl.textContent = e.message
+        errEl.classList.add('visible')
+        btn.disabled = false
+        btn.textContent = 'Assinar o Contrato →'
+      }
+    }
+  })()
+
+  function renderError(msg) {
+    return `<div class="state-box">
+      <div class="state-icon">⚠️</div>
+      <div class="state-title">Contrato não encontrado</div>
+      <div class="state-text">${msg}</div>
+    </div>`
+  }
+
+  function renderSigned(signerName, token) {
+    return `<div class="state-box">
+      <div class="state-icon">✅</div>
+      <div class="state-title">Contrato já assinado</div>
+      <div class="state-text">Este contrato foi assinado por <strong>${signerName ?? 'desconhecido'}</strong>.<br>Obrigado pela sua confiança na Da Mesa.</div>
+      <div class="state-ref">${token}</div>
+    </div>`
+  }
+
+  function renderSuccess(signerName) {
+    return `<div class="state-box">
+      <div class="state-icon">✅</div>
+      <div class="state-title">Contrato assinado com sucesso!</div>
+      <div class="state-text">
+        Vai receber um email de confirmação em breve.<br><br>
+        Obrigado, <strong>${signerName}</strong>.
+      </div>
+    </div>`
+  }
+</script>
+
+</body>
+</html>
