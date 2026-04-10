@@ -354,6 +354,17 @@
       <div class="modal-error" id="bm-contract-error"></div>
       <div class="modal-success" id="bm-contract-success"></div>
     </div>
+
+    <!-- Da Mesa Email Section -->
+    <div class="modal-section">
+      <div class="modal-section-title">📧 Email Da Mesa</div>
+      <div class="modal-status">
+        Email: <span id="bm-damesa-email-display">—</span>
+      </div>
+      <button class="modal-btn modal-btn-primary" id="bm-damesa-email-btn" onclick="generateDamesaEmail()">Gerar email Da Mesa</button>
+      <div class="modal-error" id="bm-damesa-email-error"></div>
+      <div class="modal-success" id="bm-damesa-email-success"></div>
+    </div>
   </div>
 </div>
 
@@ -462,7 +473,7 @@
     try {
       const { data, error } = await supabase
         .from('restaurants')
-        .select('id, name, slug, cuisine_type, status, subscription, owner_id, city, created_at, email, owner_legal_name, owner_iban, billing_status, contract_status, stripe_customer_id')
+        .select('id, name, slug, cuisine_type, status, subscription, owner_id, city, created_at, email, owner_legal_name, owner_iban, billing_status, contract_status, stripe_customer_id, damesa_email, description, cuisines')
         .order('created_at', { ascending: false })
       if (error) throw error
       allRestaurants = data ?? []
@@ -721,8 +732,17 @@
     const canSendContract = !!(restaurant.owner_legal_name && restaurant.email)
     document.getElementById('bm-contract-btn').disabled = !canSendContract
 
+    // Da Mesa email
+    const damesaEmail = restaurant.damesa_email
+    document.getElementById('bm-damesa-email-display').textContent = damesaEmail
+      ? damesaEmail
+      : 'Não configurado'
+    document.getElementById('bm-damesa-email-btn').textContent = damesaEmail
+      ? 'Regenerar email Da Mesa'
+      : 'Gerar email Da Mesa'
+
     // Reset messages
-    ;['bm-billing-error','bm-billing-success','bm-contract-error','bm-contract-success'].forEach(id => {
+    ;['bm-billing-error','bm-billing-success','bm-contract-error','bm-contract-success','bm-damesa-email-error','bm-damesa-email-success'].forEach(id => {
       const el = document.getElementById(id)
       el.style.display = 'none'
       el.textContent = ''
@@ -851,6 +871,49 @@
     } finally {
       btn.disabled = false
       btn.textContent = 'Enviar Contrato DocuSeal'
+    }
+  }
+
+  // ── DAMESA EMAIL ──────────────────────────────────────────
+  window.generateDamesaEmail = async function() {
+    if (!_billingRestaurantId) return
+
+    const restaurant = allRestaurants.find(r => r.id === _billingRestaurantId)
+    if (!restaurant) return
+
+    const errEl = document.getElementById('bm-damesa-email-error')
+    const sucEl = document.getElementById('bm-damesa-email-success')
+    errEl.style.display = 'none'; sucEl.style.display = 'none'
+
+    const generatedEmail = `${restaurant.slug}@damesa.pt`
+
+    const btn = document.getElementById('bm-damesa-email-btn')
+    btn.disabled = true
+    btn.textContent = 'A guardar...'
+
+    try {
+      const { error } = await supabase
+        .from('restaurants')
+        .update({ damesa_email: generatedEmail })
+        .eq('id', _billingRestaurantId)
+
+      if (error) throw error
+
+      // Update local data
+      const idx = allRestaurants.findIndex(r => r.id === _billingRestaurantId)
+      if (idx !== -1) allRestaurants[idx].damesa_email = generatedEmail
+
+      document.getElementById('bm-damesa-email-display').textContent = generatedEmail
+      sucEl.textContent = `Email Da Mesa gerado: ${generatedEmail}`
+      sucEl.style.display = 'block'
+      btn.textContent = 'Regenerar email Da Mesa'
+
+    } catch(e) {
+      errEl.textContent = `Erro: ${e.message}`
+      errEl.style.display = 'block'
+      btn.textContent = 'Gerar email Da Mesa'
+    } finally {
+      btn.disabled = false
     }
   }
 

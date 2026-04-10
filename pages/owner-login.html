@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Portal do Restaurante — Da Mesa</title>
+  <link rel="manifest" href="/assets/manifest.json" />
+  <link rel="icon" type="image/png" href="/assets/icons/icon-192.png" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:#1c1612; --card:#fff; --text:#1c1612; --muted:#7a6a5e;
+      --accent:#c0392b; --border:#e8dfd4; --radius:14px;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 48px 44px 40px;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.4);
+    }
+
+    .logo {
+      font-family: Georgia, serif;
+      font-size: 32px;
+      font-weight: normal;
+      color: var(--text);
+      text-align: center;
+      margin-bottom: 6px;
+    }
+    .logo span { color: var(--accent); }
+
+    .subtitle {
+      text-align: center;
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 36px;
+    }
+
+    .section-title {
+      font-family: Georgia, serif;
+      font-size: 18px;
+      font-weight: normal;
+      color: var(--text);
+      margin-bottom: 20px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 16px;
+    }
+    .field label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--muted);
+      font-weight: 500;
+    }
+    .field input {
+      padding: 12px 16px;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      font-size: 15px;
+      outline: none;
+      font-family: inherit;
+      transition: border-color 0.15s;
+      background: #faf7f2;
+      color: var(--text);
+    }
+    .field input:focus { border-color: var(--text); background: #fff; }
+
+    .btn-primary {
+      width: 100%;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      padding: 13px;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s;
+      margin-top: 8px;
+      font-family: inherit;
+    }
+    .btn-primary:hover { opacity: 0.88; }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .error-msg {
+      color: var(--accent);
+      font-size: 13px;
+      margin-top: 12px;
+      text-align: center;
+      display: none;
+    }
+    .success-msg {
+      color: #2e7d32;
+      font-size: 14px;
+      margin-top: 12px;
+      text-align: center;
+      display: none;
+      line-height: 1.5;
+    }
+
+    .forgot-link {
+      display: block;
+      text-align: center;
+      margin-top: 16px;
+      font-size: 13px;
+      color: var(--muted);
+      cursor: pointer;
+      text-decoration: underline;
+      background: none;
+      border: none;
+      font-family: inherit;
+      width: 100%;
+    }
+    .forgot-link:hover { color: var(--text); }
+
+    .back-link {
+      display: block;
+      text-align: center;
+      margin-top: 14px;
+      font-size: 13px;
+      color: var(--muted);
+      cursor: pointer;
+      background: none;
+      border: none;
+      font-family: inherit;
+      text-decoration: none;
+    }
+    .back-link:hover { color: var(--text); }
+
+    .section { display: none; }
+    .section.active { display: block; }
+
+    .help-text {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.5;
+      margin-bottom: 20px;
+    }
+
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 24px 0;
+    }
+
+    .footer-link {
+      display: block;
+      text-align: center;
+      margin-top: 28px;
+      font-size: 12px;
+      color: rgba(255,255,255,0.35);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+    .footer-link:hover { color: rgba(255,255,255,0.6); }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <div class="logo">Da <span>Mesa</span></div>
+  <div class="subtitle">Portal do Restaurante</div>
+
+  <!-- LOGIN SECTION -->
+  <div class="section active" id="section-login">
+    <div class="field">
+      <label>Email</label>
+      <input type="email" id="login-email" placeholder="restaurante@damesa.pt" autocomplete="email" />
+    </div>
+    <div class="field">
+      <label>Palavra-passe</label>
+      <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password" />
+    </div>
+    <button class="btn-primary" id="login-btn" onclick="doLogin()">Entrar</button>
+    <div class="error-msg" id="login-error"></div>
+    <button class="forgot-link" onclick="showForgot()">Esqueceu a palavra-passe?</button>
+  </div>
+
+  <!-- FORGOT PASSWORD SECTION -->
+  <div class="section" id="section-forgot">
+    <div class="section-title">Recuperar acesso</div>
+    <p class="help-text">Introduza o seu email Da Mesa (ex: restaurante@damesa.pt). Enviaremos um link de recuperação para o email de contacto registado.</p>
+    <div class="field">
+      <label>Email Da Mesa</label>
+      <input type="email" id="forgot-email" placeholder="restaurante@damesa.pt" autocomplete="email" />
+    </div>
+    <button class="btn-primary" id="forgot-btn" onclick="doForgot()">Enviar link de recuperação</button>
+    <div class="error-msg" id="forgot-error"></div>
+    <div class="success-msg" id="forgot-success">Enviámos um link de recuperação para o seu email de contacto registado.</div>
+    <button class="back-link" onclick="showLogin()">← Voltar ao login</button>
+  </div>
+
+  <!-- RESET PASSWORD SECTION -->
+  <div class="section" id="section-reset">
+    <div class="section-title">Nova palavra-passe</div>
+    <p class="help-text">Escolha uma nova palavra-passe para a sua conta.</p>
+    <div class="field">
+      <label>Nova palavra-passe</label>
+      <input type="password" id="new-password" placeholder="Mínimo 8 caracteres" autocomplete="new-password" />
+    </div>
+    <div class="field">
+      <label>Confirmar palavra-passe</label>
+      <input type="password" id="confirm-password" placeholder="Repita a palavra-passe" autocomplete="new-password" />
+    </div>
+    <button class="btn-primary" id="reset-btn" onclick="doReset()">Guardar nova palavra-passe</button>
+    <div class="error-msg" id="reset-error"></div>
+    <div class="success-msg" id="reset-success">Palavra-passe atualizada! A redirecionar...</div>
+  </div>
+</div>
+
+<a href="/pages/index.html" class="footer-link">← Voltar para damesa.pt</a>
+
+<script type="module">
+  import { supabase } from '/src/js/supabase.js?v=2'
+
+  ;(async () => {
+
+  const SUPABASE_URL = 'https://jdkbywroucgwrfpirloa.supabase.co'
+
+  // ── CHECK IF RECOVERY LINK ────────────────────────────────
+  const hash = window.location.hash
+  if (hash && hash.includes('type=recovery')) {
+    const params = new URLSearchParams(hash.slice(1))
+    const type = params.get('type')
+    const accessToken = params.get('access_token')
+    const refreshToken = params.get('refresh_token')
+
+    if (type === 'recovery' && accessToken) {
+      // Set the session from the recovery tokens
+      await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken ?? '' })
+      showSection('reset')
+    }
+  } else {
+    // Check if already logged in as restaurant_owner
+    const { data: { session } } = await supabase.auth.getSession()
+    if (session) {
+      const { data: profile } = await supabase
+        .from('profiles').select('role').eq('id', session.user.id).single()
+      if (profile?.role === 'restaurant_owner' || profile?.role === 'super_admin') {
+        window.location.replace('/pages/owner-dashboard.html')
+        return
+      }
+    }
+  }
+
+  // ── SECTION SWITCHING ─────────────────────────────────────
+  function showSection(name) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'))
+    document.getElementById('section-' + name).classList.add('active')
+  }
+
+  window.showForgot = function() { showSection('forgot') }
+  window.showLogin = function() { showSection('login') }
+
+  // ── LOGIN ─────────────────────────────────────────────────
+  window.doLogin = async function() {
+    const email = document.getElementById('login-email').value.trim()
+    const password = document.getElementById('login-password').value
+    const btn = document.getElementById('login-btn')
+    const errEl = document.getElementById('login-error')
+    errEl.style.display = 'none'
+
+    if (!email || !password) {
+      errEl.textContent = 'Preencha o email e a palavra-passe.'
+      errEl.style.display = 'block'
+      return
+    }
+
+    btn.disabled = true
+    btn.textContent = 'A entrar...'
+
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+
+    if (error) {
+      errEl.textContent = error.message.includes('Invalid login') ? 'Email ou palavra-passe incorretos.' : error.message
+      errEl.style.display = 'block'
+      btn.disabled = false
+      btn.textContent = 'Entrar'
+      return
+    }
+
+    // Check role
+    const { data: profile } = await supabase
+      .from('profiles').select('role').eq('id', data.user.id).single()
+
+    if (!profile || (profile.role !== 'restaurant_owner' && profile.role !== 'super_admin')) {
+      await supabase.auth.signOut()
+      errEl.textContent = 'Acesso não autorizado. Este portal é apenas para proprietários de restaurantes.'
+      errEl.style.display = 'block'
+      btn.disabled = false
+      btn.textContent = 'Entrar'
+      return
+    }
+
+    window.location.replace('/pages/owner-dashboard.html')
+  }
+
+  // Allow Enter key on login
+  document.getElementById('login-password').addEventListener('keydown', e => {
+    if (e.key === 'Enter') window.doLogin()
+  })
+  document.getElementById('login-email').addEventListener('keydown', e => {
+    if (e.key === 'Enter') window.doLogin()
+  })
+
+  // ── FORGOT PASSWORD ───────────────────────────────────────
+  window.doForgot = async function() {
+    const loginEmail = document.getElementById('forgot-email').value.trim()
+    const btn = document.getElementById('forgot-btn')
+    const errEl = document.getElementById('forgot-error')
+    const sucEl = document.getElementById('forgot-success')
+
+    errEl.style.display = 'none'
+    sucEl.style.display = 'none'
+
+    if (!loginEmail) {
+      errEl.textContent = 'Introduza o seu email Da Mesa.'
+      errEl.style.display = 'block'
+      return
+    }
+
+    if (!loginEmail.endsWith('@damesa.pt')) {
+      errEl.textContent = 'O email deve terminar em @damesa.pt'
+      errEl.style.display = 'block'
+      return
+    }
+
+    btn.disabled = true
+    btn.textContent = 'A enviar...'
+
+    try {
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/reset-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': 'sb_publishable_rU5h79iwvA6wDozm72uvMg_zSFZAkkY',
+        },
+        body: JSON.stringify({ loginEmail }),
+      })
+
+      const result = await res.json()
+
+      if (!res.ok || result.error) {
+        errEl.textContent = result.error ?? 'Erro ao enviar. Tente novamente.'
+        errEl.style.display = 'block'
+      } else {
+        sucEl.style.display = 'block'
+        btn.textContent = 'Enviado!'
+      }
+    } catch (e) {
+      errEl.textContent = 'Erro de ligação. Tente novamente.'
+      errEl.style.display = 'block'
+      btn.disabled = false
+      btn.textContent = 'Enviar link de recuperação'
+    }
+  }
+
+  document.getElementById('forgot-email').addEventListener('keydown', e => {
+    if (e.key === 'Enter') window.doForgot()
+  })
+
+  // ── RESET PASSWORD ────────────────────────────────────────
+  window.doReset = async function() {
+    const newPwd = document.getElementById('new-password').value
+    const confirmPwd = document.getElementById('confirm-password').value
+    const btn = document.getElementById('reset-btn')
+    const errEl = document.getElementById('reset-error')
+    const sucEl = document.getElementById('reset-success')
+
+    errEl.style.display = 'none'
+    sucEl.style.display = 'none'
+
+    if (!newPwd || newPwd.length < 8) {
+      errEl.textContent = 'A palavra-passe deve ter pelo menos 8 caracteres.'
+      errEl.style.display = 'block'
+      return
+    }
+
+    if (newPwd !== confirmPwd) {
+      errEl.textContent = 'As palavras-passe não coincidem.'
+      errEl.style.display = 'block'
+      return
+    }
+
+    btn.disabled = true
+    btn.textContent = 'A guardar...'
+
+    const { error } = await supabase.auth.updateUser({ password: newPwd })
+
+    if (error) {
+      errEl.textContent = error.message
+      errEl.style.display = 'block'
+      btn.disabled = false
+      btn.textContent = 'Guardar nova palavra-passe'
+      return
+    }
+
+    sucEl.style.display = 'block'
+    setTimeout(() => {
+      window.location.replace('/pages/owner-dashboard.html')
+    }, 2000)
+  }
+
+  })()
+</script>
+
+</body>
+</html>

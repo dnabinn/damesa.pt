@@ -225,6 +225,25 @@
     @keyframes spin { to { transform: rotate(360deg); } }
     .loading-text { display:inline-flex; align-items:center; gap:8px; opacity:0.7; }
     .loading-text::after { content:''; display:inline-block; width:12px; height:12px; border:1.5px solid currentColor; border-top-color:transparent; border-radius:50%; animation:spin 0.7s linear infinite; flex-shrink:0; }
+
+    /* CHIPS */
+    .chips-wrap { display:flex; flex-wrap:wrap; gap:8px; margin-top:4px; }
+    .chip { padding:6px 14px; border:1.5px solid var(--border); border-radius:100px; font-size:13px; cursor:pointer; transition:all 0.15s; background:#fff; color:var(--muted); user-select:none; }
+    .chip:hover { border-color:var(--text); color:var(--text); }
+    .chip.selected { background:var(--text); color:#fff; border-color:var(--text); }
+
+    /* SERVICE TOGGLES */
+    .service-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:10px; margin-top:4px; }
+    .service-row { display:flex; align-items:center; justify-content:space-between; padding:10px 14px; border:1px solid var(--border); border-radius:10px; background:#faf7f2; font-size:14px; }
+    .service-toggle { position:relative; width:40px; height:22px; flex-shrink:0; }
+    .service-toggle input { opacity:0; width:0; height:0; }
+    .toggle-slider { position:absolute; inset:0; background:#ccc; border-radius:11px; cursor:pointer; transition:background 0.2s; }
+    .toggle-slider::before { content:''; position:absolute; width:16px; height:16px; left:3px; bottom:3px; background:#fff; border-radius:50%; transition:transform 0.2s; }
+    .service-toggle input:checked + .toggle-slider { background:var(--text); }
+    .service-toggle input:checked + .toggle-slider::before { transform:translateX(18px); }
+
+    /* PROFILE READONLY */
+    .field-readonly { padding:11px 14px; border:1px solid var(--border); border-radius:10px; font-size:14px; background:#f5f1ec; color:var(--muted); font-family:inherit; }
   </style>
 </head>
 <body>
@@ -245,6 +264,7 @@
     <button class="tab-btn" data-tab="horarios">Horários</button>
     <button class="tab-btn" data-tab="fotos">Fotos</button>
     <button class="tab-btn" data-tab="definicoes">Definições</button>
+    <button class="tab-btn" data-tab="perfil">Perfil</button>
   </div>
 </div>
 
@@ -427,6 +447,121 @@
     </div>
   </div>
 
+  <!-- ── PERFIL ──────────────────────────────── -->
+  <div class="tab-panel" id="tab-perfil">
+
+    <!-- Informação Básica -->
+    <div class="section-card">
+      <div class="section-title">Informação Básica</div>
+      <div class="form-grid full" style="margin-bottom:16px;">
+        <div class="field">
+          <label>Nome do restaurante</label>
+          <div class="field-readonly" id="perfil-name">—</div>
+        </div>
+      </div>
+      <div class="form-grid full" style="margin-bottom:16px;">
+        <div class="field">
+          <label>Descrição</label>
+          <textarea id="perfil-description" placeholder="Descreva o seu restaurante..." rows="4"></textarea>
+        </div>
+      </div>
+      <div class="form-grid">
+        <div class="field">
+          <label>Website</label>
+          <input type="url" id="perfil-website" placeholder="https://..." />
+        </div>
+        <div class="field">
+          <label>Email Da Mesa</label>
+          <div class="field-readonly" id="perfil-damesa-email">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tipo de Cozinha -->
+    <div class="section-card">
+      <div class="section-title">Tipo de Cozinha</div>
+      <div class="chips-wrap" id="chips-cuisines"></div>
+    </div>
+
+    <!-- Comodidades -->
+    <div class="section-card">
+      <div class="section-title">Comodidades</div>
+      <div class="chips-wrap" id="chips-amenities"></div>
+    </div>
+
+    <!-- Métodos de Pagamento -->
+    <div class="section-card">
+      <div class="section-title">Métodos de Pagamento</div>
+      <div class="chips-wrap" id="chips-payments"></div>
+    </div>
+
+    <!-- Serviços -->
+    <div class="section-card">
+      <div class="section-title">Serviços</div>
+      <div class="service-grid" id="services-grid">
+        <div class="service-row">
+          <span>Jantar no local</span>
+          <label class="service-toggle"><input type="checkbox" data-svc="dine_in" /><span class="toggle-slider"></span></label>
+        </div>
+        <div class="service-row">
+          <span>Take-away</span>
+          <label class="service-toggle"><input type="checkbox" data-svc="takeaway" /><span class="toggle-slider"></span></label>
+        </div>
+        <div class="service-row">
+          <span>Entrega ao domicílio</span>
+          <label class="service-toggle"><input type="checkbox" data-svc="delivery" /><span class="toggle-slider"></span></label>
+        </div>
+        <div class="service-row">
+          <span>Esplanada</span>
+          <label class="service-toggle"><input type="checkbox" data-svc="outdoor_seating" /><span class="toggle-slider"></span></label>
+        </div>
+        <div class="service-row">
+          <span>Aceita reservas</span>
+          <label class="service-toggle"><input type="checkbox" data-svc="reservations" /><span class="toggle-slider"></span></label>
+        </div>
+        <div class="service-row">
+          <span>Catering</span>
+          <label class="service-toggle"><input type="checkbox" data-svc="catering" /><span class="toggle-slider"></span></label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sobre -->
+    <div class="section-card">
+      <div class="section-title">Sobre o Restaurante</div>
+      <div class="checkbox-row" style="margin-bottom:14px;">
+        <input type="checkbox" id="perfil-family" />
+        <label for="perfil-family" style="font-size:14px;">Negócio familiar</label>
+      </div>
+      <div class="checkbox-row">
+        <input type="checkbox" id="perfil-women" />
+        <label for="perfil-women" style="font-size:14px;">Liderado por mulheres</label>
+      </div>
+    </div>
+
+    <!-- Mapa -->
+    <div class="section-card">
+      <div class="section-title">Mapa</div>
+      <div class="field">
+        <label>URL do iframe do Google Maps</label>
+        <textarea id="perfil-map-embed" placeholder="Cole aqui o URL do iframe do Google Maps" rows="3"></textarea>
+        <span style="font-size:12px;color:var(--muted);margin-top:4px;display:block;">No Google Maps → Partilhar → Incorporar um mapa → copiar o URL do src do iframe</span>
+      </div>
+    </div>
+
+    <!-- Ofertas -->
+    <div class="section-card">
+      <div class="section-title">Ofertas</div>
+      <div class="field">
+        <label>Promoções e ofertas especiais</label>
+        <textarea id="perfil-offers" placeholder="Ex: Happy Hour das 18h às 20h, Menu almoço a 12€..." rows="4"></textarea>
+      </div>
+    </div>
+
+    <button class="save-btn" onclick="savePerfil()">Guardar Perfil</button>
+    <div class="saved-msg" id="perfil-saved">✓ Perfil guardado</div>
+  </div>
+
 </div><!-- /page-wrap -->
 
 <!-- MODALS -->
@@ -470,6 +605,12 @@
   import { supabase } from '/src/js/supabase.js?v=2'
 
   ;(async () => {
+  // Check session manually first to redirect to owner-login instead of login
+  const { data: { session: _sess } } = await supabase.auth.getSession()
+  if (!_sess) {
+    window.location.replace('/pages/owner-login.html')
+    return
+  }
   const profile = await guardRoute()
   if (!profile) return
 
@@ -946,8 +1087,121 @@
   document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       if (btn.dataset.tab === 'fotos') loadFotos()
+      if (btn.dataset.tab === 'perfil') loadPerfil()
     })
   })
+
+  // ── PERFIL TAB ────────────────────────────────────────────
+  const CUISINE_OPTIONS = ['Portuguesa','Nepalesa','Indiana','Italiana','Japonesa','Chinesa','Mediterrânea','Grelhados','Marisco','Fusão','Americana','Francesa','Espanhola','Vegana','Petiscos','Contemporânea','Brasileira','Árabe','Tailandesa','Mexicana']
+  const AMENITY_OPTIONS = ['Wi-Fi','Ar condicionado','Esplanada','Estacionamento gratuito','Acessível a cadeiras de rodas','Casa de banho adaptada','Música ao vivo','TV','Sala privada','Dog-friendly','Crianças bem-vindas','Zona de fumadores']
+  const PAYMENT_OPTIONS = ['Numerário','Multibanco','Visa','Mastercard','American Express','MB Way','Apple Pay','Google Pay','PayPal']
+
+  let _selectedCuisines = []
+  let _selectedAmenities = []
+  let _selectedPayments = []
+
+  function renderChips(containerId, options, selected, onToggle) {
+    const wrap = document.getElementById(containerId)
+    wrap.innerHTML = options.map(opt => `
+      <div class="chip ${selected.includes(opt) ? 'selected' : ''}" data-val="${opt}" onclick="${onToggle}('${opt}')">
+        ${opt}
+      </div>
+    `).join('')
+  }
+
+  window.toggleCuisine = function(val) {
+    _selectedCuisines = _selectedCuisines.includes(val)
+      ? _selectedCuisines.filter(v => v !== val)
+      : [..._selectedCuisines, val]
+    renderChips('chips-cuisines', CUISINE_OPTIONS, _selectedCuisines, 'toggleCuisine')
+  }
+
+  window.toggleAmenity = function(val) {
+    _selectedAmenities = _selectedAmenities.includes(val)
+      ? _selectedAmenities.filter(v => v !== val)
+      : [..._selectedAmenities, val]
+    renderChips('chips-amenities', AMENITY_OPTIONS, _selectedAmenities, 'toggleAmenity')
+  }
+
+  window.togglePayment = function(val) {
+    _selectedPayments = _selectedPayments.includes(val)
+      ? _selectedPayments.filter(v => v !== val)
+      : [..._selectedPayments, val]
+    renderChips('chips-payments', PAYMENT_OPTIONS, _selectedPayments, 'togglePayment')
+  }
+
+  let _perfilLoaded = false
+
+  async function loadPerfil() {
+    if (_perfilLoaded) return
+    _perfilLoaded = true
+
+    const { data: r } = await supabase
+      .from('restaurants')
+      .select('name, description, website, cuisines, amenities, payment_methods, services, is_family_business, is_women_owned, map_embed_url, offers, damesa_email')
+      .eq('id', restaurant.id)
+      .single()
+
+    if (!r) return
+
+    document.getElementById('perfil-name').textContent = r.name ?? '—'
+    document.getElementById('perfil-description').value = r.description ?? ''
+    document.getElementById('perfil-website').value = r.website ?? ''
+    document.getElementById('perfil-damesa-email').textContent = r.damesa_email ?? '—'
+    document.getElementById('perfil-family').checked = r.is_family_business ?? false
+    document.getElementById('perfil-women').checked = r.is_women_owned ?? false
+    document.getElementById('perfil-map-embed').value = r.map_embed_url ?? ''
+    document.getElementById('perfil-offers').value = r.offers ?? ''
+
+    _selectedCuisines = r.cuisines ?? []
+    _selectedAmenities = r.amenities ?? []
+    _selectedPayments = r.payment_methods ?? []
+
+    renderChips('chips-cuisines', CUISINE_OPTIONS, _selectedCuisines, 'toggleCuisine')
+    renderChips('chips-amenities', AMENITY_OPTIONS, _selectedAmenities, 'toggleAmenity')
+    renderChips('chips-payments', PAYMENT_OPTIONS, _selectedPayments, 'togglePayment')
+
+    // Populate service toggles
+    const svc = r.services ?? {}
+    document.querySelectorAll('[data-svc]').forEach(input => {
+      input.checked = svc[input.dataset.svc] ?? false
+    })
+  }
+
+  window.savePerfil = async function() {
+    const btn = document.querySelector('#tab-perfil .save-btn')
+    btn.disabled = true; btn.textContent = 'A guardar...'
+
+    // Build services object
+    const services = {}
+    document.querySelectorAll('[data-svc]').forEach(input => {
+      services[input.dataset.svc] = input.checked
+    })
+
+    const { error } = await supabase.from('restaurants').update({
+      description: document.getElementById('perfil-description').value.trim() || null,
+      website: document.getElementById('perfil-website').value.trim() || null,
+      cuisines: _selectedCuisines.length ? _selectedCuisines : null,
+      amenities: _selectedAmenities.length ? _selectedAmenities : null,
+      payment_methods: _selectedPayments.length ? _selectedPayments : null,
+      services,
+      is_family_business: document.getElementById('perfil-family').checked,
+      is_women_owned: document.getElementById('perfil-women').checked,
+      map_embed_url: document.getElementById('perfil-map-embed').value.trim() || null,
+      offers: document.getElementById('perfil-offers').value.trim() || null,
+      updated_at: new Date().toISOString()
+    }).eq('id', restaurant.id)
+
+    btn.disabled = false; btn.textContent = 'Guardar Perfil'
+
+    if (!error) {
+      const msg = document.getElementById('perfil-saved')
+      msg.style.display = 'block'
+      setTimeout(() => { msg.style.display = 'none' }, 3000)
+    } else {
+      alert('Erro ao guardar: ' + error.message)
+    }
+  }
 
   })() // end async IIFE
 

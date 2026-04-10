@@ -18,7 +18,7 @@
   RewriteRule ^contrato/([^/]+)/?$ pages/contrato.html [L]
 
   # Named page clean URLs (no .html needed)
-  RewriteRule ^(restaurantes|cozinhas|login|dashboard|owner-dashboard|superadmin|privacy|terms|offline|contrato)/?$ pages/$1.html [L]
+  RewriteRule ^(restaurantes|cozinhas|login|dashboard|owner-dashboard|owner-login|superadmin|privacy|terms|offline|contrato)/?$ pages/$1.html [L]
 
   # *.html → pages/*.html
   RewriteRule ^([a-zA-Z0-9_-]+\.html)$ pages/$1 [L]
