@@ -67,6 +67,57 @@
 
     .btn-enter { background:#1c1612; color:#fff; border:none; padding:5px 12px; border-radius:6px; font-size:12px; cursor:pointer; transition:opacity 0.15s; }
     .btn-enter:hover { opacity:0.75; }
+    .btn-billing { background:#1565c0; color:#fff; border:none; padding:5px 12px; border-radius:6px; font-size:12px; cursor:pointer; transition:opacity 0.15s; }
+    .btn-billing:hover { opacity:0.75; }
+
+    /* BILLING STATUS BADGES */
+    .billing-active { background:#e8f5e9; color:#2e7d32; padding:2px 8px; border-radius:6px; font-size:11px; font-weight:500; }
+    .billing-inactive { background:#fce4ec; color:#c62828; padding:2px 8px; border-radius:6px; font-size:11px; font-weight:500; }
+    .contract-signed { background:#e8f5e9; color:#2e7d32; padding:2px 8px; border-radius:6px; font-size:11px; font-weight:500; }
+    .contract-sent { background:#fff8e1; color:#f57f17; padding:2px 8px; border-radius:6px; font-size:11px; font-weight:500; }
+    .contract-none { background:var(--bg); border:1px solid var(--border); color:var(--muted); padding:2px 8px; border-radius:6px; font-size:11px; }
+
+    /* BILLING MODAL */
+    .modal-overlay {
+      display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55);
+      z-index:1000; align-items:center; justify-content:center; padding:20px;
+    }
+    .modal-overlay.open { display:flex; }
+    .modal-card {
+      background:#fff; border-radius:16px; padding:36px 40px; max-width:520px;
+      width:100%; max-height:90vh; overflow-y:auto;
+      box-shadow:0 24px 80px rgba(0,0,0,0.25);
+    }
+    .modal-title { font-family:Georgia,serif; font-size:22px; font-weight:normal; margin-bottom:6px; }
+    .modal-subtitle { font-size:13px; color:var(--muted); margin-bottom:28px; }
+    .modal-section { margin-bottom:28px; }
+    .modal-section-title {
+      font-size:11px; text-transform:uppercase; letter-spacing:1.5px; color:var(--muted);
+      margin-bottom:14px; padding-bottom:8px; border-bottom:1px solid var(--border);
+    }
+    .modal-field { margin-bottom:14px; }
+    .modal-label { font-size:12px; color:var(--muted); margin-bottom:5px; display:block; }
+    .modal-input {
+      width:100%; padding:10px 14px; border:1.5px solid var(--border); border-radius:8px;
+      font-size:14px; outline:none; font-family:inherit;
+    }
+    .modal-input:focus { border-color:var(--text); }
+    .modal-status { margin-bottom:14px; font-size:13px; }
+    .modal-btn {
+      width:100%; padding:12px; border:none; border-radius:8px; font-size:14px;
+      cursor:pointer; font-family:inherit; font-weight:500; transition:opacity 0.15s;
+    }
+    .modal-btn:hover:not(:disabled) { opacity:0.85; }
+    .modal-btn:disabled { opacity:0.4; cursor:not-allowed; }
+    .modal-btn-primary { background:#1c1612; color:#fff; }
+    .modal-btn-blue { background:#1565c0; color:#fff; }
+    .modal-error { color:#c62828; font-size:13px; margin-top:10px; display:none; }
+    .modal-success { color:#2e7d32; font-size:13px; margin-top:10px; display:none; }
+    .modal-close {
+      float:right; background:none; border:none; font-size:22px; cursor:pointer;
+      color:var(--muted); line-height:1; margin-top:-4px;
+    }
+    .modal-close:hover { color:var(--text); }
 
     /* GALLERY */
     .gallery-toolbar { display:flex; gap:12px; align-items:center; margin-bottom:24px; flex-wrap:wrap; }
@@ -200,10 +251,10 @@
     <div class="table-wrap">
       <table>
         <thead>
-          <tr><th>Nome</th><th>Cozinha</th><th>Proprietário</th><th>Estado</th><th>Subscrição</th><th>Ações</th><th></th></tr>
+          <tr><th>Nome</th><th>Cozinha</th><th>Proprietário</th><th>Estado</th><th>Subscrição</th><th>Faturação</th><th>Ações</th><th></th></tr>
         </thead>
         <tbody id="restaurants-tbody">
-          <tr><td colspan="6" style="padding:32px;text-align:center;color:var(--muted)"><span class="loading-text">A carregar</span></td></tr>
+          <tr><td colspan="8" style="padding:32px;text-align:center;color:var(--muted)"><span class="loading-text">A carregar</span></td></tr>
         </tbody>
       </table>
     </div>
@@ -263,6 +314,45 @@
     </div>
     <div id="gallery-container">
       <div class="gallery-empty">Seleciona um restaurante para ver as fotos.</div>
+    </div>
+  </div>
+</div>
+
+<!-- BILLING MODAL -->
+<div class="modal-overlay" id="billing-modal">
+  <div class="modal-card">
+    <button class="modal-close" onclick="closeBillingModal()">✕</button>
+    <div class="modal-title" id="bm-restaurant-name">Restaurante</div>
+    <div class="modal-subtitle" id="bm-restaurant-email"></div>
+
+    <!-- SEPA Section -->
+    <div class="modal-section">
+      <div class="modal-section-title">💳 Faturação SEPA</div>
+      <div class="modal-status">
+        Estado: <span id="bm-billing-badge">—</span>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label" for="bm-owner-name">Nome legal do proprietário</label>
+        <input class="modal-input" id="bm-owner-name" type="text" placeholder="Ex: João Silva" />
+      </div>
+      <div class="modal-field">
+        <label class="modal-label" for="bm-iban">IBAN</label>
+        <input class="modal-input" id="bm-iban" type="text" placeholder="PT50 0000 0000 0000 0000 0000 0" />
+      </div>
+      <button class="modal-btn modal-btn-primary" id="bm-billing-btn" onclick="setupBilling()">Ativar Faturação SEPA</button>
+      <div class="modal-error" id="bm-billing-error"></div>
+      <div class="modal-success" id="bm-billing-success"></div>
+    </div>
+
+    <!-- Contract Section -->
+    <div class="modal-section">
+      <div class="modal-section-title">📄 Contrato</div>
+      <div class="modal-status">
+        Estado: <span id="bm-contract-badge">—</span>
+      </div>
+      <button class="modal-btn modal-btn-blue" id="bm-contract-btn" onclick="sendContract()" disabled>Enviar Contrato DocuSeal</button>
+      <div class="modal-error" id="bm-contract-error"></div>
+      <div class="modal-success" id="bm-contract-success"></div>
     </div>
   </div>
 </div>
@@ -372,7 +462,7 @@
     try {
       const { data, error } = await supabase
         .from('restaurants')
-        .select('id, name, slug, cuisine_type, status, subscription, owner_id, city, created_at')
+        .select('id, name, slug, cuisine_type, status, subscription, owner_id, city, created_at, email, owner_legal_name, owner_iban, billing_status, contract_status, stripe_customer_id')
         .order('created_at', { ascending: false })
       if (error) throw error
       allRestaurants = data ?? []
@@ -389,22 +479,34 @@
         '<tr><td colspan="7" style="padding:32px;text-align:center;color:var(--muted)">Nenhum restaurante.</td></tr>'
       return
     }
-    document.getElementById('restaurants-tbody').innerHTML = list.map(r => `
+    document.getElementById('restaurants-tbody').innerHTML = list.map(r => {
+      const billingBadge = r.billing_status === 'active'
+        ? `<span class="billing-active">ativo</span>`
+        : `<span class="billing-inactive">${r.billing_status ?? 'inativo'}</span>`
+      const contractBadge = r.contract_status === 'signed'
+        ? `<span class="contract-signed">assinado</span>`
+        : r.contract_status === 'sent'
+        ? `<span class="contract-sent">enviado</span>`
+        : `<span class="contract-none">nenhum</span>`
+      const safeName = (r.name ?? '').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;')
+      return `
       <tr>
         <td><strong>${r.name}</strong><br><span style="font-size:11px;color:var(--muted)">${r.city ?? ''} · ${r.slug}</span></td>
         <td>${r.cuisine_type ?? '—'}</td>
         <td style="font-size:12px;color:var(--muted)">${r.owner_id ? r.owner_id.slice(0,8)+'…' : '—'}</td>
         <td><span class="status status-${r.status ?? 'pending'}">${r.status ?? 'pending'}</span></td>
         <td><span class="sub-${r.subscription ?? 'free'}">${r.subscription ?? 'free'}</span></td>
+        <td>${billingBadge}<br>${contractBadge}</td>
         <td>
           ${r.status !== 'active' ? `<button class="action-btn btn-activate" onclick="setRestStatus('${r.id}','active')">Ativar</button>` : ''}
           ${r.status !== 'suspended' ? `<button class="action-btn btn-suspend" onclick="setRestStatus('${r.id}','suspended')">Suspender</button>` : ''}
         </td>
-        <td>
-          <button class="btn-enter" onclick="enterAs('${r.id}','${r.name.replace(/'/g,"\\'").replace(/"/g,'&quot;')}')">Entrar como →</button>
+        <td style="white-space:nowrap">
+          <button class="btn-billing" onclick="openBillingModal('${r.id}')">💳 Faturação</button>
+          <button class="btn-enter" onclick="enterAs('${r.id}','${safeName}')">Entrar como →</button>
         </td>
-      </tr>
-    `).join('')
+      </tr>`
+    }).join('')
   }
 
   window.filterRestaurants = function() {
@@ -584,6 +686,174 @@
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLb() })
 
   window.handleSignOut = signOut
+
+  // ── BILLING MODAL ─────────────────────────────────────────
+  const SUPABASE_URL = 'https://jdkbywroucgwrfpirloa.supabase.co'
+  let _billingRestaurantId = null
+
+  window.openBillingModal = function(restaurantId) {
+    const restaurant = allRestaurants.find(r => r.id === restaurantId)
+    if (!restaurant) return
+
+    _billingRestaurantId = restaurantId
+
+    document.getElementById('bm-restaurant-name').textContent = restaurant.name
+    document.getElementById('bm-restaurant-email').textContent = restaurant.email ?? '(sem email)'
+    document.getElementById('bm-owner-name').value = restaurant.owner_legal_name ?? ''
+    document.getElementById('bm-iban').value = restaurant.owner_iban ?? ''
+
+    // Billing status badge
+    const billingStatus = restaurant.billing_status ?? 'inactive'
+    const billingBadge = billingStatus === 'active'
+      ? `<span class="billing-active">ativo</span>`
+      : `<span class="billing-inactive">${billingStatus}</span>`
+    document.getElementById('bm-billing-badge').innerHTML = billingBadge
+
+    // Contract status badge
+    const contractStatus = restaurant.contract_status ?? 'none'
+    let contractBadge
+    if (contractStatus === 'signed') contractBadge = `<span class="contract-signed">assinado</span>`
+    else if (contractStatus === 'sent') contractBadge = `<span class="contract-sent">enviado</span>`
+    else contractBadge = `<span class="contract-none">nenhum</span>`
+    document.getElementById('bm-contract-badge').innerHTML = contractBadge
+
+    // Enable contract button only if owner_legal_name and email are set
+    const canSendContract = !!(restaurant.owner_legal_name && restaurant.email)
+    document.getElementById('bm-contract-btn').disabled = !canSendContract
+
+    // Reset messages
+    ;['bm-billing-error','bm-billing-success','bm-contract-error','bm-contract-success'].forEach(id => {
+      const el = document.getElementById(id)
+      el.style.display = 'none'
+      el.textContent = ''
+    })
+
+    document.getElementById('billing-modal').classList.add('open')
+    document.body.style.overflow = 'hidden'
+  }
+
+  window.closeBillingModal = function() {
+    document.getElementById('billing-modal').classList.remove('open')
+    document.body.style.overflow = ''
+    _billingRestaurantId = null
+  }
+
+  // Close modal on overlay click
+  document.getElementById('billing-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeBillingModal()
+  })
+
+  window.setupBilling = async function() {
+    if (!_billingRestaurantId) return
+
+    const ownerName = document.getElementById('bm-owner-name').value.trim()
+    const iban = document.getElementById('bm-iban').value.trim().replace(/\s+/g, '')
+    const restaurant = allRestaurants.find(r => r.id === _billingRestaurantId)
+    const ownerEmail = restaurant?.email ?? ''
+
+    const errEl = document.getElementById('bm-billing-error')
+    const sucEl = document.getElementById('bm-billing-success')
+    errEl.style.display = 'none'; sucEl.style.display = 'none'
+
+    if (!ownerName) { errEl.textContent = 'Insere o nome legal do proprietário.'; errEl.style.display = 'block'; return }
+    if (!iban) { errEl.textContent = 'Insere o IBAN.'; errEl.style.display = 'block'; return }
+    if (!ownerEmail) { errEl.textContent = 'Este restaurante não tem email. Adiciona um email primeiro.'; errEl.style.display = 'block'; return }
+
+    const btn = document.getElementById('bm-billing-btn')
+    btn.disabled = true
+    btn.textContent = 'A processar...'
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/setup-billing`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          restaurantId: _billingRestaurantId,
+          iban,
+          ownerName,
+          ownerEmail,
+        }),
+      })
+
+      const result = await res.json()
+
+      if (!res.ok || !result.success) {
+        throw new Error(result.error ?? 'Erro desconhecido.')
+      }
+
+      sucEl.textContent = `Faturação SEPA ativada. Customer: ${result.customerId}`
+      sucEl.style.display = 'block'
+      document.getElementById('bm-billing-badge').innerHTML = `<span class="billing-active">ativo</span>`
+
+      // Enable contract button now that owner name is set
+      document.getElementById('bm-contract-btn').disabled = false
+
+      // Refresh restaurant list in background
+      await loadRestaurants()
+
+    } catch(e) {
+      errEl.textContent = `Erro: ${e.message}`
+      errEl.style.display = 'block'
+    } finally {
+      btn.disabled = false
+      btn.textContent = 'Ativar Faturação SEPA'
+    }
+  }
+
+  window.sendContract = async function() {
+    if (!_billingRestaurantId) return
+
+    const errEl = document.getElementById('bm-contract-error')
+    const sucEl = document.getElementById('bm-contract-success')
+    errEl.style.display = 'none'; sucEl.style.display = 'none'
+
+    // Save owner name first if changed
+    const ownerName = document.getElementById('bm-owner-name').value.trim()
+    if (ownerName) {
+      await supabase.from('restaurants').update({ owner_legal_name: ownerName }).eq('id', _billingRestaurantId)
+    }
+
+    const btn = document.getElementById('bm-contract-btn')
+    btn.disabled = true
+    btn.textContent = 'A enviar...'
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/send-contract`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ restaurantId: _billingRestaurantId }),
+      })
+
+      const result = await res.json()
+
+      if (!res.ok || !result.success) {
+        throw new Error(result.error ?? 'Erro desconhecido.')
+      }
+
+      sucEl.textContent = `Contrato enviado via DocuSeal! ID: ${result.submissionId}`
+      sucEl.style.display = 'block'
+      document.getElementById('bm-contract-badge').innerHTML = `<span class="contract-sent">enviado</span>`
+
+      // Refresh restaurant list in background
+      await loadRestaurants()
+
+    } catch(e) {
+      errEl.textContent = `Erro: ${e.message}`
+      errEl.style.display = 'block'
+    } finally {
+      btn.disabled = false
+      btn.textContent = 'Enviar Contrato DocuSeal'
+    }
+  }
+
   })() // end async IIFE
 </script>
 
