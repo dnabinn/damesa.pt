@@ -53,6 +53,9 @@ ErrorDocument 404 /pages/404.html
   # Booking widget: damesa.pt/reservar/{slug}
   RewriteRule ^reservar/([^/]+)/?$ pages/reservar.html?slug=$1 [L,QSA]
 
+  # Named page clean URLs (no .html): damesa.pt/restaurantes → pages/restaurantes.html
+  RewriteRule ^(restaurantes|cozinhas|login|dashboard|owner-dashboard|superadmin|privacy|terms|404|offline)/?$ pages/$1.html [L]
+
   # *.html → pages/*.html (e.g. damesa.pt/restaurantes.html)
   RewriteRule ^([a-zA-Z0-9_-]+\.html)$ pages/$1 [L]
 </IfModule>
