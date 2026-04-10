@@ -168,6 +168,59 @@
 
     footer { text-align:center; padding:40px 24px; color:var(--muted); font-size:13px; border-top:1px solid var(--border); }
     footer strong { color:var(--text); font-family:Georgia,serif; }
+
+    /* ── MOBILE ─────────────────────────────────── */
+    @media(max-width:640px) {
+      nav { padding:12px 16px; gap:8px; }
+      .rest-badge { max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; padding:5px 10px; }
+      .view-site-btn { display:none; }
+      .btn-sm { padding:6px 12px; font-size:12px; }
+
+      .tabs-bar { padding:0; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
+      .tabs-bar::-webkit-scrollbar { display:none; }
+      .tabs-inner { min-width:max-content; padding:0 12px; }
+      .tab-btn { padding:12px 14px; font-size:13px; white-space:nowrap; }
+
+      .page-wrap { padding:16px 12px 80px; }
+
+      /* Stats 2-col on mobile */
+      .stats { grid-template-columns:1fr 1fr; gap:10px; margin-bottom:20px; }
+      .stat-card { padding:14px; }
+      .stat-value { font-size:26px; }
+
+      /* Toolbar stack */
+      .toolbar { flex-direction:column; align-items:flex-start; gap:10px; }
+      .toolbar h2 { font-size:18px; }
+
+      /* Table scroll */
+      .table-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+      table { min-width:580px; }
+
+      /* Widget quick bar */
+      #widget-quick { flex-direction:column; align-items:stretch; }
+      #widget-quick input { min-width:0; }
+      #widget-quick button { width:100%; }
+
+      /* Section cards */
+      .section-card { padding:16px; }
+      .section-title { font-size:17px; }
+
+      /* Modal full-width */
+      .modal { margin:12px; max-width:calc(100vw - 24px); padding:20px; }
+      .modal-actions { flex-direction:column; }
+
+      /* Menu rows wrap */
+      .menu-item-row { flex-wrap:wrap; gap:8px; }
+      .item-info { flex-basis:100%; }
+
+      /* Hours */
+      .hours-day { grid-template-columns:1fr; gap:8px; }
+      .slot-row input[type=time] { font-size:16px; } /* prevent iOS zoom */
+
+      /* Photo grid */
+      .fotos-owner-grid { grid-template-columns:repeat(auto-fill,minmax(130px,1fr)); }
+    }
+
     /* Loading */
     @keyframes spin { to { transform: rotate(360deg); } }
     .loading-text { display:inline-flex; align-items:center; gap:8px; opacity:0.7; }
