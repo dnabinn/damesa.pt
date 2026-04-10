@@ -1,44 +1,29 @@
-DirectoryIndex index.html pages/index.html
-
 <IfModule mod_rewrite.c>
   RewriteEngine On
-
-  # Serve existing files and directories directly
   RewriteCond %{REQUEST_FILENAME} -f [OR]
   RewriteCond %{REQUEST_FILENAME} -d
   RewriteRule ^ - [L]
-
-  # Root → pages/index.html
   RewriteRule ^$ pages/index.html [L]
-
-  # Clean restaurant URLs: damesa.pt/restaurante/lisboa/lumbini
   RewriteRule ^restaurante/([^/]+)/([^/]+)/?$ pages/restaurant.html?slug=$2 [L,QSA]
-
-  # Booking widget: damesa.pt/reservar/{slug}
   RewriteRule ^reservar/([^/]+)/?$ pages/reservar.html?slug=$1 [L,QSA]
-
-  # Named page clean URLs (no .html)
   RewriteRule ^(restaurantes|cozinhas|login|dashboard|owner-dashboard|superadmin|privacy|terms|offline)/?$ pages/$1.html [L]
-
-  # *.html → pages/*.html
   RewriteRule ^([a-zA-Z0-9_-]+\.html)$ pages/$1 [L]
 </IfModule>
 
 <IfModule mod_mime.c>
   AddType application/manifest+json .json
   AddType text/javascript .js
-  AddType image/png .png
 </IfModule>
 
 <IfModule mod_headers.c>
   <FilesMatch "\.js$">
     Header set Cache-Control "no-cache, must-revalidate"
   </FilesMatch>
+  <FilesMatch "sw\.js$">
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+  </FilesMatch>
   <FilesMatch "assetlinks\.json$">
     Header set Content-Type "application/json"
     Header set Access-Control-Allow-Origin "*"
-  </FilesMatch>
-  <FilesMatch "sw\.js$">
-    Header set Cache-Control "no-cache, no-store, must-revalidate"
   </FilesMatch>
 </IfModule>
