@@ -27,3 +27,17 @@ jobs:
             **/sql/**
             **/supabase/**
             **/.github/**
+            **/.claude/**
+            **/.gradle/**
+            **/app/**
+            **/gradle/**
+            **/build.gradle
+            **/gradlew
+            **/gradlew.bat
+            **/settings.gradle
+            **/gradle.properties
+            **/local.properties
+            **/twa-manifest.json
+            **/*.keystore
+            **/*.apk
+            **/generate-icons-pure.js
