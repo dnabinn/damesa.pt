@@ -1,12 +1,23 @@
 <IfModule mod_rewrite.c>
   RewriteEngine On
-  RewriteCond %{REQUEST_FILENAME} -f [OR]
-  RewriteCond %{REQUEST_FILENAME} -d
-  RewriteRule ^ - [L]
+
+  # Root must come FIRST — before the -f/-d pass-through
   RewriteRule ^$ pages/index.html [L]
+
+  # Pass existing files through directly
+  RewriteCond %{REQUEST_FILENAME} -f
+  RewriteRule ^ - [L]
+
+  # Clean restaurant URLs: damesa.pt/restaurante/lisboa/lumbini
   RewriteRule ^restaurante/([^/]+)/([^/]+)/?$ pages/restaurant.html?slug=$2 [L,QSA]
+
+  # Booking widget: damesa.pt/reservar/{slug}
   RewriteRule ^reservar/([^/]+)/?$ pages/reservar.html?slug=$1 [L,QSA]
+
+  # Named page clean URLs (no .html needed)
   RewriteRule ^(restaurantes|cozinhas|login|dashboard|owner-dashboard|superadmin|privacy|terms|offline)/?$ pages/$1.html [L]
+
+  # *.html → pages/*.html
   RewriteRule ^([a-zA-Z0-9_-]+\.html)$ pages/$1 [L]
 </IfModule>
 
