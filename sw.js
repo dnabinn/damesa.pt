@@ -1,11 +1,11 @@
-// Da Mesa — Service Worker v1.2
+// Da Mesa — Service Worker v1.3
 // Strategy:
 //   - Shell (HTML pages, JS, CSS) → Cache First, fall back to network
 //   - Images → Cache First with 7-day expiry
 //   - Supabase API calls → Network First (never cache)
 //   - Offline fallback → /offline.html
 
-const CACHE_NAME = 'damesa-v1'
+const CACHE_NAME = 'damesa-v2'
 const OFFLINE_URL = '/offline.html'
 
 const PRECACHE = [
