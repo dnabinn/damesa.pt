@@ -55,50 +55,35 @@
   <p>Descobre os melhores restaurantes de Lisboa por tipo de cozinha.</p>
 </div>
 
-<div class="cuisine-grid" id="cuisine-grid">
-  <p style="color:var(--muted);padding:0 0 24px"><span class="loading-text">A carregar</span></p>
-</div>
+<div class="cuisine-grid" id="cuisine-grid"></div>
 
 <footer>
-  <strong>Da Mesa</strong> — Reservas de restaurantes em Lisboa · <a href="mailto:ola@damesa.pt">ola@damesa.pt</a> · <a href="login.html">Entrar como restaurante</a> · <a href="privacy.html">Privacidade</a> · <a href="terms.html">Termos</a>
+  <strong>Da Mesa</strong> — Reservas de restaurantes em Lisboa · <a href="mailto:ola@damesa.pt">ola@damesa.pt</a> · <a href="/pages/owner-login.html">Portal restaurante</a> · <a href="/pages/privacy.html">Privacidade</a> · <a href="/pages/terms.html">Termos</a>
 </footer>
 
 <script type="module">
-  import { getRestaurants } from '../src/js/restaurants.js'
-  import { initCookieBanner } from '../src/js/cookies.js'
+  import { initCookieBanner } from '/src/js/cookies.js'
   initCookieBanner()
 
-  const CUISINE_ICONS = {
-    'Portuguesa': '🍖',
-    'Marisco': '🦞',
-    'Italiana': '🍝',
-    'Japonesa': '🍣',
-    'Contemporânea': '✨',
-    'Grelhados': '🥩',
-    'Vegan': '🥗',
-    'Vegetariana': '🥦',
-    'Petiscos': '🫒',
-    'Fusão': '🌏',
-    'Peruana': '🫙',
-    'Asiática': '🥢',
-  }
+  const CUISINES = [
+    { name:'Portuguesa', icon:'🍖' }, { name:'Nepalesa', icon:'🏔️' },
+    { name:'Indiana', icon:'🍛' },    { name:'Italiana', icon:'🍝' },
+    { name:'Japonesa', icon:'🍣' },   { name:'Chinesa', icon:'🥢' },
+    { name:'Mediterrânea', icon:'🫒' },{ name:'Grelhados', icon:'🥩' },
+    { name:'Marisco', icon:'🦞' },    { name:'Fusão', icon:'🌏' },
+    { name:'Americana', icon:'🍔' },  { name:'Francesa', icon:'🥐' },
+    { name:'Espanhola', icon:'🥘' },  { name:'Vegana', icon:'🥗' },
+    { name:'Petiscos', icon:'🫙' },   { name:'Contemporânea', icon:'✨' },
+    { name:'Brasileira', icon:'🌿' }, { name:'Árabe', icon:'🧆' },
+    { name:'Tailandesa', icon:'🌶️' },{ name:'Mexicana', icon:'🌮' },
+  ]
 
-  const { restaurants } = await getRestaurants()
-  const counts = {}
-  for (const r of restaurants ?? []) {
-    if (r.cuisine_type) counts[r.cuisine_type] = (counts[r.cuisine_type] ?? 0) + 1
-  }
-
-  const grid = document.getElementById('cuisine-grid')
-  grid.innerHTML = Object.entries(counts)
-    .sort((a, b) => b[1] - a[1])
-    .map(([cuisine, count]) => `
-      <a class="cuisine-card" href="restaurantes.html?cuisine=${encodeURIComponent(cuisine)}">
-        <div class="cuisine-icon">${CUISINE_ICONS[cuisine] ?? '🍽️'}</div>
-        <div class="cuisine-name">${cuisine}</div>
-        <div class="cuisine-count">${count} restaurante${count !== 1 ? 's' : ''}</div>
-      </a>
-    `).join('')
+  document.getElementById('cuisine-grid').innerHTML = CUISINES.map(c => `
+    <a class="cuisine-card" href="/pages/restaurantes.html?cuisine=${encodeURIComponent(c.name)}">
+      <div class="cuisine-icon">${c.icon}</div>
+      <div class="cuisine-name">${c.name}</div>
+    </a>
+  `).join('')
 </script>
 
 </body>

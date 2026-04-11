@@ -29,6 +29,17 @@
     .filter-input:focus { border-color: var(--text); }
     select.filter-input { cursor:pointer; }
 
+    .search-wrap { position:relative; flex:1; min-width:200px; }
+    .search-wrap .filter-input { width:100%; }
+    .suggestions { position:absolute; top:calc(100% + 4px); left:0; right:0; background:#fff; border:1px solid var(--border); border-radius:10px; box-shadow:0 8px 24px rgba(0,0,0,0.10); z-index:200; overflow:hidden; display:none; }
+    .suggestions.open { display:block; }
+    .sug-section { padding:8px 0 4px; }
+    .sug-label { font-size:10px; text-transform:uppercase; letter-spacing:1px; color:var(--muted); padding:0 14px 4px; }
+    .sug-item { display:flex; align-items:center; gap:10px; padding:9px 14px; cursor:pointer; font-size:14px; transition:background 0.1s; }
+    .sug-item:hover { background:var(--bg); }
+    .sug-item .sug-icon { font-size:16px; width:22px; text-align:center; flex-shrink:0; }
+    .sug-item .sug-sub { font-size:12px; color:var(--muted); margin-left:auto; }
+
     .chips { display:flex; gap:8px; flex-wrap:wrap; padding:0 24px 32px; max-width:1100px; margin:0 auto; }
     .chip { padding:7px 16px; border:1px solid var(--border); border-radius:100px; font-size:13px; cursor:pointer; background:#fff; transition:all 0.15s; }
     .chip:hover, .chip.active { background:var(--text); color:#fff; border-color:var(--text); }
@@ -78,7 +89,10 @@
 </div>
 
 <div class="filters">
-  <input class="filter-input" id="search" type="text" placeholder="Pesquisar..." oninput="applyFilters()" />
+  <div class="search-wrap">
+    <input class="filter-input" id="search" type="text" placeholder="Pesquisar restaurante ou cozinha..." autocomplete="off" />
+    <div class="suggestions" id="suggestions"></div>
+  </div>
   <select class="filter-input" id="price-filter" onchange="applyFilters()">
     <option value="">Preço: todos</option>
     <option value="€">€ — Económico</option>
@@ -88,18 +102,7 @@
   </select>
 </div>
 
-<div class="chips" id="cuisine-chips">
-  <div class="chip active" data-cuisine="">Todos</div>
-  <div class="chip" data-cuisine="Portuguesa">Portuguesa</div>
-  <div class="chip" data-cuisine="Marisco">Marisco</div>
-  <div class="chip" data-cuisine="Italiana">Italiana</div>
-  <div class="chip" data-cuisine="Japonesa">Japonesa</div>
-  <div class="chip" data-cuisine="Contemporânea">Contemporânea</div>
-  <div class="chip" data-cuisine="Grelhados">Grelhados</div>
-  <div class="chip" data-cuisine="Vegan">Vegan</div>
-  <div class="chip" data-cuisine="Petiscos">Petiscos</div>
-  <div class="chip" data-cuisine="Fusão">Fusão</div>
-</div>
+<div class="chips" id="cuisine-chips"></div>
 
 <div class="grid-wrap">
   <div class="results-count" id="results-count"></div>
@@ -117,27 +120,114 @@
   import { initCookieBanner } from '/src/js/cookies.js'
   initCookieBanner()
 
-  let all = []
-  let activeCuisine = ''
+  const CUISINES = ['Portuguesa','Nepalesa','Indiana','Italiana','Japonesa','Chinesa',
+    'Mediterrânea','Grelhados','Marisco','Fusão','Americana','Francesa','Espanhola',
+    'Vegana','Petiscos','Contemporânea','Brasileira','Árabe','Tailandesa','Mexicana']
+
+  const CUISINE_ICONS = {
+    'Portuguesa':'🍖','Nepalesa':'🏔️','Indiana':'🍛','Italiana':'🍝','Japonesa':'🍣',
+    'Chinesa':'🥢','Mediterrânea':'🫒','Grelhados':'🥩','Marisco':'🦞','Fusão':'🌏',
+    'Americana':'🍔','Francesa':'🥐','Espanhola':'🥘','Vegana':'🥗','Petiscos':'🫙',
+    'Contemporânea':'✨','Brasileira':'🌿','Árabe':'🧆','Tailandesa':'🌶️','Mexicana':'🌮'
+  }
+
+  let all = [], activeCuisine = ''
+
+  // Build cuisine chips from fixed list
+  const chipsEl = document.getElementById('cuisine-chips')
+  chipsEl.innerHTML = '<div class="chip active" data-cuisine="">Todos</div>' +
+    CUISINES.map(c => `<div class="chip" data-cuisine="${c}">${c}</div>`).join('')
+
+  // Check URL param for cuisine pre-filter
+  const urlCuisine = new URLSearchParams(location.search).get('cuisine')
+  if (urlCuisine) {
+    activeCuisine = urlCuisine
+    chipsEl.querySelectorAll('.chip').forEach(c => {
+      c.classList.toggle('active', c.dataset.cuisine === urlCuisine)
+    })
+  }
 
   const { restaurants } = await getRestaurants()
   all = restaurants ?? []
   applyFilters()
 
-  document.getElementById('cuisine-chips').addEventListener('click', (e) => {
+  chipsEl.addEventListener('click', (e) => {
     const chip = e.target.closest('.chip')
     if (!chip) return
-    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'))
+    chipsEl.querySelectorAll('.chip').forEach(c => c.classList.remove('active'))
     chip.classList.add('active')
     activeCuisine = chip.dataset.cuisine
+    hideSuggestions()
     applyFilters()
   })
+
+  // ── SEARCH SUGGESTIONS ──────────────────────────────────────
+  const searchEl = document.getElementById('search')
+  const sugEl = document.getElementById('suggestions')
+
+  searchEl.addEventListener('input', () => {
+    applyFilters()
+    showSuggestions(searchEl.value.trim())
+  })
+  searchEl.addEventListener('focus', () => { if (searchEl.value.trim()) showSuggestions(searchEl.value.trim()) })
+  document.addEventListener('click', (e) => { if (!e.target.closest('.search-wrap')) hideSuggestions() })
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') hideSuggestions() })
+
+  function showSuggestions(q) {
+    if (!q || q.length < 1) { hideSuggestions(); return }
+    const ql = q.toLowerCase()
+
+    const matchRests = all.filter(r => r.name.toLowerCase().includes(ql)).slice(0, 4)
+    const matchCuisines = CUISINES.filter(c => c.toLowerCase().includes(ql)).slice(0, 4)
+
+    if (!matchRests.length && !matchCuisines.length) { hideSuggestions(); return }
+
+    let html = ''
+    if (matchRests.length) {
+      html += `<div class="sug-section">
+        <div class="sug-label">Restaurantes</div>
+        ${matchRests.map(r => `
+          <div class="sug-item" onclick="goRestaurant('${citySlug(r.city)}','${r.slug}')">
+            <span class="sug-icon">🍽️</span>
+            <span>${r.name}</span>
+            <span class="sug-sub">${r.cuisine_type ?? ''}</span>
+          </div>`).join('')}
+      </div>`
+    }
+    if (matchCuisines.length) {
+      html += `<div class="sug-section">
+        <div class="sug-label">Cozinhas</div>
+        ${matchCuisines.map(c => `
+          <div class="sug-item" onclick="filterByCuisine('${c}')">
+            <span class="sug-icon">${CUISINE_ICONS[c] ?? '🍽️'}</span>
+            <span>${c}</span>
+            <span class="sug-sub">ver restaurantes</span>
+          </div>`).join('')}
+      </div>`
+    }
+    sugEl.innerHTML = html
+    sugEl.classList.add('open')
+  }
+
+  function hideSuggestions() { sugEl.classList.remove('open') }
+
+  window.goRestaurant = function(city, slug) {
+    window.location.href = `/restaurante/${city}/${slug}`
+  }
+
+  window.filterByCuisine = function(cuisine) {
+    activeCuisine = cuisine
+    searchEl.value = ''
+    chipsEl.querySelectorAll('.chip').forEach(c => c.classList.toggle('active', c.dataset.cuisine === cuisine))
+    hideSuggestions()
+    applyFilters()
+  }
 
   window.applyFilters = function() {
     const q = document.getElementById('search').value.toLowerCase()
     const price = document.getElementById('price-filter').value
     const filtered = all.filter(r => {
-      const matchCuisine = !activeCuisine || r.cuisine_type === activeCuisine
+      const matchCuisine = !activeCuisine || r.cuisine_type === activeCuisine || (r.cuisines ?? []).includes(activeCuisine)
       const matchSearch = !q || r.name.toLowerCase().includes(q) || (r.cuisine_type ?? '').toLowerCase().includes(q)
       const matchPrice = !price || r.price_range === price
       return matchCuisine && matchSearch && matchPrice

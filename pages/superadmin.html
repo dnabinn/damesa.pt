@@ -62,6 +62,25 @@
     .btn-activate { background:#e8f5e9; color:#2e7d32; }
     .btn-suspend { background:#fce4ec; color:#c62828; }
 
+    /* ADD RESTAURANT MODAL */
+    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:1000; align-items:center; justify-content:center; padding:16px; }
+    .modal-overlay.open { display:flex; }
+    .modal-box { background:#fff; border-radius:16px; padding:32px; max-width:560px; width:100%; max-height:90vh; overflow-y:auto; position:relative; }
+    .modal-title { font-family:Georgia,serif; font-size:22px; font-weight:normal; margin-bottom:24px; }
+    .modal-close { position:absolute; top:16px; right:20px; font-size:22px; cursor:pointer; color:var(--muted); line-height:1; background:none; border:none; }
+    .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .form-grid .full { grid-column:1/-1; }
+    .form-group { display:flex; flex-direction:column; gap:5px; }
+    .form-group label { font-size:12px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; }
+    .form-group input, .form-group select { padding:10px 14px; border:1px solid var(--border); border-radius:8px; font-size:14px; outline:none; background:#fff; }
+    .form-group input:focus, .form-group select:focus { border-color:var(--text); }
+    .form-note { font-size:12px; color:var(--muted); background:var(--bg); border-radius:8px; padding:10px 14px; margin-top:4px; }
+    .modal-actions { display:flex; gap:10px; margin-top:24px; justify-content:flex-end; }
+    .btn-cancel { background:none; border:1px solid var(--border); padding:10px 20px; border-radius:8px; font-size:13px; cursor:pointer; color:var(--muted); }
+    .btn-cancel:hover { border-color:var(--text); color:var(--text); }
+    .form-success { background:#e8f5e9; color:#2e7d32; border-radius:8px; padding:14px; font-size:14px; margin-top:12px; display:none; }
+    .form-error { background:#fce4ec; color:#c62828; border-radius:8px; padding:14px; font-size:14px; margin-top:12px; display:none; }
+
     .search-input { padding:9px 14px; border:1px solid var(--border); border-radius:8px; font-size:14px; background:#fff; outline:none; width:260px; }
     .search-input:focus { border-color:var(--text); }
 
@@ -241,12 +260,83 @@
   </div>
 </div>
 
+<!-- ADD RESTAURANT MODAL -->
+<div class="modal-overlay" id="add-rest-modal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeAddModal()">✕</button>
+    <div class="modal-title">Adicionar Restaurante</div>
+    <div class="form-grid">
+      <div class="form-group full">
+        <label>Nome do Restaurante *</label>
+        <input type="text" id="ar-name" placeholder="Ex: Lumbini Restaurant" oninput="autoSlug()" />
+      </div>
+      <div class="form-group">
+        <label>Slug (URL) *</label>
+        <input type="text" id="ar-slug" placeholder="lumbini-restaurant" />
+      </div>
+      <div class="form-group">
+        <label>Cidade</label>
+        <input type="text" id="ar-city" value="Lisboa" />
+      </div>
+      <div class="form-group full">
+        <label>Morada</label>
+        <input type="text" id="ar-address" placeholder="Rua..., Lisboa" />
+      </div>
+      <div class="form-group">
+        <label>Telefone</label>
+        <input type="text" id="ar-phone" placeholder="+351 9xx xxx xxx" />
+      </div>
+      <div class="form-group">
+        <label>Tipo de Cozinha</label>
+        <select id="ar-cuisine">
+          <option value="">— Selecionar —</option>
+          <option>Portuguesa</option><option>Nepalesa</option><option>Indiana</option>
+          <option>Italiana</option><option>Japonesa</option><option>Chinesa</option>
+          <option>Mediterrânea</option><option>Grelhados</option><option>Marisco</option>
+          <option>Fusão</option><option>Americana</option><option>Francesa</option>
+          <option>Espanhola</option><option>Vegana</option><option>Petiscos</option>
+          <option>Contemporânea</option><option>Brasileira</option><option>Árabe</option>
+          <option>Tailandesa</option><option>Mexicana</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Preço</label>
+        <select id="ar-price">
+          <option value="€€">€€ — Moderado</option>
+          <option value="€">€ — Económico</option>
+          <option value="€€€">€€€ — Caro</option>
+          <option value="€€€€">€€€€ — Fine dining</option>
+        </select>
+      </div>
+      <div class="form-group full" style="border-top:1px solid var(--border);padding-top:16px;margin-top:4px;">
+        <label>Email de contacto real (do restaurante) *</label>
+        <input type="email" id="ar-email" placeholder="reservas@restaurante.pt" />
+        <div class="form-note">Usado para envio de reservas e recuperação de palavra-passe</div>
+      </div>
+      <div class="form-group full">
+        <label>Palavra-passe de acesso ao portal *</label>
+        <input type="password" id="ar-password" placeholder="Mínimo 8 caracteres" />
+        <div class="form-note">O email de login será gerado automaticamente: <strong id="ar-email-preview">slug@damesa.pt</strong></div>
+      </div>
+    </div>
+    <div class="form-success" id="ar-success"></div>
+    <div class="form-error" id="ar-error"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeAddModal()">Cancelar</button>
+      <button class="btn-primary" id="ar-submit" onclick="submitAddRestaurant()">Criar Restaurante</button>
+    </div>
+  </div>
+</div>
+
 <!-- RESTAURANTS -->
 <div class="tab-pane" id="tab-restaurants">
   <div class="page-wrap">
     <div class="section-header">
       <div class="section-title">Restaurantes</div>
-      <input class="search-input" id="rest-search" placeholder="Pesquisar..." oninput="filterRestaurants()" />
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+        <input class="search-input" id="rest-search" placeholder="Pesquisar..." oninput="filterRestaurants()" />
+        <button class="btn-primary" onclick="openAddModal()">+ Adicionar</button>
+      </div>
     </div>
     <div class="table-wrap">
       <table>
@@ -913,6 +1003,93 @@
       errEl.style.display = 'block'
       btn.textContent = 'Gerar email Da Mesa'
     } finally {
+      btn.disabled = false
+    }
+  }
+
+  // ── ADD RESTAURANT MODAL ──────────────────────────────────
+  window.openAddModal = function() {
+    document.getElementById('add-rest-modal').classList.add('open')
+    document.body.style.overflow = 'hidden'
+    document.getElementById('ar-success').style.display = 'none'
+    document.getElementById('ar-error').style.display = 'none'
+  }
+  window.closeAddModal = function() {
+    document.getElementById('add-rest-modal').classList.remove('open')
+    document.body.style.overflow = ''
+  }
+  document.getElementById('add-rest-modal').addEventListener('click', e => {
+    if (e.target === e.currentTarget) closeAddModal()
+  })
+
+  window.autoSlug = function() {
+    const name = document.getElementById('ar-name').value
+    const slug = name.toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9\s-]/g, '').trim().replace(/\s+/g, '-')
+    document.getElementById('ar-slug').value = slug
+    document.getElementById('ar-email-preview').textContent = slug ? `${slug}@damesa.pt` : 'slug@damesa.pt'
+  }
+
+  window.submitAddRestaurant = async function() {
+    const btn = document.getElementById('ar-submit')
+    const successEl = document.getElementById('ar-success')
+    const errorEl = document.getElementById('ar-error')
+    successEl.style.display = 'none'
+    errorEl.style.display = 'none'
+
+    const name = document.getElementById('ar-name').value.trim()
+    const slug = document.getElementById('ar-slug').value.trim()
+    const email = document.getElementById('ar-email').value.trim()
+    const password = document.getElementById('ar-password').value
+
+    if (!name || !slug || !email || !password) {
+      errorEl.textContent = 'Preenche todos os campos obrigatórios (*).'
+      errorEl.style.display = 'block'; return
+    }
+    if (password.length < 8) {
+      errorEl.textContent = 'A palavra-passe deve ter pelo menos 8 caracteres.'
+      errorEl.style.display = 'block'; return
+    }
+
+    btn.textContent = 'A criar...'
+    btn.disabled = true
+
+    const { data: { session } } = await supabase.auth.getSession()
+    try {
+      const res = await fetch('https://jdkbywroucgwrfpirloa.supabase.co/functions/v1/create-restaurant', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+        body: JSON.stringify({
+          name,
+          slug,
+          city: document.getElementById('ar-city').value.trim() || 'Lisboa',
+          address: document.getElementById('ar-address').value.trim(),
+          phone: document.getElementById('ar-phone').value.trim(),
+          email,
+          password,
+          cuisineType: document.getElementById('ar-cuisine').value,
+          priceRange: document.getElementById('ar-price').value,
+        })
+      })
+      const data = await res.json()
+      if (!res.ok || !data.success) throw new Error(data.error ?? 'Erro desconhecido')
+
+      successEl.innerHTML = `✅ Restaurante criado com sucesso!<br>
+        <strong>Login email:</strong> ${data.damesaEmail}<br>
+        <strong>URL:</strong> damesa.pt/restaurante/lisboa/${data.restaurant.slug}`
+      successEl.style.display = 'block'
+      ;['ar-name','ar-slug','ar-address','ar-phone','ar-email','ar-password'].forEach(id => {
+        document.getElementById(id).value = ''
+      })
+      document.getElementById('ar-city').value = 'Lisboa'
+      document.getElementById('ar-email-preview').textContent = 'slug@damesa.pt'
+      await loadRestaurants()
+    } catch(e) {
+      errorEl.textContent = `Erro: ${e.message}`
+      errorEl.style.display = 'block'
+    } finally {
+      btn.textContent = 'Criar Restaurante'
       btn.disabled = false
     }
   }
