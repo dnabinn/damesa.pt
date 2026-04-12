@@ -874,7 +874,17 @@
     slotsEl.innerHTML = [1,2,3,4,5,6].map(() => `<div class="slot skeleton" style="height:40px;border:none;"></div>`).join('')
     const slots = await getAvailableSlots(restaurant.id, date)
     const capacity = restaurant.capacity ?? 50
-    slotsEl.innerHTML = slots.map(s => {
+
+    // If booking for today, hide slots whose time has already passed (Lisbon time)
+    const nowLisbon = new Date().toLocaleTimeString('en-GB', { timeZone: 'Europe/Lisbon', hour: '2-digit', minute: '2-digit' }) // HH:MM
+    const isToday = date === todayLisbon
+
+    const visible = slots.filter(s => !isToday || s.time > nowLisbon)
+    if (!visible.length) {
+      slotsEl.innerHTML = '<p style="color:var(--muted);font-size:14px;grid-column:1/-1;">Sem horários disponíveis para hoje. Escolhe outro dia.</p>'
+      return
+    }
+    slotsEl.innerHTML = visible.map(s => {
       const full = s.booked >= capacity
       return `<div class="slot${full ? ' full' : ''}" data-time="${s.time}" onclick="selectSlot(this)">${s.time}</div>`
     }).join('')
