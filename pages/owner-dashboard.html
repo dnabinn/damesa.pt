@@ -403,11 +403,22 @@
     <!-- Cover image -->
     <div class="section-card">
       <div class="section-title">Imagem de capa</div>
-      <div class="form-grid full">
-        <div class="field"><label>URL da imagem de capa</label><input type="url" id="def-cover" placeholder="https://..." /></div>
+      <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
+        <div class="field" style="flex:1;min-width:200px;margin-bottom:0;">
+          <label>URL da imagem (opcional)</label>
+          <input type="url" id="def-cover" placeholder="https://..." />
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;">
+          <label style="font-size:12px;color:var(--muted);">Ou fazer upload</label>
+          <label class="btn-secondary" for="cover-file-input" id="cover-upload-label" style="height:42px;display:flex;align-items:center;cursor:pointer;padding:0 16px;border-radius:8px;border:1px solid var(--border);font-size:13px;white-space:nowrap;">
+            🖼️ Escolher ficheiro
+          </label>
+          <input type="file" id="cover-file-input" accept="image/jpeg,image/png,image/webp" style="display:none;" />
+        </div>
       </div>
+      <div id="cover-upload-progress" style="margin-top:8px;font-size:13px;color:var(--muted);display:none;">A carregar imagem...</div>
       <div id="cover-preview" style="margin-top:12px;display:none;">
-        <img id="cover-preview-img" src="" alt="Preview" style="width:100%;max-height:200px;object-fit:cover;border-radius:10px;border:1px solid var(--border);" />
+        <img id="cover-preview-img" src="" alt="Preview" style="width:100%;max-height:220px;object-fit:cover;border-radius:10px;border:1px solid var(--border);" />
       </div>
     </div>
 
@@ -428,7 +439,7 @@
         <label class="btn-secondary" for="fotos-file-input" style="height:42px;display:flex;align-items:center;cursor:pointer;padding:0 16px;border-radius:8px;border:1px solid var(--border);font-size:13px;white-space:nowrap;">
           📷 Upload de ficheiro
         </label>
-        <input type="file" id="fotos-file-input" accept="image/*" style="display:none;" />
+        <input type="file" id="fotos-file-input" accept="image/*" multiple style="display:none;" />
       </div>
       <div id="fotos-upload-progress" style="margin-top:10px;font-size:13px;color:var(--muted);display:none;">A enviar...</div>
     </div>
@@ -1057,19 +1068,45 @@
   }
 
   document.getElementById('fotos-file-input').addEventListener('change', async (e) => {
-    const file = e.target.files[0]
-    if (!file) return
+    const files = Array.from(e.target.files)
+    if (!files.length) return
     const progress = document.getElementById('fotos-upload-progress')
     progress.style.display = 'block'
-    const ext = file.name.split('.').pop()
-    const path = `${restaurant.id}/${Date.now()}.${ext}`
-    const { error } = await supabase.storage.from('restaurant-photos').upload(path, file, { contentType: file.type })
-    if (error) { alert('Erro ao enviar: ' + error.message); progress.style.display = 'none'; return }
-    const { data: { publicUrl } } = supabase.storage.from('restaurant-photos').getPublicUrl(path)
-    await supabase.from('restaurant_photos').insert({ restaurant_id: restaurant.id, photo_url: publicUrl, approved: true, diner_name: restaurant.name })
+    let uploaded = 0
+    for (const file of files) {
+      progress.textContent = `A enviar ${uploaded + 1} de ${files.length}...`
+      const ext = file.name.split('.').pop()
+      const path = `${restaurant.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+      const { error } = await supabase.storage.from('restaurant-photos').upload(path, file, { contentType: file.type })
+      if (error) { alert(`Erro ao enviar ${file.name}: ${error.message}`); continue }
+      const { data: { publicUrl } } = supabase.storage.from('restaurant-photos').getPublicUrl(path)
+      await supabase.from('restaurant_photos').insert({ restaurant_id: restaurant.id, photo_url: publicUrl, approved: true, diner_name: restaurant.name, source_type: 'restaurant' })
+      uploaded++
+    }
     e.target.value = ''
     progress.style.display = 'none'
     await loadFotos()
+  })
+
+  // ── COVER IMAGE UPLOAD ─────────────────────────────────────
+  document.getElementById('cover-file-input').addEventListener('change', async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    const label = document.getElementById('cover-upload-label')
+    const progress = document.getElementById('cover-upload-progress')
+    label.textContent = '⏳ A carregar...'
+    progress.style.display = 'block'
+    const ext = file.name.split('.').pop()
+    const path = `${restaurant.id}/cover-${Date.now()}.${ext}`
+    const { error } = await supabase.storage.from('restaurant-photos').upload(path, file, { contentType: file.type, upsert: true })
+    if (error) { alert('Erro ao carregar: ' + error.message); label.textContent = '🖼️ Escolher ficheiro'; progress.style.display = 'none'; return }
+    const { data: { publicUrl } } = supabase.storage.from('restaurant-photos').getPublicUrl(path)
+    // Populate URL field so it's picked up by saveDefinicoes()
+    document.getElementById('def-cover').value = publicUrl
+    updateCoverPreview(publicUrl)
+    label.textContent = '✓ Carregada'
+    progress.style.display = 'none'
+    e.target.value = ''
   })
 
   window.approveOwnerPhoto = async function(id) {
