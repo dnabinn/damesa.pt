@@ -268,14 +268,6 @@
     .menu-pdf-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
     .menu-pdf-icon { font-size: 28px; }
     .menu-pdf-meta { font-size: 12px; color: var(--muted); font-weight: 400; margin-top: 2px; }
-    .menu-upload-area { border: 2px dashed var(--border); border-radius: var(--radius); padding: 28px; text-align: center; cursor: pointer; transition: all 0.2s; background: var(--card); margin-top: 16px; }
-    .menu-upload-area:hover { border-color: var(--accent); background: #fff8f6; }
-    .menu-upload-area .upload-icon { font-size: 28px; margin-bottom: 8px; }
-    .menu-upload-area p { color: var(--muted); font-size: 13px; }
-    #menu-file-input { display: none; }
-    .menu-file-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--card); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 8px; font-size: 13px; }
-    .menu-file-delete { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 16px; padding: 0 4px; line-height: 1; }
-    .menu-file-delete:hover { color: var(--accent); }
     /* Lightbox */
     .lightbox { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.88); z-index:1000; align-items:center; justify-content:center; cursor:zoom-out; }
     .lightbox.open { display:flex; animation: fadeIn 0.2s ease; }
@@ -533,34 +525,11 @@
           <div class="sk-block skeleton"></div>
         </div>
 
-        <!-- MENU FILES (photos + PDF) -->
+        <!-- MENU FILES — public display only (managed from owner dashboard) -->
         <div class="menu-files-section" id="menu-files-section" style="display:none;">
           <div class="menu-files-title">Ementa Visual</div>
-
-          <!-- PDF links -->
           <div id="menu-pdfs"></div>
-
-          <!-- Image pages -->
           <div class="menu-imgs-grid" id="menu-imgs"></div>
-
-          <!-- Owner: empty state hint -->
-          <p id="menu-files-empty" style="display:none; color:var(--muted); font-size:14px; padding:12px 0;">
-            Nenhuma foto ou PDF da ementa adicionado ainda.
-          </p>
-
-          <!-- Owner upload -->
-          <div id="menu-upload-owner" style="display:none; margin-top:20px;">
-            <label class="menu-upload-area" for="menu-file-input">
-              <div class="upload-icon">📄</div>
-              <p><strong>Adicionar ementa</strong></p>
-              <p style="margin-top:4px;">Foto (JPG/PNG) ou PDF · Tamanho máx. 10 MB</p>
-            </label>
-            <input type="file" id="menu-file-input" accept="image/jpeg,image/png,application/pdf" multiple />
-            <div id="menu-upload-progress" style="margin-top:10px;font-size:13px;color:var(--muted);display:none;">A carregar...</div>
-          </div>
-
-          <!-- Owner: list with delete buttons -->
-          <div id="menu-owner-list" style="display:none; margin-top:16px;"></div>
         </div>
       </div>
 
@@ -868,109 +837,29 @@
     `).join('')
   }
 
-  // ── MENU FILES ────────────────────────────────────────────
-  const _isOwner = _session?.user?.id === restaurant.owner_id
-
-  async function loadMenuFiles() {
+  // ── MENU FILES (public display only — managed from owner dashboard) ──────
+  ;(async () => {
     const { data: files } = await supabase
       .from('menu_files').select('*')
       .eq('restaurant_id', restaurant.id)
       .order('sort_order').order('created_at')
-
-    const section = document.getElementById('menu-files-section')
-    const pdfsEl  = document.getElementById('menu-pdfs')
-    const imgsEl  = document.getElementById('menu-imgs')
-    const emptyEl = document.getElementById('menu-files-empty')
-    const ownerList = document.getElementById('menu-owner-list')
-
-    if (!files?.length && !_isOwner) {
-      section.style.display = 'none'
-      return
-    }
-    section.style.display = 'block'
-
-    const pdfs   = (files ?? []).filter(f => f.file_type === 'pdf')
-    const images = (files ?? []).filter(f => f.file_type === 'image')
-
-    // PDF cards
-    pdfsEl.innerHTML = pdfs.map(f => `
+    if (!files?.length) return
+    document.getElementById('menu-files-section').style.display = 'block'
+    const pdfs   = files.filter(f => f.file_type === 'pdf')
+    const images = files.filter(f => f.file_type === 'image')
+    document.getElementById('menu-pdfs').innerHTML = pdfs.map(f => `
       <a class="menu-pdf-card" href="${f.file_url}" target="_blank" rel="noopener">
         <span class="menu-pdf-icon">📄</span>
         <div>
           <div>${f.file_name ?? 'Ementa PDF'}</div>
           <div class="menu-pdf-meta">Abrir / Transferir</div>
         </div>
-      </a>
-    `).join('')
-
-    // Image grid (clickable → lightbox)
-    imgsEl.innerHTML = images.map(f => `
+      </a>`).join('')
+    document.getElementById('menu-imgs').innerHTML = images.map(f => `
       <div class="menu-img-thumb" onclick="openLightbox('${f.file_url}')">
         <img src="${f.file_url}" alt="Ementa" loading="lazy" />
-      </div>
-    `).join('')
-
-    // Empty state (only owner sees this)
-    const isEmpty = !files?.length
-    emptyEl.style.display = isEmpty && _isOwner ? 'block' : 'none'
-
-    // Owner delete list
-    if (_isOwner && files?.length) {
-      ownerList.style.display = 'block'
-      ownerList.innerHTML = (files ?? []).map(f => `
-        <div class="menu-file-item" data-id="${f.id}">
-          <span>${f.file_type === 'pdf' ? '📄' : '🖼️'} ${f.file_name ?? (f.file_type === 'pdf' ? 'Ementa PDF' : 'Imagem')}</span>
-          <button class="menu-file-delete" onclick="deleteMenuFile('${f.id}','${f.file_url}')">✕</button>
-        </div>
-      `).join('')
-    } else {
-      ownerList.style.display = 'none'
-    }
-  }
-
-  await loadMenuFiles()
-
-  // Show upload area to owner
-  if (_isOwner) {
-    document.getElementById('menu-upload-owner').style.display = 'block'
-    document.getElementById('menu-files-section').style.display = 'block'
-  }
-
-  // Handle file upload
-  document.getElementById('menu-file-input').addEventListener('change', async (e) => {
-    const files = Array.from(e.target.files)
-    if (!files.length) return
-    const progress = document.getElementById('menu-upload-progress')
-    progress.style.display = 'block'
-    for (const file of files) {
-      if (file.size > 10 * 1024 * 1024) { alert(`${file.name} é demasiado grande (máx. 10 MB).`); continue }
-      const isPdf = file.type === 'application/pdf'
-      const ext = file.name.split('.').pop().toLowerCase()
-      const path = `${restaurant.id}/menu/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
-      progress.textContent = `A carregar ${file.name}...`
-      const { error: upErr } = await supabase.storage.from('restaurant-photos').upload(path, file, { contentType: file.type })
-      if (upErr) { alert('Erro ao carregar: ' + upErr.message); continue }
-      const { data: { publicUrl } } = supabase.storage.from('restaurant-photos').getPublicUrl(path)
-      await supabase.from('menu_files').insert({
-        restaurant_id: restaurant.id,
-        file_url: publicUrl,
-        file_type: isPdf ? 'pdf' : 'image',
-        file_name: file.name
-      })
-    }
-    progress.style.display = 'none'
-    e.target.value = ''
-    await loadMenuFiles()
-  })
-
-  window.deleteMenuFile = async function(id, url) {
-    if (!confirm('Remover este ficheiro da ementa?')) return
-    await supabase.from('menu_files').delete().eq('id', id)
-    // Extract storage path from URL and remove file
-    const pathMatch = url.match(/restaurant-photos\/(.+)$/)
-    if (pathMatch) await supabase.storage.from('restaurant-photos').remove([decodeURIComponent(pathMatch[1])])
-    await loadMenuFiles()
-  }
+      </div>`).join('')
+  })()
 
   // ── BOOKING ───────────────────────────────────────────────
   // Use Lisbon timezone (UTC+1 winter / UTC+2 summer) so the date is never off by a day

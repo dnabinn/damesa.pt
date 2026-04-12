@@ -309,12 +309,31 @@
   <div class="tab-panel" id="tab-ementa">
     <div class="section-card">
       <div class="section-title">
-        Ementa
+        Ementa Digital
         <button class="add-cat-btn" onclick="openCatModal()">+ Adicionar categoria</button>
       </div>
       <div id="menu-editor">
         <p style="color:var(--muted)"><span class="loading-text">A carregar ementa</span></p>
       </div>
+    </div>
+
+    <!-- Menu files: photos + PDF -->
+    <div class="section-card">
+      <div class="section-title">Ementa Visual <span>Fotos ou PDF da ementa física</span></div>
+
+      <!-- Upload area -->
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px;">
+        <label class="btn-secondary" for="menu-file-input" style="height:42px;display:flex;align-items:center;cursor:pointer;padding:0 18px;border-radius:8px;border:1px solid var(--border);font-size:13px;gap:8px;white-space:nowrap;">
+          📄 Adicionar ficheiro
+        </label>
+        <input type="file" id="menu-file-input" accept="image/jpeg,image/png,application/pdf" multiple style="display:none;" />
+        <span style="font-size:12px;color:var(--muted);">JPG · PNG · PDF · máx. 10 MB por ficheiro</span>
+      </div>
+      <div id="menu-upload-progress" style="font-size:13px;color:var(--muted);display:none;margin-bottom:12px;">A carregar...</div>
+
+      <!-- File list -->
+      <div id="menu-files-list"></div>
+      <p id="menu-files-empty" style="color:var(--muted);font-size:14px;display:none;">Nenhum ficheiro adicionado ainda.</p>
     </div>
   </div>
 
@@ -1120,10 +1139,76 @@
     await loadFotos()
   }
 
-  // Load fotos when tab activated
+  // ── MENU FILES TAB ────────────────────────────────────────
+  async function loadMenuFiles() {
+    const { data: files } = await supabase
+      .from('menu_files').select('*')
+      .eq('restaurant_id', restaurant.id)
+      .order('sort_order').order('created_at')
+
+    const listEl  = document.getElementById('menu-files-list')
+    const emptyEl = document.getElementById('menu-files-empty')
+
+    if (!files?.length) {
+      listEl.innerHTML = ''
+      emptyEl.style.display = 'block'
+      return
+    }
+    emptyEl.style.display = 'none'
+    listEl.innerHTML = files.map(f => `
+      <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--bg);border:1px solid var(--border);border-radius:8px;margin-bottom:8px;">
+        ${f.file_type === 'image'
+          ? `<img src="${f.file_url}" style="width:48px;height:48px;object-fit:cover;border-radius:6px;flex-shrink:0;" />`
+          : `<span style="font-size:28px;flex-shrink:0;">📄</span>`}
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${f.file_name ?? (f.file_type === 'pdf' ? 'Ementa PDF' : 'Imagem')}</div>
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;">${f.file_type === 'pdf' ? 'PDF' : 'Imagem'}</div>
+        </div>
+        <a href="${f.file_url}" target="_blank" rel="noopener" style="font-size:12px;color:var(--muted);white-space:nowrap;">Ver</a>
+        <button onclick="deleteMenuFile('${f.id}','${f.file_url}')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;line-height:1;padding:0 4px;" title="Apagar">✕</button>
+      </div>
+    `).join('')
+  }
+
+  document.getElementById('menu-file-input').addEventListener('change', async (e) => {
+    const files = Array.from(e.target.files)
+    if (!files.length) return
+    const progress = document.getElementById('menu-upload-progress')
+    progress.style.display = 'block'
+    for (const [i, file] of files.entries()) {
+      if (file.size > 10 * 1024 * 1024) { alert(`${file.name} é demasiado grande (máx. 10 MB).`); continue }
+      progress.textContent = `A carregar ${i + 1} de ${files.length}: ${file.name}`
+      const isPdf = file.type === 'application/pdf'
+      const ext = file.name.split('.').pop().toLowerCase()
+      const path = `${restaurant.id}/menu/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+      const { error } = await supabase.storage.from('restaurant-photos').upload(path, file, { contentType: file.type })
+      if (error) { alert(`Erro ao carregar ${file.name}: ${error.message}`); continue }
+      const { data: { publicUrl } } = supabase.storage.from('restaurant-photos').getPublicUrl(path)
+      await supabase.from('menu_files').insert({
+        restaurant_id: restaurant.id,
+        file_url: publicUrl,
+        file_type: isPdf ? 'pdf' : 'image',
+        file_name: file.name
+      })
+    }
+    progress.style.display = 'none'
+    e.target.value = ''
+    await loadMenuFiles()
+  })
+
+  window.deleteMenuFile = async function(id, url) {
+    if (!confirm('Apagar este ficheiro da ementa?')) return
+    await supabase.from('menu_files').delete().eq('id', id)
+    const pathMatch = url.match(/restaurant-photos\/(.+)$/)
+    if (pathMatch) await supabase.storage.from('restaurant-photos').remove([decodeURIComponent(pathMatch[1])])
+    await loadMenuFiles()
+  }
+
+  // Load tabs on activation
   document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       if (btn.dataset.tab === 'fotos') loadFotos()
+      if (btn.dataset.tab === 'ementa') loadMenuFiles()
       if (btn.dataset.tab === 'perfil') loadPerfil()
     })
   })
