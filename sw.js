@@ -5,7 +5,7 @@
 //   - Supabase API calls → Network First (never cache)
 //   - Offline fallback → /offline.html
 
-const CACHE_NAME = 'damesa-v2'
+const CACHE_NAME = 'damesa-v3'
 const OFFLINE_URL = '/offline.html'
 
 const PRECACHE = [

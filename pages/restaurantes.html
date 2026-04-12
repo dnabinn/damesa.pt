@@ -39,6 +39,10 @@
     .sug-item:hover { background:var(--bg); }
     .sug-item .sug-icon { font-size:16px; width:22px; text-align:center; flex-shrink:0; }
     .sug-item .sug-sub { font-size:12px; color:var(--muted); margin-left:auto; }
+    .sug-thumb { width:40px; height:40px; border-radius:6px; background:#e8dfd4 center/cover; flex-shrink:0; }
+    .sug-info { flex:1; min-width:0; }
+    .sug-info .sug-name { font-size:14px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .sug-info .sug-meta { font-size:12px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
     .chips { display:flex; gap:8px; flex-wrap:wrap; padding:0 24px 32px; max-width:1100px; margin:0 auto; }
     .chip { padding:7px 16px; border:1px solid var(--border); border-radius:100px; font-size:13px; cursor:pointer; background:#fff; transition:all 0.15s; }
@@ -133,108 +137,7 @@
 
   let all = [], activeCuisine = ''
 
-  // Build cuisine chips from fixed list
-  const chipsEl = document.getElementById('cuisine-chips')
-  chipsEl.innerHTML = '<div class="chip active" data-cuisine="">Todos</div>' +
-    CUISINES.map(c => `<div class="chip" data-cuisine="${c}">${c}</div>`).join('')
-
-  // Check URL param for cuisine pre-filter
-  const urlCuisine = new URLSearchParams(location.search).get('cuisine')
-  if (urlCuisine) {
-    activeCuisine = urlCuisine
-    chipsEl.querySelectorAll('.chip').forEach(c => {
-      c.classList.toggle('active', c.dataset.cuisine === urlCuisine)
-    })
-  }
-
-  const { restaurants } = await getRestaurants()
-  all = restaurants ?? []
-  applyFilters()
-
-  chipsEl.addEventListener('click', (e) => {
-    const chip = e.target.closest('.chip')
-    if (!chip) return
-    chipsEl.querySelectorAll('.chip').forEach(c => c.classList.remove('active'))
-    chip.classList.add('active')
-    activeCuisine = chip.dataset.cuisine
-    hideSuggestions()
-    applyFilters()
-  })
-
-  // ── SEARCH SUGGESTIONS ──────────────────────────────────────
-  const searchEl = document.getElementById('search')
-  const sugEl = document.getElementById('suggestions')
-
-  searchEl.addEventListener('input', () => {
-    applyFilters()
-    showSuggestions(searchEl.value.trim())
-  })
-  searchEl.addEventListener('focus', () => { if (searchEl.value.trim()) showSuggestions(searchEl.value.trim()) })
-  document.addEventListener('click', (e) => { if (!e.target.closest('.search-wrap')) hideSuggestions() })
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') hideSuggestions() })
-
-  function showSuggestions(q) {
-    if (!q || q.length < 1) { hideSuggestions(); return }
-    const ql = q.toLowerCase()
-
-    const matchRests = all.filter(r => r.name.toLowerCase().includes(ql)).slice(0, 4)
-    const matchCuisines = CUISINES.filter(c => c.toLowerCase().includes(ql)).slice(0, 4)
-
-    if (!matchRests.length && !matchCuisines.length) { hideSuggestions(); return }
-
-    let html = ''
-    if (matchRests.length) {
-      html += `<div class="sug-section">
-        <div class="sug-label">Restaurantes</div>
-        ${matchRests.map(r => `
-          <div class="sug-item" onclick="goRestaurant('${citySlug(r.city)}','${r.slug}')">
-            <span class="sug-icon">🍽️</span>
-            <span>${r.name}</span>
-            <span class="sug-sub">${r.cuisine_type ?? ''}</span>
-          </div>`).join('')}
-      </div>`
-    }
-    if (matchCuisines.length) {
-      html += `<div class="sug-section">
-        <div class="sug-label">Cozinhas</div>
-        ${matchCuisines.map(c => `
-          <div class="sug-item" onclick="filterByCuisine('${c}')">
-            <span class="sug-icon">${CUISINE_ICONS[c] ?? '🍽️'}</span>
-            <span>${c}</span>
-            <span class="sug-sub">ver restaurantes</span>
-          </div>`).join('')}
-      </div>`
-    }
-    sugEl.innerHTML = html
-    sugEl.classList.add('open')
-  }
-
-  function hideSuggestions() { sugEl.classList.remove('open') }
-
-  window.goRestaurant = function(city, slug) {
-    window.location.href = `/restaurante/${city}/${slug}`
-  }
-
-  window.filterByCuisine = function(cuisine) {
-    activeCuisine = cuisine
-    searchEl.value = ''
-    chipsEl.querySelectorAll('.chip').forEach(c => c.classList.toggle('active', c.dataset.cuisine === cuisine))
-    hideSuggestions()
-    applyFilters()
-  }
-
-  window.applyFilters = function() {
-    const q = document.getElementById('search').value.toLowerCase()
-    const price = document.getElementById('price-filter').value
-    const filtered = all.filter(r => {
-      const matchCuisine = !activeCuisine || r.cuisine_type === activeCuisine || (r.cuisines ?? []).includes(activeCuisine)
-      const matchSearch = !q || r.name.toLowerCase().includes(q) || (r.cuisine_type ?? '').toLowerCase().includes(q)
-      const matchPrice = !price || r.price_range === price
-      return matchCuisine && matchSearch && matchPrice
-    })
-    render(filtered)
-  }
-
+  // ── helpers (declared first so they're available before any await) ──────────
   function citySlug(city) {
     return (city ?? 'portugal').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-')
   }
@@ -259,6 +162,120 @@
         </div>
       </a>
     `).join('')
+  }
+
+  function applyFilters() {
+    const q = document.getElementById('search').value.toLowerCase()
+    const price = document.getElementById('price-filter').value
+    const filtered = all.filter(r => {
+      const matchCuisine = !activeCuisine || r.cuisine_type === activeCuisine || (r.cuisines ?? []).includes(activeCuisine)
+      const matchSearch = !q || r.name.toLowerCase().includes(q) || (r.cuisine_type ?? '').toLowerCase().includes(q)
+      const matchPrice = !price || r.price_range === price
+      return matchCuisine && matchSearch && matchPrice
+    })
+    render(filtered)
+  }
+  window.applyFilters = applyFilters  // expose for HTML onchange="applyFilters()"
+
+  function hideSuggestions() { document.getElementById('suggestions').classList.remove('open') }
+
+  function showSuggestions(q) {
+    const sugEl = document.getElementById('suggestions')
+    if (!q || q.length < 1) { hideSuggestions(); return }
+    const ql = q.toLowerCase()
+
+    const matchRests = all.filter(r => r.name.toLowerCase().includes(ql)).slice(0, 6)
+    const matchCuisines = CUISINES.filter(c => c.toLowerCase().includes(ql)).slice(0, 3)
+
+    if (!matchRests.length && !matchCuisines.length) { hideSuggestions(); return }
+
+    let html = ''
+    if (matchRests.length) {
+      html += `<div class="sug-section">
+        <div class="sug-label">Restaurantes</div>
+        ${matchRests.map(r => `
+          <div class="sug-item" onclick="window._goRestaurant('${citySlug(r.city)}','${r.slug}')">
+            <div class="sug-thumb" style="${r.cover_image ? `background-image:url(${r.cover_image})` : ''}"></div>
+            <div class="sug-info">
+              <div class="sug-name">${r.name}</div>
+              <div class="sug-meta">${[r.cuisine_type, r.city].filter(Boolean).join(' · ')}</div>
+            </div>
+          </div>`).join('')}
+      </div>`
+    }
+    if (matchCuisines.length) {
+      html += `<div class="sug-section">
+        <div class="sug-label">Cozinhas</div>
+        ${matchCuisines.map(c => `
+          <div class="sug-item" onclick="window._filterByCuisine('${c}')">
+            <span class="sug-icon">${CUISINE_ICONS[c] ?? '🍽️'}</span>
+            <div class="sug-info">
+              <div class="sug-name">${c}</div>
+              <div class="sug-meta">ver todos os restaurantes</div>
+            </div>
+          </div>`).join('')}
+      </div>`
+    }
+    sugEl.innerHTML = html
+    sugEl.classList.add('open')
+  }
+
+  // ── Build cuisine chips ──────────────────────────────────────────────────────
+  const chipsEl = document.getElementById('cuisine-chips')
+  chipsEl.innerHTML = '<div class="chip active" data-cuisine="">Todos</div>' +
+    CUISINES.map(c => `<div class="chip" data-cuisine="${c}">${c}</div>`).join('')
+
+  // Check URL param for cuisine pre-filter
+  const urlCuisine = new URLSearchParams(location.search).get('cuisine')
+  if (urlCuisine) {
+    activeCuisine = urlCuisine
+    chipsEl.querySelectorAll('.chip').forEach(c => {
+      c.classList.toggle('active', c.dataset.cuisine === urlCuisine)
+    })
+  }
+
+  // ── Load restaurants ─────────────────────────────────────────────────────────
+  const { restaurants } = await getRestaurants()
+  all = restaurants ?? []
+  applyFilters()
+
+  // ── Event listeners ──────────────────────────────────────────────────────────
+  chipsEl.addEventListener('click', (e) => {
+    const chip = e.target.closest('.chip')
+    if (!chip) return
+    chipsEl.querySelectorAll('.chip').forEach(c => c.classList.remove('active'))
+    chip.classList.add('active')
+    activeCuisine = chip.dataset.cuisine
+    hideSuggestions()
+    applyFilters()
+  })
+
+  const searchEl = document.getElementById('search')
+  searchEl.addEventListener('input', () => {
+    const q = searchEl.value.trim()
+    if (!q) applyFilters()
+    showSuggestions(q)
+  })
+  searchEl.addEventListener('focus', () => { if (searchEl.value.trim()) showSuggestions(searchEl.value.trim()) })
+  document.addEventListener('click', (e) => { if (!e.target.closest('.search-wrap')) hideSuggestions() })
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') hideSuggestions()
+    if (e.key === 'Enter' && searchEl === document.activeElement) {
+      hideSuggestions()
+      applyFilters()
+    }
+  })
+
+  window._goRestaurant = function(city, slug) {
+    window.location.href = `/restaurante/${city}/${slug}`
+  }
+
+  window._filterByCuisine = function(cuisine) {
+    activeCuisine = cuisine
+    searchEl.value = ''
+    chipsEl.querySelectorAll('.chip').forEach(c => c.classList.toggle('active', c.dataset.cuisine === cuisine))
+    hideSuggestions()
+    applyFilters()
   }
 </script>
 
