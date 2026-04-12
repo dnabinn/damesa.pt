@@ -39,7 +39,12 @@ export async function getAvailableSlots(restaurantId, date) {
     .eq('booking_date', date)
     .in('status', ['pending', 'confirmed'])
 
-  const allSlots = ['19:00','19:30','20:00','20:30','21:00','21:30','22:00','22:30','23:00']
+  const allSlots = [
+    // Lunch
+    '12:00','12:30','13:00','13:30','14:00','14:30','15:00',
+    // Dinner
+    '19:00','19:30','20:00','20:30','21:00','21:30','22:00','22:30','23:00'
+  ]
   return allSlots.map(slot => ({
     time: slot,
     booked: bookings?.filter(b => b.booking_time === slot + ':00').reduce((sum, b) => sum + b.party_size, 0) || 0

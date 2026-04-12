@@ -816,10 +816,10 @@
   }
 
   // ── BOOKING ───────────────────────────────────────────────
-  const tomorrow = new Date()
-  tomorrow.setDate(tomorrow.getDate() + 1)
-  document.getElementById('bdate').value = tomorrow.toISOString().split('T')[0]
-  document.getElementById('bdate').min = tomorrow.toISOString().split('T')[0]
+  // Use Lisbon timezone (UTC+1 winter / UTC+2 summer) so the date is never off by a day
+  const todayLisbon = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Lisbon' }) // → YYYY-MM-DD
+  document.getElementById('bdate').value = todayLisbon
+  document.getElementById('bdate').min = todayLisbon
 
   async function loadSlots() {
     const date = document.getElementById('bdate').value
@@ -944,7 +944,7 @@
       return
     }
     // Verified diner check
-    const today = new Date().toISOString().split('T')[0]
+    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Lisbon' })
     const { data } = await supabase
       .from('bookings').select('id')
       .eq('restaurant_id', restaurant.id)
@@ -1050,7 +1050,7 @@
       document.getElementById('review-login-required').style.display = 'block'
       return
     }
-    const today = new Date().toISOString().split('T')[0]
+    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Lisbon' })
     const { data } = await supabase
       .from('bookings').select('id')
       .eq('restaurant_id', restaurant.id)
