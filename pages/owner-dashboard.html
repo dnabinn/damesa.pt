@@ -1175,21 +1175,24 @@
     if (!files.length) return
     const progress = document.getElementById('menu-upload-progress')
     progress.style.display = 'block'
+    let successCount = 0
     for (const [i, file] of files.entries()) {
       if (file.size > 10 * 1024 * 1024) { alert(`${file.name} é demasiado grande (máx. 10 MB).`); continue }
       progress.textContent = `A carregar ${i + 1} de ${files.length}: ${file.name}`
       const isPdf = file.type === 'application/pdf'
       const ext = file.name.split('.').pop().toLowerCase()
       const path = `${restaurant.id}/menu/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
-      const { error } = await supabase.storage.from('restaurant-photos').upload(path, file, { contentType: file.type })
-      if (error) { alert(`Erro ao carregar ${file.name}: ${error.message}`); continue }
+      const { error: storageErr } = await supabase.storage.from('restaurant-photos').upload(path, file, { contentType: file.type })
+      if (storageErr) { alert(`Erro no storage (${file.name}): ${storageErr.message}`); continue }
       const { data: { publicUrl } } = supabase.storage.from('restaurant-photos').getPublicUrl(path)
-      await supabase.from('menu_files').insert({
+      const { error: dbErr } = await supabase.from('menu_files').insert({
         restaurant_id: restaurant.id,
         file_url: publicUrl,
         file_type: isPdf ? 'pdf' : 'image',
         file_name: file.name
       })
+      if (dbErr) { alert(`Erro ao guardar ${file.name}: ${dbErr.message}`); continue }
+      successCount++
     }
     progress.style.display = 'none'
     e.target.value = ''
