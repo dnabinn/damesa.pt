@@ -1081,7 +1081,7 @@
   window.addPhotoByUrl = async function() {
     const url = document.getElementById('fotos-url-input').value.trim()
     if (!url || !url.startsWith('http')) { alert('Insere um URL válido.'); return }
-    await supabase.from('restaurant_photos').insert({ restaurant_id: restaurant.id, photo_url: url, approved: true, diner_name: restaurant.name })
+    await supabase.from('restaurant_photos').insert({ restaurant_id: restaurant.id, photo_url: url, approved: true, diner_name: restaurant.name, source_type: 'restaurant' })
     document.getElementById('fotos-url-input').value = ''
     await loadFotos()
   }

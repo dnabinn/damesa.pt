@@ -185,17 +185,7 @@
     .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
 
     /* ── MAIN LAYOUT ────────────────────────────── */
-    .page-wrap { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
-    .layout {
-      display: grid;
-      grid-template-columns: 1fr 380px;
-      gap: 40px; padding: 40px 0 80px;
-      align-items: start;
-    }
-    @media (max-width: 860px) {
-      .layout { grid-template-columns: 1fr; }
-      .booking-col { order: -1; }
-    }
+    .page-wrap { max-width: 720px; margin: 0 auto; padding: 0 24px 80px; }
 
     /* ── TAB PANELS ─────────────────────────────── */
     .tab-panel { display: none; }
@@ -360,11 +350,6 @@
     .review-form textarea { resize: vertical; min-height: 90px; }
 
     /* ── BOOKING WIDGET ─────────────────────────── */
-    .booking-col { position: static; }
-    @media (min-width: 861px) {
-      .booking-col { position: sticky; top: 100px; }
-      .booking-widget { max-height: calc(100vh - 120px); overflow-y: auto; }
-    }
     .booking-widget {
       background: var(--card); border: 1px solid var(--border);
       border-radius: var(--radius); overflow: hidden;
@@ -507,15 +492,13 @@
     <button class="tab-btn active" data-tab="menu">Ementa</button>
     <button class="tab-btn" data-tab="photos">Fotos</button>
     <button class="tab-btn" data-tab="reviews">Avaliações</button>
+    <button class="tab-btn" data-tab="booking">Reservar</button>
   </div>
 </div>
 
 <!-- MAIN -->
 <div class="page-wrap">
-  <div class="layout">
-
-    <!-- LEFT CONTENT -->
-    <div class="content-col">
+  <div>
 
       <!-- MENU TAB -->
       <div class="tab-panel active" id="tab-menu">
@@ -579,7 +562,7 @@
 
         <!-- Message for users without a booking -->
         <div id="photo-no-booking" style="display:none; text-align:center; padding:24px 0; color:var(--muted); font-size:14px;">
-          📷 <a href="#booking-widget" style="color:var(--accent);">Reserva uma mesa</a> para poderes partilhar fotos deste restaurante.
+          📷 <a href="#" onclick="switchTab('booking');return false;" style="color:var(--accent);">Reserva uma mesa</a> para poderes partilhar fotos deste restaurante.
         </div>
       </div>
 
@@ -612,7 +595,7 @@
         <!-- Message for users without a qualifying booking -->
         <div id="review-no-booking" style="display:none; background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:24px; text-align:center; color:var(--muted); font-size:14px; line-height:1.6;">
           <p>Só podes deixar uma avaliação após teres visitado este restaurante.</p>
-          <p style="margin-top:8px;"><a href="#booking-widget" style="color:var(--accent);">Reserva uma mesa</a> para poderes avaliar.</p>
+          <p style="margin-top:8px;"><a href="#" onclick="switchTab('booking');return false;" style="color:var(--accent);">Reserva uma mesa</a> para poderes avaliar.</p>
         </div>
         <!-- Message for unauthenticated users -->
         <div id="review-login-required" style="display:none; background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:24px; text-align:center; color:var(--muted); font-size:14px; line-height:1.6;">
@@ -630,8 +613,8 @@
 
     </div><!-- /content-col -->
 
-    <!-- RIGHT: BOOKING WIDGET -->
-    <div class="booking-col">
+      <!-- BOOKING TAB -->
+      <div class="tab-panel" id="tab-booking">
       <div class="booking-widget">
         <div class="widget-header">
           <div class="widget-title">Reservar mesa</div>
@@ -708,13 +691,13 @@
 
         </div>
       </div>
-    </div><!-- /booking-col -->
+      </div><!-- /tab-booking -->
 
   </div>
 </div>
 
 <!-- MOBILE FLOATING CTA -->
-<button class="mobile-reserve-cta" onclick="document.querySelector('.booking-widget').scrollIntoView({behavior:'smooth'})">
+<button class="mobile-reserve-cta" onclick="switchTab('booking')">
   Reservar mesa
 </button>
 
@@ -802,20 +785,24 @@
   document.getElementById('rest-address').textContent = restaurant.address ?? 'Lisboa'
 
   // ── TABS ─────────────────────────────────────────────────
+  function switchTab(name) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'))
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'))
+    const btn = document.querySelector(`.tab-btn[data-tab="${name}"]`)
+    if (btn) btn.classList.add('active')
+    const panel = document.getElementById('tab-' + name)
+    if (panel) panel.classList.add('active')
+  }
   document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'))
-      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'))
-      btn.classList.add('active')
-      document.getElementById('tab-' + btn.dataset.tab).classList.add('active')
-    })
+    btn.addEventListener('click', () => switchTab(btn.dataset.tab))
   })
+  window.switchTab = switchTab
 
   // ── MENU ─────────────────────────────────────────────────
   const cats = restaurant.menu_categories ?? []
   const menuEl = document.getElementById('menu-container')
   if (!cats.length) {
-    menuEl.innerHTML = '<p class="menu-empty">Ementa não disponível de momento.</p>'
+    menuEl.innerHTML = '<p class="menu-empty" id="menu-empty-msg">Ementa não disponível de momento.</p>'
   } else {
     menuEl.innerHTML = cats.map((cat, i) => `
       <div class="menu-category fade-up" style="animation-delay:${i * 0.07}s">
@@ -844,6 +831,9 @@
       .eq('restaurant_id', restaurant.id)
       .order('sort_order').order('created_at')
     if (!files?.length) return
+    // Hide "not available" message — visual menu counts as a menu
+    const emptyMsg = document.getElementById('menu-empty-msg')
+    if (emptyMsg) emptyMsg.style.display = 'none'
     document.getElementById('menu-files-section').style.display = 'block'
     const pdfs   = files.filter(f => f.file_type === 'pdf')
     const images = files.filter(f => f.file_type === 'image')
@@ -977,8 +967,8 @@
       .from('restaurant_photos').select('*')
       .eq('restaurant_id', restaurant.id).eq('approved', true)
       .order('created_at', { ascending: false })
-    const rest = data?.filter(p => p.source_type === 'restaurant') ?? []
-    const diners = data?.filter(p => p.source_type !== 'restaurant') ?? []
+    const rest = data?.filter(p => p.source_type === 'restaurant' || p.source_type == null) ?? []
+    const diners = data?.filter(p => p.source_type === 'diner') ?? []
     renderPhotoGrid('photos-grid-restaurant', rest)
     renderPhotoGrid('photos-grid-diner', diners)
   }
