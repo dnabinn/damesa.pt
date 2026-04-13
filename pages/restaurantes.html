@@ -11,93 +11,191 @@
   <link rel="canonical" href="https://damesa.pt/restaurantes" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root { --bg:#faf7f2; --card:#fff; --text:#1c1612; --muted:#7a6a5e; --accent:#c0392b; --border:#e8dfd4; --radius:12px; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-    a { color: inherit; text-decoration: none; }
+    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+    :root {
+      --bg:#faf7f2; --card:#fff; --text:#1c1612; --muted:#7a6a5e;
+      --accent:#c0392b; --border:#e8dfd4; --radius:12px;
+    }
+    html, body { height:100%; }
+    body {
+      font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background:var(--bg); color:var(--text);
+      display:flex; flex-direction:column; overflow:hidden;
+    }
+    a { color:inherit; text-decoration:none; }
 
-    /* ── NAV ───────────────────────────────── */
-    nav { display:flex; align-items:center; justify-content:space-between; padding:12px 20px; background:#fff; border-bottom:1px solid var(--border); flex-shrink:0; z-index:200; }
+    /* ── NAV ─────────────────────────────────────────── */
+    nav {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:10px 16px; background:#fff; border-bottom:1px solid var(--border);
+      flex-shrink:0; z-index:300; position:relative;
+    }
     .logo { font-family:Georgia,serif; font-size:20px; font-weight:normal; }
     .logo span { color:var(--accent); }
-    .nav-links { display:flex; gap:20px; align-items:center; font-size:14px; color:var(--muted); }
+    .nav-links { display:flex; gap:16px; align-items:center; font-size:14px; color:var(--muted); }
     .nav-cta { background:var(--text); color:#fff !important; padding:7px 16px; border-radius:8px; font-size:13px; }
+    @media(max-width:500px) { .nav-links a:not(.nav-cta) { display:none; } }
 
-    /* ── SEARCH BAR ────────────────────────── */
-    .search-bar {
-      background:#fff; border-bottom:1px solid var(--border); padding:10px 20px;
-      display:flex; gap:8px; align-items:center; flex-wrap:wrap; flex-shrink:0; z-index:150;
+    /* ── TOP FILTERS ─────────────────────────────────── */
+    .top-filters {
+      background:#fff; border-bottom:1px solid var(--border);
+      padding:10px 16px; flex-shrink:0; z-index:200;
     }
-    .sb-group { display:flex; align-items:center; gap:6px; background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:6px 12px; cursor:pointer; font-size:13px; color:var(--text); white-space:nowrap; position:relative; }
-    .sb-group:focus-within { border-color:var(--text); }
-    .sb-icon { font-size:14px; flex-shrink:0; }
-    .sb-label { font-size:10px; text-transform:uppercase; letter-spacing:0.5px; color:var(--muted); display:block; }
-    .sb-val { font-size:13px; font-weight:500; }
-    .sb-group select, .sb-group input[type=date], .sb-group input[type=time] {
-      position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; border:none; background:none;
+
+    /* Search row */
+    .search-row { display:flex; gap:8px; align-items:center; margin-bottom:10px; position:relative; }
+    .search-input-wrap {
+      flex:1; display:flex; align-items:center; gap:8px;
+      background:var(--bg); border:1.5px solid var(--border); border-radius:10px;
+      padding:9px 14px;
     }
-    .sb-search { flex:1; min-width:160px; display:flex; align-items:center; gap:6px; background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:6px 12px; }
-    .sb-search input { border:none; background:none; font-size:13px; outline:none; width:100%; color:var(--text); }
-    .sb-search input::placeholder { color:var(--muted); }
-    .suggestions { position:absolute; top:calc(100% + 4px); left:0; right:0; background:#fff; border:1px solid var(--border); border-radius:10px; box-shadow:0 8px 24px rgba(0,0,0,0.10); z-index:400; overflow:hidden; display:none; }
+    .search-input-wrap:focus-within { border-color:var(--text); }
+    .search-input-wrap input { border:none; background:none; font-size:14px; outline:none; width:100%; color:var(--text); }
+    .search-input-wrap input::placeholder { color:var(--muted); }
+    .search-icon { color:var(--muted); font-size:15px; flex-shrink:0; }
+    .suggestions {
+      position:absolute; top:calc(100% + 4px); left:0; right:0;
+      background:#fff; border:1px solid var(--border); border-radius:12px;
+      box-shadow:0 8px 32px rgba(0,0,0,0.12); z-index:500; overflow:hidden; display:none;
+    }
     .suggestions.open { display:block; }
     .sug-section { padding:6px 0 2px; }
-    .sug-label { font-size:10px; text-transform:uppercase; letter-spacing:1px; color:var(--muted); padding:0 12px 3px; }
-    .sug-item { display:flex; align-items:center; gap:10px; padding:8px 12px; cursor:pointer; font-size:13px; }
+    .sug-label { font-size:10px; text-transform:uppercase; letter-spacing:1px; color:var(--muted); padding:0 14px 4px; }
+    .sug-item { display:flex; align-items:center; gap:10px; padding:9px 14px; cursor:pointer; }
     .sug-item:hover { background:var(--bg); }
-    .sug-thumb { width:36px; height:36px; border-radius:5px; background:var(--border) center/cover; flex-shrink:0; }
-    .sug-info .sug-name { font-size:13px; font-weight:500; }
-    .sug-info .sug-meta { font-size:11px; color:var(--muted); }
-    .sug-icon { font-size:15px; width:20px; text-align:center; flex-shrink:0; }
-    .sb-btn { background:var(--accent); color:#fff; border:none; border-radius:8px; padding:8px 18px; font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap; flex-shrink:0; }
-    .sb-btn:hover { background:#a93226; }
+    .sug-thumb { width:38px; height:38px; border-radius:7px; background:var(--border) center/cover; flex-shrink:0; }
+    .sug-icon { font-size:18px; width:26px; text-align:center; flex-shrink:0; }
+    .sug-name { font-size:13px; font-weight:500; }
+    .sug-meta { font-size:11px; color:var(--muted); margin-top:1px; }
 
-    /* ── CUISINE CHIPS ─────────────────────── */
-    .chips-bar { background:#fff; border-bottom:1px solid var(--border); padding:8px 20px; display:flex; gap:7px; overflow-x:auto; flex-shrink:0; scrollbar-width:none; }
-    .chips-bar::-webkit-scrollbar { display:none; }
-    .chip { padding:5px 14px; border:1px solid var(--border); border-radius:100px; font-size:12px; cursor:pointer; background:#fff; transition:all 0.15s; white-space:nowrap; flex-shrink:0; }
-    .chip:hover, .chip.active { background:var(--text); color:#fff; border-color:var(--text); }
-
-    /* ── MAIN SPLIT ────────────────────────── */
-    .main-split { display:flex; flex:1; overflow:hidden; }
-
-    /* ── LIST PANEL ────────────────────────── */
-    .list-panel { width:420px; flex-shrink:0; overflow-y:auto; border-right:1px solid var(--border); background:var(--bg); }
-    .list-header { padding:14px 16px 10px; font-size:13px; color:var(--muted); border-bottom:1px solid var(--border); background:#fff; position:sticky; top:0; z-index:10; }
-    .rest-card { display:flex; gap:12px; padding:14px 16px; border-bottom:1px solid var(--border); cursor:pointer; background:#fff; transition:background 0.15s; }
-    .rest-card:hover, .rest-card.highlighted { background:#fff8f6; }
-    .rest-card-img { width:90px; height:72px; border-radius:8px; background:var(--border) center/cover; flex-shrink:0; }
-    .rest-card-body { flex:1; min-width:0; }
-    .rest-card-name { font-size:15px; font-weight:600; margin-bottom:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .rest-card-meta { font-size:12px; color:var(--muted); margin-bottom:6px; display:flex; gap:8px; flex-wrap:wrap; }
-    .rest-card-slots { display:flex; gap:5px; flex-wrap:wrap; }
-    .slot-pill { padding:3px 9px; background:var(--accent); color:#fff; border-radius:5px; font-size:11px; font-weight:600; }
-    .slot-pill.full { background:var(--border); color:var(--muted); text-decoration:line-through; }
-    .no-results { padding:40px 20px; text-align:center; color:var(--muted); font-size:14px; }
-    @keyframes spin { to { transform:rotate(360deg); } }
-    .loading-spin { display:inline-block; width:14px; height:14px; border:2px solid var(--border); border-top-color:var(--muted); border-radius:50%; animation:spin 0.7s linear infinite; vertical-align:middle; margin-right:6px; }
-
-    /* ── MAP PANEL ─────────────────────────── */
-    .map-panel { flex:1; position:relative; }
-    #map { width:100%; height:100%; }
-    .leaflet-popup-content-wrapper { border-radius:10px !important; box-shadow:0 4px 20px rgba(0,0,0,0.15) !important; }
-    .map-popup { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
-    .map-popup-name { font-weight:600; font-size:14px; margin-bottom:3px; }
-    .map-popup-meta { font-size:12px; color:#7a6a5e; margin-bottom:8px; }
-    .map-popup-btn { display:block; background:#c0392b; color:#fff; text-align:center; padding:6px 12px; border-radius:6px; font-size:12px; font-weight:600; text-decoration:none; }
-    .map-popup-btn:hover { background:#a93226; }
-
-    /* ── MOBILE ────────────────────────────── */
-    @media (max-width: 700px) {
-      body { overflow:auto; }
-      .main-split { flex-direction:column; overflow:visible; }
-      .list-panel { width:100%; border-right:none; overflow:visible; }
-      .map-panel { height:320px; flex-shrink:0; }
-      .search-bar { gap:6px; }
-      .sb-group { padding:5px 10px; }
+    /* Filter pills row */
+    .filter-pills { display:flex; gap:7px; overflow-x:auto; scrollbar-width:none; }
+    .filter-pills::-webkit-scrollbar { display:none; }
+    .fpill {
+      display:inline-flex; align-items:center; gap:5px;
+      padding:6px 13px; border:1.5px solid var(--border); border-radius:100px;
+      font-size:13px; background:#fff; cursor:pointer; white-space:nowrap;
+      flex-shrink:0; position:relative; transition:border-color 0.15s;
+    }
+    .fpill:hover { border-color:var(--text); }
+    .fpill.active { border-color:var(--text); background:var(--text); color:#fff; }
+    .fpill .fpill-icon { font-size:13px; }
+    .fpill select, .fpill input[type=date] {
+      position:absolute; inset:0; opacity:0; cursor:pointer;
+      width:100%; height:100%; font-size:16px; /* prevents iOS zoom */
     }
 
-    footer { background:#fff; border-top:1px solid var(--border); padding:20px 24px; text-align:center; color:var(--muted); font-size:12px; flex-shrink:0; }
+    /* ── CUISINE CHIPS ───────────────────────────────── */
+    .chips-bar {
+      background:#fff; border-bottom:1px solid var(--border);
+      padding:8px 16px; display:flex; gap:7px; overflow-x:auto;
+      scrollbar-width:none; flex-shrink:0;
+    }
+    .chips-bar::-webkit-scrollbar { display:none; }
+    .chip {
+      padding:5px 13px; border:1.5px solid var(--border); border-radius:100px;
+      font-size:12px; cursor:pointer; background:#fff; white-space:nowrap;
+      flex-shrink:0; transition:all 0.15s;
+    }
+    .chip:hover, .chip.active { background:var(--text); color:#fff; border-color:var(--text); }
+
+    /* ── MAIN AREA ───────────────────────────────────── */
+    .main-area { flex:1; display:flex; overflow:hidden; position:relative; }
+
+    /* ── LIST PANEL ──────────────────────────────────── */
+    .list-panel { width:100%; max-width:460px; overflow-y:auto; background:var(--bg); border-right:1px solid var(--border); flex-shrink:0; }
+    @media(max-width:767px) { .list-panel { max-width:100%; border-right:none; } }
+
+    .list-header {
+      padding:12px 16px; font-size:13px; color:var(--muted);
+      background:#fff; border-bottom:1px solid var(--border);
+      display:flex; align-items:center; justify-content:space-between;
+      position:sticky; top:0; z-index:10;
+    }
+    .map-toggle-btn {
+      display:none; align-items:center; gap:5px;
+      background:var(--text); color:#fff; border:none;
+      border-radius:20px; padding:5px 13px; font-size:12px; font-weight:600;
+      cursor:pointer;
+    }
+    @media(max-width:767px) { .map-toggle-btn { display:inline-flex; } }
+
+    /* Restaurant card */
+    .rest-card {
+      background:#fff; border-bottom:1px solid var(--border);
+      cursor:pointer; transition:background 0.15s;
+      display:block;
+    }
+    .rest-card:hover, .rest-card.highlighted { background:#fff8f6; }
+    .rest-card-photo {
+      width:100%; aspect-ratio:16/9;
+      background:var(--border) center/cover; display:block;
+    }
+    .rest-card-body { padding:12px 16px 14px; }
+    .rest-card-name { font-size:16px; font-weight:600; margin-bottom:4px; }
+    .rest-card-meta {
+      font-size:12px; color:var(--muted); margin-bottom:8px;
+      display:flex; gap:10px; flex-wrap:wrap; align-items:center;
+    }
+    .price-badge {
+      background:var(--bg); border:1px solid var(--border);
+      border-radius:5px; padding:1px 6px; font-size:11px; color:var(--text);
+    }
+    .rest-card-slots { display:flex; gap:6px; flex-wrap:wrap; }
+    .slot-pill {
+      padding:4px 10px; background:var(--accent); color:#fff;
+      border-radius:6px; font-size:12px; font-weight:600;
+    }
+    .slot-pill.full {
+      background:var(--bg); color:var(--muted);
+      border:1px solid var(--border); text-decoration:line-through;
+    }
+
+    /* Desktop: card is horizontal */
+    @media(min-width:768px) {
+      .rest-card { display:flex; gap:0; }
+      .rest-card-photo { width:120px; min-width:120px; aspect-ratio:auto; height:96px; border-radius:0; flex-shrink:0; }
+      .rest-card-body { padding:12px 14px; }
+      .rest-card-name { font-size:14px; }
+    }
+
+    .no-results { padding:48px 20px; text-align:center; color:var(--muted); font-size:14px; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    .loading-spin {
+      display:inline-block; width:13px; height:13px;
+      border:2px solid var(--border); border-top-color:var(--muted);
+      border-radius:50%; animation:spin 0.7s linear infinite; vertical-align:middle; margin-right:5px;
+    }
+
+    /* ── MAP PANEL ───────────────────────────────────── */
+    .map-panel { flex:1; position:relative; }
+    #map { width:100%; height:100%; }
+
+    /* Mobile: map is an overlay */
+    @media(max-width:767px) {
+      .map-panel {
+        position:fixed; inset:0; z-index:400;
+        display:none; flex-direction:column;
+      }
+      .map-panel.open { display:flex; }
+      #map { flex:1; }
+      .map-close-btn {
+        position:absolute; top:12px; left:50%; transform:translateX(-50%);
+        background:#fff; border:none; border-radius:20px;
+        padding:7px 18px; font-size:13px; font-weight:600;
+        box-shadow:0 2px 12px rgba(0,0,0,0.2); cursor:pointer; z-index:10;
+        display:flex; align-items:center; gap:6px;
+      }
+    }
+    @media(min-width:768px) { .map-close-btn { display:none; } }
+
+    /* Leaflet popup */
+    .leaflet-popup-content-wrapper { border-radius:10px !important; box-shadow:0 4px 20px rgba(0,0,0,0.15) !important; }
+    .map-popup-name { font-weight:600; font-size:14px; margin-bottom:3px; font-family:-apple-system,sans-serif; }
+    .map-popup-meta { font-size:12px; color:#7a6a5e; margin-bottom:8px; font-family:-apple-system,sans-serif; }
+    .map-popup-btn { display:block; background:#c0392b; color:#fff; text-align:center; padding:6px 12px; border-radius:7px; font-size:12px; font-weight:600; }
+
+    footer { background:#fff; border-top:1px solid var(--border); padding:16px; text-align:center; color:var(--muted); font-size:12px; flex-shrink:0; }
     footer strong { color:var(--text); font-family:Georgia,serif; }
   </style>
 </head>
@@ -106,103 +204,115 @@
 <nav>
   <a href="/pages/index.html" class="logo">Da <span>Mesa</span></a>
   <div class="nav-links">
-    <a href="/pages/restaurantes.html">Restaurantes</a>
     <a href="/pages/cozinhas.html">Cozinhas</a>
     <a id="nav-login-btn" href="/pages/login.html" class="nav-cta">Entrar</a>
   </div>
 </nav>
 
-<!-- SEARCH BAR -->
-<div class="search-bar">
-  <!-- Location -->
-  <div class="sb-group" id="sb-city-wrap">
-    <span class="sb-icon">📍</span>
-    <div>
-      <span class="sb-label">Localização</span>
-      <span class="sb-val" id="sb-city-val">Lisboa</span>
-    </div>
-    <select id="sb-city" onchange="onCityChange()">
-      <option value="">Todas</option>
-    </select>
-  </div>
+<!-- TOP FILTERS -->
+<div class="top-filters">
 
-  <!-- Search input -->
-  <div class="sb-search" style="position:relative;">
-    <span style="font-size:14px;color:var(--muted);">🔍</span>
-    <input type="text" id="search" placeholder="Restaurante ou cozinha..." autocomplete="off" />
+  <!-- Search row -->
+  <div class="search-row">
+    <div class="search-input-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="search" placeholder="Restaurante ou cozinha..." autocomplete="off" />
+    </div>
     <div class="suggestions" id="suggestions"></div>
   </div>
 
-  <!-- Date -->
-  <div class="sb-group" id="sb-date-wrap">
-    <span class="sb-icon">📅</span>
-    <div>
-      <span class="sb-label">Data</span>
-      <span class="sb-val" id="sb-date-val">Qualquer dia</span>
-    </div>
-    <input type="date" id="sb-date" onchange="onFilterChange()" />
-  </div>
+  <!-- Filter pills -->
+  <div class="filter-pills">
 
-  <!-- Time -->
-  <div class="sb-group" id="sb-time-wrap">
-    <span class="sb-icon">⏰</span>
-    <div>
-      <span class="sb-label">Hora</span>
-      <span class="sb-val" id="sb-time-val">Qualquer hora</span>
+    <!-- City -->
+    <div class="fpill" id="fpill-city">
+      <span class="fpill-icon">📍</span>
+      <span id="fpill-city-val">Lisboa</span>
+      <select id="sb-city" onchange="onCityChange()">
+        <option value="">Todas as cidades</option>
+      </select>
     </div>
-    <select id="sb-time" onchange="onFilterChange()">
-      <option value="">Qualquer hora</option>
-      <optgroup label="Almoço">
-        <option>12:00</option><option>12:30</option><option>13:00</option>
-        <option>13:30</option><option>14:00</option><option>14:30</option><option>15:00</option>
-      </optgroup>
-      <optgroup label="Jantar">
-        <option>19:00</option><option>19:30</option><option>20:00</option>
-        <option>20:30</option><option>21:00</option><option>21:30</option>
-        <option>22:00</option><option>22:30</option><option>23:00</option>
-      </optgroup>
-    </select>
-  </div>
 
-  <!-- Party -->
-  <div class="sb-group" id="sb-party-wrap">
-    <span class="sb-icon">👥</span>
-    <div>
-      <span class="sb-label">Pessoas</span>
-      <span class="sb-val" id="sb-party-val">2 pessoas</span>
+    <!-- Date -->
+    <div class="fpill" id="fpill-date">
+      <span class="fpill-icon">📅</span>
+      <span id="fpill-date-val">Hoje</span>
+      <input type="date" id="sb-date" onchange="onFilterChange()" />
     </div>
-    <select id="sb-party" onchange="onFilterChange()">
-      <option value="1">1 pessoa</option>
-      <option value="2" selected>2 pessoas</option>
-      <option value="3">3 pessoas</option>
-      <option value="4">4 pessoas</option>
-      <option value="5">5 pessoas</option>
-      <option value="6">6 pessoas</option>
-      <option value="7">7 pessoas</option>
-      <option value="8">8+ pessoas</option>
-    </select>
+
+    <!-- Time -->
+    <div class="fpill" id="fpill-time">
+      <span class="fpill-icon">⏰</span>
+      <span id="fpill-time-val">Qualquer hora</span>
+      <select id="sb-time" onchange="onFilterChange()">
+        <option value="">Qualquer hora</option>
+        <optgroup label="Almoço">
+          <option>12:00</option><option>12:30</option><option>13:00</option>
+          <option>13:30</option><option>14:00</option><option>14:30</option><option>15:00</option>
+        </optgroup>
+        <optgroup label="Jantar">
+          <option>19:00</option><option>19:30</option><option>20:00</option>
+          <option>20:30</option><option>21:00</option><option>21:30</option>
+          <option>22:00</option><option>22:30</option><option>23:00</option>
+        </optgroup>
+      </select>
+    </div>
+
+    <!-- Party -->
+    <div class="fpill" id="fpill-party">
+      <span class="fpill-icon">👥</span>
+      <span id="fpill-party-val">2 pessoas</span>
+      <select id="sb-party" onchange="onFilterChange()">
+        <option value="1">1 pessoa</option>
+        <option value="2" selected>2 pessoas</option>
+        <option value="3">3 pessoas</option>
+        <option value="4">4 pessoas</option>
+        <option value="5">5 pessoas</option>
+        <option value="6">6 pessoas</option>
+        <option value="7">7 pessoas</option>
+        <option value="8">8+ pessoas</option>
+      </select>
+    </div>
+
+    <!-- Price -->
+    <div class="fpill" id="fpill-price">
+      <span class="fpill-icon">💶</span>
+      <span id="fpill-price-val">Preço</span>
+      <select id="sb-price" onchange="onFilterChange()">
+        <option value="">Todos os preços</option>
+        <option value="€">€ Económico</option>
+        <option value="€€">€€ Moderado</option>
+        <option value="€€€">€€€ Sofisticado</option>
+        <option value="€€€€">€€€€ Fine dining</option>
+      </select>
+    </div>
+
   </div>
 </div>
 
 <!-- CUISINE CHIPS -->
 <div class="chips-bar" id="cuisine-chips"></div>
 
-<!-- MAIN SPLIT: list + map -->
-<div class="main-split">
+<!-- MAIN: list + map -->
+<div class="main-area">
 
   <div class="list-panel" id="list-panel">
-    <div class="list-header" id="list-header"><span class="loading-spin"></span>A carregar...</div>
+    <div class="list-header" id="list-header">
+      <span><span class="loading-spin"></span>A carregar...</span>
+      <button class="map-toggle-btn" onclick="toggleMap(true)">🗺️ Ver no mapa</button>
+    </div>
     <div id="restaurants-list"></div>
   </div>
 
-  <div class="map-panel">
+  <div class="map-panel" id="map-panel">
+    <button class="map-close-btn" onclick="toggleMap(false)">✕ Fechar mapa</button>
     <div id="map"></div>
   </div>
 
 </div>
 
 <footer>
-  <strong>Da Mesa</strong> — Reservas de restaurantes em Lisboa · <a href="mailto:ola@damesa.pt">ola@damesa.pt</a> · <a href="/pages/privacy.html">Privacidade</a> · <a href="/pages/terms.html">Termos</a>
+  <strong>Da Mesa</strong> · <a href="mailto:ola@damesa.pt">ola@damesa.pt</a> · <a href="/pages/privacy.html">Privacidade</a> · <a href="/pages/terms.html">Termos</a>
 </footer>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -211,18 +321,16 @@
   import { initCookieBanner } from '/src/js/cookies.js'
   initCookieBanner()
 
-  // ── AUTH NAV ──────────────────────────────────────────────
+  // Auth nav
   const { data: { session } } = await supabase.auth.getSession()
   if (session) {
     const btn = document.getElementById('nav-login-btn')
-    btn.textContent = 'A minha conta'
-    btn.href = '/pages/dashboard.html'
+    btn.textContent = 'A minha conta'; btn.href = '/pages/dashboard.html'
   }
 
   const CUISINES = ['Portuguesa','Nepalesa','Indiana','Italiana','Japonesa','Chinesa',
     'Mediterrânea','Grelhados','Marisco','Fusão','Americana','Francesa','Espanhola',
     'Vegana','Petiscos','Contemporânea','Brasileira','Árabe','Tailandesa','Mexicana']
-
   const CUISINE_ICONS = {
     'Portuguesa':'🍖','Nepalesa':'🏔️','Indiana':'🍛','Italiana':'🍝','Japonesa':'🍣',
     'Chinesa':'🥢','Mediterrânea':'🫒','Grelhados':'🥩','Marisco':'🦞','Fusão':'🌏',
@@ -230,142 +338,129 @@
     'Contemporânea':'✨','Brasileira':'🌿','Árabe':'🧆','Tailandesa':'🌶️','Mexicana':'🌮'
   }
 
-  // ── STATE ─────────────────────────────────────────────────
-  let all = []
-  let activeCuisine = ''
-  let availabilityMap = {}  // restaurantId → { booked, full }
-  let markers = {}          // restaurantId → leaflet marker
-  let map, defaultIcon, highlightIcon
+  let all = [], activeCuisine = '', availabilityMap = {}, markers = {}, map
+  let defaultIcon, highlightIcon
 
-  // ── MAP INIT ─────────────────────────────────────────────
+  // ── MAP ──────────────────────────────────────────────────
   map = L.map('map', { zoomControl: true }).setView([38.7169, -9.1399], 13)
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-    maxZoom: 19
+    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>', maxZoom: 19
   }).addTo(map)
 
-  defaultIcon = L.divIcon({
-    className: '',
-    html: `<div style="background:#c0392b;color:#fff;border:2px solid #fff;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:13px;box-shadow:0 2px 8px rgba(0,0,0,0.3);">🍽️</div>`,
-    iconSize: [28, 28], iconAnchor: [14, 14]
-  })
-  highlightIcon = L.divIcon({
-    className: '',
-    html: `<div style="background:#a93226;color:#fff;border:3px solid #fff;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:15px;box-shadow:0 3px 12px rgba(0,0,0,0.4);">🍽️</div>`,
-    iconSize: [36, 36], iconAnchor: [18, 18]
-  })
+  const markerHtml = (big) => `<div style="background:#c0392b;color:#fff;border:${big?3:2}px solid #fff;border-radius:50%;width:${big?36:28}px;height:${big?36:28}px;display:flex;align-items:center;justify-content:center;font-size:${big?15:12}px;box-shadow:0 2px 10px rgba(0,0,0,0.3);">🍽️</div>`
+  defaultIcon   = L.divIcon({ className:'', html: markerHtml(false), iconSize:[28,28], iconAnchor:[14,14] })
+  highlightIcon = L.divIcon({ className:'', html: markerHtml(true),  iconSize:[36,36], iconAnchor:[18,18] })
 
-  // ── CUISINE CHIPS ─────────────────────────────────────────
+  window.toggleMap = function(open) {
+    const panel = document.getElementById('map-panel')
+    panel.classList.toggle('open', open)
+    if (open) setTimeout(() => map.invalidateSize(), 50)
+  }
+
+  // ── CUISINE CHIPS ────────────────────────────────────────
   const chipsEl = document.getElementById('cuisine-chips')
   chipsEl.innerHTML = '<div class="chip active" data-cuisine="">Todos</div>' +
-    CUISINES.map(c => `<div class="chip" data-cuisine="${c}">${CUISINE_ICONS[c] ?? ''} ${c}</div>`).join('')
+    CUISINES.map(c => `<div class="chip" data-cuisine="${c}">${CUISINE_ICONS[c]} ${c}</div>`).join('')
   chipsEl.addEventListener('click', e => {
-    const chip = e.target.closest('.chip')
-    if (!chip) return
+    const chip = e.target.closest('.chip'); if (!chip) return
     chipsEl.querySelectorAll('.chip').forEach(c => c.classList.remove('active'))
-    chip.classList.add('active')
-    activeCuisine = chip.dataset.cuisine
-    hideSuggestions()
-    renderList()
+    chip.classList.add('active'); activeCuisine = chip.dataset.cuisine
+    hideSuggestions(); renderList()
   })
 
-  // ── CITY FILTER ───────────────────────────────────────────
+  // ── FILTER LABELS ────────────────────────────────────────
   window.onCityChange = function() {
-    const val = document.getElementById('sb-city').value
-    document.getElementById('sb-city-val').textContent = val || 'Todas'
+    const v = document.getElementById('sb-city').value
+    document.getElementById('fpill-city-val').textContent = v || 'Todas'
+    document.getElementById('fpill-city').classList.toggle('active', !!v)
     renderList()
   }
 
-  // ── FILTER BAR DISPLAY LABELS ─────────────────────────────
   window.onFilterChange = function() {
-    const date = document.getElementById('sb-date').value
-    const time = document.getElementById('sb-time').value
+    const date  = document.getElementById('sb-date').value
+    const time  = document.getElementById('sb-time').value
     const party = document.getElementById('sb-party').value
+    const price = document.getElementById('sb-price').value
 
-    document.getElementById('sb-date-val').textContent = date
-      ? new Date(date + 'T12:00:00').toLocaleDateString('pt-PT', { day:'numeric', month:'short' })
-      : 'Qualquer dia'
-    document.getElementById('sb-time-val').textContent = time || 'Qualquer hora'
-    document.getElementById('sb-party-val').textContent = party === '8' ? '8+ pessoas' : `${party} ${party === '1' ? 'pessoa' : 'pessoas'}`
+    const todayLisbon = new Date().toLocaleDateString('en-CA', { timeZone:'Europe/Lisbon' })
+    const isToday = date === todayLisbon
+    document.getElementById('fpill-date-val').textContent = !date ? 'Qualquer dia'
+      : isToday ? 'Hoje'
+      : new Date(date + 'T12:00').toLocaleDateString('pt-PT', { day:'numeric', month:'short' })
+    document.getElementById('fpill-date').classList.toggle('active', !!date && !isToday)
+
+    document.getElementById('fpill-time-val').textContent = time || 'Qualquer hora'
+    document.getElementById('fpill-time').classList.toggle('active', !!time)
+
+    document.getElementById('fpill-party-val').textContent = party === '8' ? '8+ pessoas' : `${party} ${+party===1?'pessoa':'pessoas'}`
+    document.getElementById('fpill-price-val').textContent = price || 'Preço'
+    document.getElementById('fpill-price').classList.toggle('active', !!price)
 
     if (date && time) loadAvailability(date, time)
     else { availabilityMap = {}; renderList() }
   }
 
-  // ── AVAILABILITY CHECK ────────────────────────────────────
+  // ── AVAILABILITY ─────────────────────────────────────────
   async function loadAvailability(date, time) {
-    document.getElementById('list-header').innerHTML = '<span class="loading-spin"></span>A verificar disponibilidade...'
-    const timeWithSeconds = time + ':00'
-    const { data } = await supabase
-      .from('bookings')
+    document.getElementById('list-header').innerHTML =
+      `<span><span class="loading-spin"></span>A verificar disponibilidade...</span>
+       <button class="map-toggle-btn" onclick="toggleMap(true)">🗺️ Ver no mapa</button>`
+    const { data } = await supabase.from('bookings')
       .select('restaurant_id, party_size')
-      .eq('booking_date', date)
-      .eq('booking_time', timeWithSeconds)
-      .in('status', ['pending', 'confirmed'])
-
+      .eq('booking_date', date).eq('booking_time', time + ':00')
+      .in('status', ['pending','confirmed'])
     availabilityMap = {}
-    if (data) {
-      data.forEach(b => {
-        availabilityMap[b.restaurant_id] = (availabilityMap[b.restaurant_id] ?? 0) + b.party_size
-      })
-    }
+    if (data) data.forEach(b => { availabilityMap[b.restaurant_id] = (availabilityMap[b.restaurant_id]??0) + b.party_size })
     renderList()
   }
 
-  // ── LOAD RESTAURANTS ─────────────────────────────────────
-  const { data: restaurants } = await supabase
-    .from('restaurants').select('*').eq('status', 'active').order('name')
+  // ── LOAD DATA ────────────────────────────────────────────
+  const { data: restaurants } = await supabase.from('restaurants')
+    .select('*').eq('status','active').order('name')
   all = restaurants ?? []
 
-  // Populate city filter
+  // Populate city select
   const cities = [...new Set(all.map(r => r.city).filter(Boolean))].sort()
   const citySelect = document.getElementById('sb-city')
-  cities.forEach(c => {
-    const opt = document.createElement('option')
-    opt.value = c; opt.textContent = c
-    citySelect.appendChild(opt)
-  })
+  cities.forEach(c => { const o = document.createElement('option'); o.value=c; o.textContent=c; citySelect.appendChild(o) })
 
-  // Pre-select from URL param
+  // URL params
   const urlParams = new URLSearchParams(location.search)
   const urlCuisine = urlParams.get('cuisine')
-  const urlCity = urlParams.get('city')
+  const urlCity    = urlParams.get('city')
   if (urlCuisine) {
     activeCuisine = urlCuisine
     chipsEl.querySelectorAll('.chip').forEach(c => c.classList.toggle('active', c.dataset.cuisine === urlCuisine))
   }
-  if (urlCity) {
-    citySelect.value = urlCity
-    document.getElementById('sb-city-val').textContent = urlCity
-  }
+  if (urlCity) { citySelect.value = urlCity; window.onCityChange() }
 
-  // Date pre-fill to today (Lisbon)
-  const todayLisbon = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Lisbon' })
+  // Date default = today
+  const todayLisbon = new Date().toLocaleDateString('en-CA', { timeZone:'Europe/Lisbon' })
   document.getElementById('sb-date').value = todayLisbon
-  document.getElementById('sb-date-val').textContent = new Date(todayLisbon + 'T12:00:00')
-    .toLocaleDateString('pt-PT', { day:'numeric', month:'short' })
 
-  // Place markers on map
+  // Place map markers
   all.forEach(r => placeMarker(r))
-
   renderList()
 
-  // ── RENDER LIST ───────────────────────────────────────────
+  // ── RENDER ───────────────────────────────────────────────
   function renderList() {
-    const q = document.getElementById('search').value.toLowerCase().trim()
-    const city = document.getElementById('sb-city').value
-    const time = document.getElementById('sb-time').value
+    const q     = document.getElementById('search').value.toLowerCase().trim()
+    const city  = document.getElementById('sb-city').value
+    const time  = document.getElementById('sb-time').value
     const party = parseInt(document.getElementById('sb-party').value) || 2
+    const price = document.getElementById('sb-price').value
 
     const filtered = all.filter(r => {
-      const matchCuisine = !activeCuisine || r.cuisine_type === activeCuisine || (r.cuisines ?? []).includes(activeCuisine)
-      const matchCity = !city || r.city === city
-      const matchSearch = !q || r.name.toLowerCase().includes(q) || (r.cuisine_type ?? '').toLowerCase().includes(q)
-      return matchCuisine && matchCity && matchSearch
+      const matchCuisine = !activeCuisine || r.cuisine_type===activeCuisine || (r.cuisines??[]).includes(activeCuisine)
+      const matchCity    = !city  || r.city===city
+      const matchSearch  = !q    || r.name.toLowerCase().includes(q) || (r.cuisine_type??'').toLowerCase().includes(q)
+      const matchPrice   = !price || r.price_range===price
+      return matchCuisine && matchCity && matchSearch && matchPrice
     })
 
-    const headerEl = document.getElementById('list-header')
-    headerEl.textContent = `${filtered.length} restaurante${filtered.length !== 1 ? 's' : ''}${time ? ' · ' + time : ''}`
+    document.getElementById('list-header').innerHTML =
+      `<span>${filtered.length} restaurante${filtered.length!==1?'s':''}${time?' · '+time:''}</span>
+       <button class="map-toggle-btn" onclick="toggleMap(true)">🗺️ Ver no mapa</button>`
 
     const listEl = document.getElementById('restaurants-list')
     if (!filtered.length) {
@@ -373,138 +468,109 @@
       return
     }
 
-    const showSlots = !!time
     listEl.innerHTML = filtered.map(r => {
-      const booked = availabilityMap[r.id] ?? 0
-      const cap = r.capacity ?? 50
+      const booked  = availabilityMap[r.id] ?? 0
+      const cap     = r.capacity ?? 50
       const hasRoom = booked + party <= cap
-      const slotsHtml = showSlots
-        ? `<div class="rest-card-slots">
-            <span class="slot-pill${!hasRoom ? ' full' : ''}">${time}</span>
-           </div>`
+      const slotsHtml = time
+        ? `<div class="rest-card-slots"><span class="slot-pill${!hasRoom?' full':''}">${time}</span></div>`
         : ''
       return `
         <div class="rest-card" data-id="${r.id}" onclick="goRestaurant('${citySlug(r.city)}','${r.slug}')">
-          <div class="rest-card-img" style="${r.cover_image ? `background-image:url(${r.cover_image})` : ''}"></div>
+          <div class="rest-card-photo" style="${r.cover_image?`background-image:url(${r.cover_image})`:''}"></div>
           <div class="rest-card-body">
             <div class="rest-card-name">${r.name}</div>
             <div class="rest-card-meta">
-              <span>${r.cuisine_type ?? ''}</span>
-              <span>${r.price_range ?? '€€'}</span>
-              <span>📍 ${r.city ?? 'Lisboa'}</span>
+              <span>${r.cuisine_type??''}</span>
+              <span class="price-badge">${r.price_range??'€€'}</span>
+              <span>📍 ${r.city??'Lisboa'}</span>
             </div>
             ${slotsHtml}
           </div>
         </div>`
     }).join('')
 
-    // Card hover ↔ map highlight
+    // Card hover → map marker
     listEl.querySelectorAll('.rest-card').forEach(card => {
       card.addEventListener('mouseenter', () => highlightMarker(card.dataset.id, true))
       card.addEventListener('mouseleave', () => highlightMarker(card.dataset.id, false))
     })
 
-    // Fit map to visible markers
+    // Fit map to filtered restaurants
     const visibleIds = new Set(filtered.map(r => r.id))
-    const bounds = []
-    filtered.forEach(r => {
-      if (r.latitude && r.longitude) bounds.push([r.latitude, r.longitude])
-    })
-    if (bounds.length > 1) map.fitBounds(bounds, { padding: [40, 40], maxZoom: 15 })
-    else if (bounds.length === 1) map.setView(bounds[0], 15)
-
-    // Show/hide markers
+    const bounds = filtered.filter(r => r.latitude && r.longitude).map(r => [r.latitude, r.longitude])
+    if (bounds.length > 1) map.fitBounds(bounds, { padding:[40,40], maxZoom:15 })
+    else if (bounds.length===1) map.setView(bounds[0], 15)
     Object.entries(markers).forEach(([id, m]) => {
       if (visibleIds.has(id)) { if (!map.hasLayer(m)) m.addTo(map) }
       else { if (map.hasLayer(m)) map.removeLayer(m) }
     })
   }
 
-  // ── MAP HELPERS ───────────────────────────────────────────
+  // ── MAP HELPERS ──────────────────────────────────────────
   function placeMarker(r) {
     if (!r.latitude || !r.longitude) return
-    const marker = L.marker([r.latitude, r.longitude], { icon: defaultIcon })
-    marker.bindPopup(`
-      <div class="map-popup">
+    const m = L.marker([r.latitude, r.longitude], { icon: defaultIcon })
+    m.bindPopup(`
+      <div>
         <div class="map-popup-name">${r.name}</div>
-        <div class="map-popup-meta">${r.cuisine_type ?? ''} · ${r.price_range ?? '€€'}<br>${r.address ?? r.city ?? 'Lisboa'}</div>
+        <div class="map-popup-meta">${r.cuisine_type??''} · ${r.price_range??'€€'}<br>${r.address??r.city??'Lisboa'}</div>
         <a class="map-popup-btn" href="/restaurante/${citySlug(r.city)}/${r.slug}">Ver restaurante →</a>
-      </div>`, { maxWidth: 220 })
-    marker.on('click', () => {
+      </div>`, { maxWidth:220 })
+    m.on('click', () => {
       const card = document.querySelector(`.rest-card[data-id="${r.id}"]`)
-      if (card) { card.classList.add('highlighted'); card.scrollIntoView({ behavior: 'smooth', block: 'nearest' }) }
+      if (card) { card.classList.add('highlighted'); card.scrollIntoView({ behavior:'smooth', block:'nearest' }) }
     })
-    markers[r.id] = marker
-    marker.addTo(map)
+    markers[r.id] = m; m.addTo(map)
   }
 
   function highlightMarker(id, on) {
-    const m = markers[id]
-    if (!m) return
+    const m = markers[id]; if (!m) return
     m.setIcon(on ? highlightIcon : defaultIcon)
-    if (on) m.openPopup()
-    else m.closePopup()
+    if (on) m.openPopup(); else m.closePopup()
   }
 
-  window.goRestaurant = function(city, slug) {
-    window.location.href = `/restaurante/${city}/${slug}`
-  }
+  window.goRestaurant = (city, slug) => { window.location.href = `/restaurante/${city}/${slug}` }
 
   function citySlug(city) {
-    return (city ?? 'portugal').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-')
+    return (city??'portugal').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,'-')
   }
 
   // ── SEARCH SUGGESTIONS ───────────────────────────────────
   const searchEl = document.getElementById('search')
-  const sugEl = document.getElementById('suggestions')
-
+  const sugEl    = document.getElementById('suggestions')
   function hideSuggestions() { sugEl.classList.remove('open') }
 
   searchEl.addEventListener('input', () => {
     renderList()
-    const q = searchEl.value.trim()
-    if (!q) { hideSuggestions(); return }
+    const q = searchEl.value.trim(); if (!q) { hideSuggestions(); return }
     const ql = q.toLowerCase()
-    const matchRests = all.filter(r => r.name.toLowerCase().includes(ql)).slice(0, 5)
-    const matchCuisines = CUISINES.filter(c => c.toLowerCase().includes(ql)).slice(0, 3)
+    const matchRests    = all.filter(r => r.name.toLowerCase().includes(ql)).slice(0,5)
+    const matchCuisines = CUISINES.filter(c => c.toLowerCase().includes(ql)).slice(0,3)
     if (!matchRests.length && !matchCuisines.length) { hideSuggestions(); return }
     let html = ''
-    if (matchRests.length) {
-      html += `<div class="sug-section"><div class="sug-label">Restaurantes</div>
-        ${matchRests.map(r => `
-          <div class="sug-item" onclick="goRestaurant('${citySlug(r.city)}','${r.slug}')">
-            <div class="sug-thumb" style="${r.cover_image ? `background-image:url(${r.cover_image})` : ''}"></div>
-            <div class="sug-info"><div class="sug-name">${r.name}</div><div class="sug-meta">${[r.cuisine_type,r.city].filter(Boolean).join(' · ')}</div></div>
-          </div>`).join('')}
-      </div>`
-    }
-    if (matchCuisines.length) {
-      html += `<div class="sug-section"><div class="sug-label">Cozinhas</div>
-        ${matchCuisines.map(c => `
-          <div class="sug-item" onclick="window._filterCuisine('${c}')">
-            <span class="sug-icon">${CUISINE_ICONS[c] ?? '🍽️'}</span>
-            <div class="sug-info"><div class="sug-name">${c}</div><div class="sug-meta">ver restaurantes</div></div>
-          </div>`).join('')}
-      </div>`
-    }
-    sugEl.innerHTML = html
-    sugEl.classList.add('open')
+    if (matchRests.length) html += `<div class="sug-section"><div class="sug-label">Restaurantes</div>
+      ${matchRests.map(r => `<div class="sug-item" onclick="goRestaurant('${citySlug(r.city)}','${r.slug}')">
+        <div class="sug-thumb" style="${r.cover_image?`background-image:url(${r.cover_image})`:''}"></div>
+        <div><div class="sug-name">${r.name}</div><div class="sug-meta">${[r.cuisine_type,r.city].filter(Boolean).join(' · ')}</div></div>
+      </div>`).join('')}</div>`
+    if (matchCuisines.length) html += `<div class="sug-section"><div class="sug-label">Cozinhas</div>
+      ${matchCuisines.map(c => `<div class="sug-item" onclick="window._filterCuisine('${c}')">
+        <span class="sug-icon">${CUISINE_ICONS[c]??'🍽️'}</span>
+        <div><div class="sug-name">${c}</div><div class="sug-meta">ver restaurantes</div></div>
+      </div>`).join('')}</div>`
+    sugEl.innerHTML = html; sugEl.classList.add('open')
   })
   searchEl.addEventListener('focus', () => { if (searchEl.value.trim()) searchEl.dispatchEvent(new Event('input')) })
-  document.addEventListener('click', e => { if (!e.target.closest('.sb-search')) hideSuggestions() })
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') hideSuggestions() })
-
-  window._filterCuisine = function(cuisine) {
-    activeCuisine = cuisine
-    searchEl.value = ''
-    chipsEl.querySelectorAll('.chip').forEach(c => c.classList.toggle('active', c.dataset.cuisine === cuisine))
-    hideSuggestions()
-    renderList()
+  document.addEventListener('click', e => { if (!e.target.closest('.search-row')) hideSuggestions() })
+  document.addEventListener('keydown', e => { if (e.key==='Escape') hideSuggestions() })
+  window._filterCuisine = cuisine => {
+    activeCuisine = cuisine; searchEl.value = ''
+    chipsEl.querySelectorAll('.chip').forEach(c => c.classList.toggle('active', c.dataset.cuisine===cuisine))
+    hideSuggestions(); renderList()
   }
 </script>
 
-<!-- PWA Service Worker -->
-<script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {})</script>
-
+<script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(()=>{})</script>
 </body>
 </html>
