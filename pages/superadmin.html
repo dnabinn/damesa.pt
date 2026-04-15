@@ -567,7 +567,7 @@
     try {
       const { data, error } = await supabase
         .from('restaurants')
-        .select('id, name, slug, cuisine_type, status, subscription, owner_id, city, created_at, email, owner_legal_name, owner_iban, billing_status, contract_status, stripe_customer_id, damesa_email, description, cuisines')
+        .select('id, name, slug, cuisine_type, status, plan, subscription, owner_id, city, created_at, email, owner_legal_name, owner_iban, billing_status, contract_status, stripe_customer_id, damesa_email, description, cuisines')
         .order('created_at', { ascending: false })
       if (error) throw error
       allRestaurants = data ?? []
