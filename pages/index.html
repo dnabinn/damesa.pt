@@ -19,295 +19,296 @@
   <link rel="manifest" href="/assets/manifest.json" />
   <link rel="icon" href="/assets/icons/icon-192.png" />
   <link rel="apple-touch-icon" href="/assets/icons/icon-192.png" />
-  <meta name="theme-color" content="#111318" />
-
-  <!-- Fonts -->
+  <meta name="theme-color" content="#0f1117" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
-
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
       --bg: #faf8f5;
-      --card: #ffffff;
+      --card: #fff;
       --text: #1a1410;
       --muted: #8c7d72;
-      --accent: #b84530;        /* warm brick — not harsh red */
+      --accent: #b84530;
       --accent-dark: #9e3a28;
       --accent-light: #fdf1ee;
       --border: #e8e0d8;
       --radius: 14px;
       --serif: 'Playfair Display', Georgia, serif;
-      --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     }
     body { font-family: var(--sans); background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; }
     a { color: inherit; text-decoration: none; }
-
     @keyframes spin { to { transform: rotate(360deg); } }
-    @keyframes fadeUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:none; } }
-    .fade-up { animation: fadeUp 0.55s ease both; }
 
-    /* ── NAV ──────────────────────────────────────── */
+    /* ── NAV ── */
     nav {
       display: flex; align-items: center; justify-content: space-between;
-      padding: 16px 28px;
-      position: absolute; top: 0; left: 0; right: 0; z-index: 100;
+      padding: 20px 36px; position: absolute; top: 0; left: 0; right: 0; z-index: 200;
     }
-    .logo { font-family: var(--serif); font-size: 24px; font-weight: 400; color: #fff; letter-spacing: -0.3px; }
+    .logo { font-family: var(--serif); font-size: 26px; font-weight: 400; color: #fff; letter-spacing: -0.3px; }
     .logo span { color: #d4795a; }
-    .nav-links { display: flex; gap: 22px; align-items: center; font-size: 14px; color: rgba(255,255,255,0.72); font-weight: 500; }
+    .nav-links { display: flex; gap: 24px; align-items: center; font-size: 14px; color: rgba(255,255,255,0.65); font-weight: 500; }
     .nav-links a:hover { color: #fff; }
     .nav-cta {
       background: rgba(255,255,255,0.12); color: #fff !important;
-      padding: 8px 20px; border-radius: 100px; font-size: 13px;
-      border: 1px solid rgba(255,255,255,0.22);
-      backdrop-filter: blur(8px); transition: background 0.15s;
+      padding: 8px 22px; border-radius: 100px; font-size: 13px; font-weight: 600;
+      border: 1px solid rgba(255,255,255,0.22); transition: background 0.15s;
     }
     .nav-cta:hover { background: rgba(255,255,255,0.22); }
-    @media(max-width:500px) { .nav-links a:not(.nav-cta) { display:none; } }
+    @media(max-width:520px) { nav { padding: 16px 20px; } .nav-links a:not(.nav-cta) { display: none; } }
 
-    /* ── HERO ─────────────────────────────────────── */
-    .hero-wrap {
-      min-height: 560px; position: relative;
-      display: flex; align-items: center; justify-content: center;
-      background: #111318;
+    /* ── HERO ── */
+    .hero {
+      background: #0f1117;
+      padding: 148px 24px 100px;
+      text-align: center;
+      position: relative;
       overflow: hidden;
     }
-    /* Subtle warm gradient — no muddy orbs */
-    .hero-wrap::before {
+    .hero::after {
       content: '';
-      position: absolute; inset: 0;
-      background:
-        radial-gradient(ellipse 80% 60% at 50% 120%, rgba(184,69,48,0.22) 0%, transparent 70%),
-        radial-gradient(ellipse 60% 40% at 80% -20%, rgba(212,121,90,0.10) 0%, transparent 60%);
+      position: absolute; bottom: -1px; left: 0; right: 0; height: 120px;
+      background: linear-gradient(to bottom, transparent, var(--bg));
       pointer-events: none;
     }
-    /* Subtle grain texture */
-    .hero-wrap::after {
-      content: '';
-      position: absolute; inset: 0;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
-      opacity: 0.035; pointer-events: none;
-    }
-
-    .hero-content {
-      position: relative; z-index: 2;
-      text-align: center; padding: 110px 24px 72px;
-      width: 100%; max-width: 780px;
+    .hero-glow {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      width: 800px; height: 500px;
+      background: radial-gradient(ellipse at center, rgba(184,69,48,0.18) 0%, transparent 65%);
+      pointer-events: none;
     }
     .hero-eyebrow {
       display: inline-flex; align-items: center; gap: 8px;
-      background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.14);
-      color: rgba(255,255,255,0.75); font-size: 12px; font-weight: 600;
-      padding: 6px 16px; border-radius: 100px; margin-bottom: 24px;
-      letter-spacing: 0.6px; text-transform: uppercase;
+      background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12);
+      color: rgba(255,255,255,0.60); font-size: 11px; font-weight: 600;
+      padding: 6px 18px; border-radius: 100px; margin-bottom: 32px;
+      letter-spacing: 0.9px; text-transform: uppercase; position: relative; z-index: 1;
     }
     .hero h1 {
-      font-family: var(--serif); font-size: clamp(38px, 6vw, 64px);
-      font-weight: 400; line-height: 1.10; color: #fff; margin-bottom: 16px;
-      letter-spacing: -0.5px;
+      font-family: var(--serif); font-size: clamp(44px, 7.5vw, 72px);
+      font-weight: 400; line-height: 1.07; color: #fff;
+      margin-bottom: 20px; letter-spacing: -0.5px; position: relative; z-index: 1;
     }
     .hero h1 em { color: #d4795a; font-style: italic; }
     .hero-sub {
-      color: rgba(255,255,255,0.55); font-size: clamp(15px, 2vw, 17px);
-      margin-bottom: 40px; font-weight: 400; letter-spacing: 0.1px;
+      color: rgba(255,255,255,0.45); font-size: 17px; font-weight: 400;
+      position: relative; z-index: 1; max-width: 500px; margin: 0 auto 32px;
+      line-height: 1.6;
     }
+    .trust-row {
+      display: flex; gap: 28px; justify-content: center; flex-wrap: wrap;
+      position: relative; z-index: 1;
+    }
+    .trust-item { display: flex; align-items: center; gap: 7px; font-size: 13px; color: rgba(255,255,255,0.40); font-weight: 500; }
+    .trust-chk { color: #d4795a; font-size: 14px; }
 
-    /* ── BOOKING BAR ──────────────────────────────── */
+    /* ── BOOKING BAR ── */
+    .booking-section {
+      background: var(--bg);
+      padding: 0 24px 0;
+      display: flex;
+      justify-content: center;
+    }
     .booking-bar {
-      background: #fff; border-radius: 18px;
-      box-shadow: 0 24px 64px rgba(0,0,0,0.40), 0 0 0 1px rgba(255,255,255,0.06);
-      display: flex; align-items: stretch;
-      max-width: 680px; margin: 0 auto 28px;
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: 0 8px 48px rgba(0,0,0,0.14), 0 0 0 1px rgba(0,0,0,0.06);
+      display: flex;
+      align-items: stretch;
+      margin-top: -52px;
+      position: relative;
+      z-index: 100;
+      width: 100%;
+      max-width: 760px;
     }
-    .bb-field {
-      flex: 1; display: flex; flex-direction: column; padding: 14px 20px;
-      border-right: 1px solid var(--border); cursor: pointer; min-width: 0;
-      transition: background 0.12s; user-select: none; position: relative;
-      border-radius: 0;
-    }
-    .bb-field:first-child { border-radius: 18px 0 0 18px; }
-    .bb-field:hover { background: #faf8f5; }
-    .bb-field.is-open { background: #fdf1ee; }
-    .bb-field-date { cursor: pointer; }
-    .bb-field-date input[type=date] {
-      position: absolute; inset: 0; opacity: 0; cursor: pointer;
-      width: 100%; height: 100%; font-size: 16px;
-    }
-    .bb-label {
-      font-size: 10px; font-weight: 600; text-transform: uppercase;
-      letter-spacing: 0.9px; color: var(--muted); margin-bottom: 4px;
-      font-family: var(--sans);
-    }
-    .bb-value {
-      font-size: 14px; font-weight: 600; color: var(--text);
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-      display: flex; align-items: center; gap: 6px; font-family: var(--sans);
-    }
-    .bb-arrow {
-      font-size: 9px; color: var(--muted); margin-left: auto;
-      transition: transform 0.18s; flex-shrink: 0;
-    }
-    .bb-field.is-open .bb-arrow { transform: rotate(180deg); color: var(--accent); }
-    .bb-lock { font-size: 11px; color: var(--muted); margin-left: auto; }
-    .bb-btn {
-      background: var(--accent); color: #fff; border: none;
-      padding: 0 30px; font-size: 14px; font-weight: 600; cursor: pointer;
-      border-radius: 0 18px 18px 0; white-space: nowrap; flex-shrink: 0;
-      letter-spacing: 0.2px; transition: background 0.15s; min-width: 136px;
-      font-family: var(--sans);
-    }
-    .bb-btn:hover { background: var(--accent-dark); }
 
-    /* ── CUSTOM DROPDOWN PANEL ────────────────────── */
+    /* Each field is the dropdown anchor */
+    .bb-field {
+      flex: 1;
+      padding: 16px 22px;
+      border-right: 1px solid var(--border);
+      cursor: pointer;
+      min-width: 0;
+      transition: background 0.12s;
+      position: relative; /* dropdown positions relative to this */
+      user-select: none;
+    }
+    .bb-field:first-child { border-radius: 20px 0 0 20px; }
+    .bb-field:hover { background: var(--accent-light); }
+    .bb-field.open { background: var(--accent-light); }
+
+    .bb-label {
+      font-size: 10px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.9px; color: var(--muted); margin-bottom: 5px;
+    }
+    .bb-val {
+      font-size: 15px; font-weight: 600; color: var(--text);
+      display: flex; align-items: center; gap: 6px; white-space: nowrap; overflow: hidden;
+    }
+    .bb-arrow { font-size: 9px; color: var(--muted); margin-left: auto; flex-shrink: 0; transition: transform 0.15s; }
+    .bb-field.open .bb-arrow { transform: rotate(180deg); color: var(--accent); }
+
+    /* Invisible date input overlays the whole field */
+    .bb-field-date input[type=date] {
+      position: absolute; inset: 0; opacity: 0; width: 100%; height: 100%;
+      cursor: pointer; font-size: 16px; border: none; background: none;
+    }
+
+    .bb-search {
+      background: var(--accent); color: #fff; border: none;
+      padding: 0 30px; font-size: 15px; font-weight: 600; cursor: pointer;
+      border-radius: 0 20px 20px 0; white-space: nowrap; flex-shrink: 0;
+      transition: background 0.15s; font-family: var(--sans);
+    }
+    .bb-search:hover { background: var(--accent-dark); }
+
+    /* ── DROPDOWNS — positioned absolute inside their field ── */
     .bb-drop {
-      position: fixed; z-index: 9999;
-      background: #fff; border: 1px solid var(--border);
-      border-radius: 16px; overflow: hidden; display: none;
-      box-shadow: 0 16px 48px rgba(0,0,0,0.16), 0 0 0 1px rgba(0,0,0,0.04);
-      min-width: 200px;
+      display: none;
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      min-width: 210px;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.13), 0 0 0 1px rgba(0,0,0,0.04);
+      z-index: 500;
+      overflow: hidden;
     }
     .bb-drop.open { display: block; }
-    .bb-drop-inner { overflow-y: auto; }
+    .bb-drop-scroll { max-height: 300px; overflow-y: auto; padding: 6px 0; }
     .bb-drop-group {
-      font-size: 10px; font-weight: 700; text-transform: uppercase;
-      letter-spacing: 1px; color: var(--muted); padding: 12px 18px 4px;
-      font-family: var(--sans);
+      font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+      color: var(--muted); padding: 10px 18px 4px; font-family: var(--sans);
     }
-    .bb-drop-divider { height: 1px; background: var(--border); margin: 6px 0; }
+    .bb-drop-sep { height: 1px; background: var(--border); margin: 4px 12px; }
     .bb-drop-item {
       display: flex; align-items: center; justify-content: space-between;
-      padding: 11px 18px; font-size: 14px; font-weight: 500; cursor: pointer;
-      color: var(--text); transition: background 0.1s; gap: 12px;
-      font-family: var(--sans);
+      padding: 10px 18px; font-size: 14px; font-weight: 500; cursor: pointer;
+      color: var(--text); gap: 14px; font-family: var(--sans); transition: background 0.1s;
     }
-    .bb-drop-item:hover { background: #fdf1ee; color: var(--accent); }
-    .bb-drop-item.sel { color: var(--accent); font-weight: 600; background: #fdf1ee; }
-    .bb-drop-check { font-size: 13px; flex-shrink: 0; opacity: 0; }
-    .bb-drop-item.sel .bb-drop-check { opacity: 1; }
+    .bb-drop-item:hover { background: var(--accent-light); color: var(--accent); }
+    .bb-drop-item.sel { color: var(--accent); font-weight: 600; background: var(--accent-light); }
+    .bb-chk { font-size: 12px; color: var(--accent); opacity: 0; flex-shrink: 0; }
+    .bb-drop-item.sel .bb-chk { opacity: 1; }
 
-    @media(max-width: 580px) {
-      .booking-bar { flex-direction: column; border-radius: 16px; }
-      .bb-field { border-right: none; border-bottom: 1px solid var(--border); }
-      .bb-field:first-child { border-radius: 16px 16px 0 0; }
-      .bb-btn { border-radius: 0 0 16px 16px; padding: 16px; }
-    }
-
-    /* Trust row */
-    .trust-row { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
-    .trust-item { display: flex; align-items: center; gap: 7px; color: rgba(255,255,255,0.50); font-size: 13px; font-weight: 500; }
-    .trust-check { color: #d4795a; font-size: 14px; }
-
-    /* ── CUISINE CHIPS ────────────────────────────── */
+    /* ── CUISINE CHIPS ── */
     .cuisines-bar {
       background: #fff; border-bottom: 1px solid var(--border);
-      padding: 12px 24px; display: flex; gap: 8px;
-      overflow-x: auto; scrollbar-width: none;
+      padding: 14px 24px; display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none;
+      margin-top: 40px;
     }
     .cuisines-bar::-webkit-scrollbar { display: none; }
     .cchip {
       padding: 7px 16px; border: 1.5px solid var(--border); border-radius: 100px;
       font-size: 13px; font-weight: 500; cursor: pointer; background: #fff;
-      white-space: nowrap; flex-shrink: 0; transition: all 0.15s;
-      font-family: var(--sans);
+      white-space: nowrap; flex-shrink: 0; transition: all 0.15s; font-family: var(--sans);
     }
     .cchip:hover { border-color: #c0b0a4; }
     .cchip.active { background: var(--text); color: #fff; border-color: var(--text); }
 
-    /* ── SECTION ──────────────────────────────────── */
+    /* ── SECTIONS ── */
     .section { max-width: 1160px; margin: 0 auto; padding: 52px 24px 0; }
     .section-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 28px; flex-wrap: wrap; gap: 8px; }
     .section-title { font-family: var(--serif); font-size: 28px; font-weight: 400; letter-spacing: -0.3px; }
     .section-link { font-size: 14px; color: var(--accent); font-weight: 500; }
     .section-link:hover { text-decoration: underline; }
 
-    /* ── RESTAURANT CARDS ─────────────────────────── */
-    .rest-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 22px; margin-bottom: 60px; }
+    /* ── RESTAURANT CARDS ── */
+    .rest-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 22px; margin-bottom: 60px; }
     .rest-card {
       background: var(--card); border-radius: var(--radius);
       box-shadow: 0 2px 12px rgba(0,0,0,0.07), 0 0 0 1px rgba(0,0,0,0.04);
-      overflow: hidden; display: block;
-      transition: transform 0.18s, box-shadow 0.18s;
+      overflow: hidden; display: block; transition: transform 0.18s, box-shadow 0.18s;
     }
-    .rest-card:hover { transform: translateY(-3px); box-shadow: 0 10px 32px rgba(0,0,0,0.11), 0 0 0 1px rgba(0,0,0,0.05); }
+    .rest-card:hover { transform: translateY(-3px); box-shadow: 0 10px 32px rgba(0,0,0,0.11); }
     .rest-card-photo {
-      height: 196px; background: var(--border) center/cover no-repeat;
-      position: relative; overflow: hidden;
+      height: 196px; position: relative; overflow: hidden;
+      background: linear-gradient(135deg, #ede4da, #ddd0c4) center/cover no-repeat;
     }
-    .rest-card-photo-empty {
-      background: linear-gradient(135deg, #ede4da, #ddd0c4);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 42px; opacity: 0.35;
+    .rest-card-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .rest-card-photo-icon {
+      position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+      font-size: 44px; opacity: 0.28;
     }
     .pro-badge-card {
       position: absolute; top: 10px; right: 10px;
-      background: linear-gradient(135deg, #a67c00, #c8a84b);
+      background: linear-gradient(135deg, #a67c00, #c9a84c);
       color: #fff; font-size: 10px; font-weight: 700;
-      padding: 3px 9px; border-radius: 100px; letter-spacing: 0.5px;
+      padding: 4px 10px; border-radius: 100px; letter-spacing: 0.5px;
     }
-    .avail-pills {
-      position: absolute; bottom: 10px; left: 10px; display: flex; gap: 5px; flex-wrap: wrap;
-    }
+    .avail-pills { position: absolute; bottom: 10px; left: 10px; display: flex; gap: 5px; }
     .avail-pill {
-      background: rgba(17,19,24,0.78); backdrop-filter: blur(6px);
+      background: rgba(15,17,23,0.80); backdrop-filter: blur(6px);
       color: #fff; font-size: 11px; font-weight: 600;
-      padding: 4px 9px; border-radius: 7px; letter-spacing: 0.2px;
+      padding: 4px 9px; border-radius: 7px;
     }
     .rest-card-body { padding: 16px 18px 18px; }
     .rest-card-name { font-size: 16px; font-weight: 600; margin-bottom: 6px; letter-spacing: -0.1px; }
     .rest-card-meta { font-size: 12px; color: var(--muted); display: flex; gap: 7px; align-items: center; flex-wrap: wrap; font-weight: 500; }
-    .price-pill {
-      background: var(--bg); border: 1px solid var(--border);
-      border-radius: 5px; padding: 1px 7px; font-size: 11px;
-      font-weight: 600; color: var(--text); letter-spacing: 0.3px;
-    }
-
+    .price-pill { background: var(--bg); border: 1px solid var(--border); border-radius: 5px; padding: 1px 7px; font-size: 11px; font-weight: 600; color: var(--text); }
     .loading-spin { display:inline-block; width:13px; height:13px; border:2px solid var(--border); border-top-color:var(--muted); border-radius:50%; animation:spin 0.7s linear infinite; vertical-align:middle; margin-right:6px; }
 
-    /* ── HOW IT WORKS ─────────────────────────────── */
+    /* ── HOW IT WORKS ── */
     .how-section { background: var(--text); color: #fff; padding: 80px 24px; margin-top: 60px; }
     .how-inner { max-width: 1100px; margin: 0 auto; }
     .how-eyebrow { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: #d4795a; margin-bottom: 12px; }
-    .how-title { font-family: var(--serif); font-size: clamp(26px, 4vw, 36px); font-weight: 400; margin-bottom: 52px; color: #fff; letter-spacing: -0.3px; }
+    .how-title { font-family: var(--serif); font-size: clamp(26px, 4vw, 36px); font-weight: 400; margin-bottom: 52px; letter-spacing: -0.3px; }
     .how-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 40px; }
-    .how-num { font-family: var(--serif); font-size: 52px; color: rgba(212,121,90,0.35); line-height: 1; margin-bottom: 16px; font-style: italic; }
-    .how-step h3 { font-size: 17px; font-weight: 600; margin-bottom: 10px; letter-spacing: -0.1px; }
-    .how-step p { font-size: 14px; color: rgba(255,255,255,0.48); line-height: 1.75; }
+    .how-num { font-family: var(--serif); font-size: 52px; color: rgba(212,121,90,0.30); line-height: 1; margin-bottom: 16px; font-style: italic; }
+    .how-step h3 { font-size: 17px; font-weight: 600; margin-bottom: 10px; }
+    .how-step p { font-size: 14px; color: rgba(255,255,255,0.45); line-height: 1.75; }
 
-    /* ── CUISINES BROWSE ──────────────────────────── */
+    /* ── BROWSE BY CUISINE ── */
     .browse-section { max-width: 1160px; margin: 68px auto 0; padding: 0 24px; }
     .cuisine-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; margin-bottom: 60px; }
     .cuisine-card {
       background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius);
-      padding: 22px 16px; text-align: center; cursor: pointer; display: block;
-      transition: all 0.18s;
+      padding: 22px 16px; text-align: center; cursor: pointer; display: block; transition: all 0.18s;
     }
     .cuisine-card:hover { background: var(--text); color: #fff; border-color: var(--text); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.10); }
     .cuisine-icon { font-size: 30px; margin-bottom: 8px; }
-    .cuisine-name { font-size: 13px; font-weight: 600; letter-spacing: -0.1px; }
+    .cuisine-name { font-size: 13px; font-weight: 600; }
 
-    /* ── WHY ──────────────────────────────────────── */
+    /* ── WHY ── */
     .why-section { background: #fff; border-top: 1px solid var(--border); padding: 72px 24px; }
     .why-inner { max-width: 1100px; margin: 0 auto; }
     .why-eyebrow { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--accent); margin-bottom: 10px; text-align: center; }
-    .why-title { font-family: var(--serif); font-size: clamp(24px, 3.5vw, 32px); font-weight: 400; text-align: center; margin-bottom: 48px; color: var(--text); letter-spacing: -0.3px; }
+    .why-title { font-family: var(--serif); font-size: clamp(24px, 3.5vw, 32px); font-weight: 400; text-align: center; margin-bottom: 48px; letter-spacing: -0.3px; }
     .why-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 36px; }
     .why-item { text-align: center; }
     .why-icon { font-size: 28px; margin-bottom: 14px; display: block; }
-    .why-item h3 { font-size: 15px; font-weight: 600; margin-bottom: 8px; letter-spacing: -0.1px; }
+    .why-item h3 { font-size: 15px; font-weight: 600; margin-bottom: 8px; }
     .why-item p { font-size: 13px; color: var(--muted); line-height: 1.7; }
 
-    /* ── FOOTER ───────────────────────────────────── */
-    footer {
-      text-align: center; padding: 32px 24px;
-      color: var(--muted); font-size: 13px;
-      border-top: 1px solid var(--border);
+    /* ── FOOTER ── */
+    footer { text-align: center; padding: 32px 24px; color: var(--muted); font-size: 13px; border-top: 1px solid var(--border); }
+    .footer-logo { font-family: var(--serif); color: var(--text); font-size: 17px; margin-bottom: 10px; }
+    .footer-links { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+    .footer-links a:hover { color: var(--text); }
+
+    /* ── MOBILE ── */
+    @media(max-width: 640px) {
+      .hero { padding: 120px 20px 80px; }
+      .booking-section { padding: 0 14px; }
+      .booking-bar {
+        flex-direction: column;
+        border-radius: 18px;
+        margin-top: -40px;
+      }
+      .bb-field {
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        border-radius: 0;
+      }
+      .bb-field:first-child { border-radius: 18px 18px 0 0; }
+      .bb-search { border-radius: 0 0 18px 18px; padding: 16px; text-align: center; }
+      /* On mobile: dropdowns full-width */
+      .bb-drop { left: 0; right: 0; min-width: unset; }
     }
-    footer .footer-logo { font-family: var(--serif); color: var(--text); font-size: 15px; }
-    footer a { color: var(--muted); }
-    footer a:hover { color: var(--text); }
-    .footer-links { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin-top: 8px; }
   </style>
 </head>
 <body>
@@ -323,78 +324,77 @@
 </nav>
 
 <!-- HERO -->
-<div class="hero-wrap">
-  <div class="hero-content fade-up">
-    <div class="hero-eyebrow">🍽️ Lisboa · Reserva gratuita e instantânea</div>
-    <h1>A mesa certa,<br>na hora <em>certa.</em></h1>
-    <p class="hero-sub">Os melhores restaurantes de Lisboa — reserva em segundos, sem taxas.</p>
+<div class="hero">
+  <div class="hero-glow"></div>
+  <div class="hero-eyebrow">🍽️ Lisboa &nbsp;·&nbsp; Reserva gratuita e instantânea</div>
+  <h1>A mesa certa,<br>na hora <em>certa.</em></h1>
+  <p class="hero-sub">Os melhores restaurantes de Lisboa — reserva em segundos, sem taxas e sem chamadas.</p>
+  <div class="trust-row">
+    <div class="trust-item"><span class="trust-chk">✓</span> 100% gratuito</div>
+    <div class="trust-item"><span class="trust-chk">✓</span> Confirmação imediata</div>
+    <div class="trust-item"><span class="trust-chk">✓</span> Sem chamadas</div>
+  </div>
+</div>
 
-    <div class="booking-bar" id="booking-bar">
+<!-- BOOKING BAR -->
+<div class="booking-section">
+  <div class="booking-bar" id="booking-bar">
 
-      <!-- DATE — native calendar picker, branded field -->
-      <div class="bb-field bb-field-date">
-        <div class="bb-label">Data</div>
-        <div class="bb-value">📅 <span id="bb-date-val">Hoje</span></div>
-        <input type="date" id="bb-date" onchange="bbDateChange()" />
-      </div>
-
-      <!-- TIME — custom dropdown -->
-      <div class="bb-field" id="bbf-time" onclick="bbToggle('time')">
-        <div class="bb-label">Hora</div>
-        <div class="bb-value"><span id="bb-time-val">20:00</span><span class="bb-arrow">▾</span></div>
-      </div>
-
-      <!-- PARTY — custom dropdown -->
-      <div class="bb-field" id="bbf-party" onclick="bbToggle('party')">
-        <div class="bb-label">Pessoas</div>
-        <div class="bb-value"><span id="bb-party-val">2 pessoas</span><span class="bb-arrow">▾</span></div>
-      </div>
-
-      <button class="bb-btn" onclick="goSearch()">Ver mesas →</button>
+    <!-- DATE field — invisible native date input on top -->
+    <div class="bb-field bb-field-date" id="bbf-date">
+      <div class="bb-label">Data</div>
+      <div class="bb-val">📅 <span id="bb-date-val">Hoje</span></div>
+      <input type="date" id="bb-date" onchange="bbDateChange()" />
     </div>
 
-    <!-- TIME dropdown -->
-    <div class="bb-drop" id="bbdrop-time">
-      <div class="bb-drop-inner">
-        <div class="bb-drop-group">Almoço</div>
-        <div class="bb-drop-item" data-val="12:00" onclick="bbPick('time','12:00','12:00')">12:00<span class="bb-drop-check">✓</span></div>
-        <div class="bb-drop-item" data-val="12:30" onclick="bbPick('time','12:30','12:30')">12:30<span class="bb-drop-check">✓</span></div>
-        <div class="bb-drop-item" data-val="13:00" onclick="bbPick('time','13:00','13:00')">13:00<span class="bb-drop-check">✓</span></div>
-        <div class="bb-drop-item" data-val="13:30" onclick="bbPick('time','13:30','13:30')">13:30<span class="bb-drop-check">✓</span></div>
-        <div class="bb-drop-item" data-val="14:00" onclick="bbPick('time','14:00','14:00')">14:00<span class="bb-drop-check">✓</span></div>
-        <div class="bb-drop-item" data-val="14:30" onclick="bbPick('time','14:30','14:30')">14:30<span class="bb-drop-check">✓</span></div>
-        <div class="bb-drop-divider"></div>
-        <div class="bb-drop-group">Jantar</div>
-        <div class="bb-drop-item" data-val="19:00" onclick="bbPick('time','19:00','19:00')">19:00<span class="bb-drop-check">✓</span></div>
-        <div class="bb-drop-item" data-val="19:30" onclick="bbPick('time','19:30','19:30')">19:30<span class="bb-drop-check">✓</span></div>
-        <div class="bb-drop-item sel" data-val="20:00" onclick="bbPick('time','20:00','20:00')">20:00<span class="bb-drop-check">✓</span></div>
-        <div class="bb-drop-item" data-val="20:30" onclick="bbPick('time','20:30','20:30')">20:30<span class="bb-drop-check">✓</span></div>
-        <div class="bb-drop-item" data-val="21:00" onclick="bbPick('time','21:00','21:00')">21:00<span class="bb-drop-check">✓</span></div>
-        <div class="bb-drop-item" data-val="21:30" onclick="bbPick('time','21:30','21:30')">21:30<span class="bb-drop-check">✓</span></div>
-        <div class="bb-drop-item" data-val="22:00" onclick="bbPick('time','22:00','22:00')">22:00<span class="bb-drop-check">✓</span></div>
-        <div class="bb-drop-item" data-val="22:30" onclick="bbPick('time','22:30','22:30')">22:30<span class="bb-drop-check">✓</span></div>
-      </div>
-    </div>
-
-    <!-- PARTY dropdown -->
-    <div class="bb-drop" id="bbdrop-party">
-      <div class="bb-drop-inner">
-        <div class="bb-drop-item" data-val="1" onclick="bbPick('party','1','1 pessoa')">1 pessoa<span class="bb-drop-check">✓</span></div>
-        <div class="bb-drop-item sel" data-val="2" onclick="bbPick('party','2','2 pessoas')">2 pessoas<span class="bb-drop-check">✓</span></div>
-        <div class="bb-drop-item" data-val="3" onclick="bbPick('party','3','3 pessoas')">3 pessoas<span class="bb-drop-check">✓</span></div>
-        <div class="bb-drop-item" data-val="4" onclick="bbPick('party','4','4 pessoas')">4 pessoas<span class="bb-drop-check">✓</span></div>
-        <div class="bb-drop-item" data-val="5" onclick="bbPick('party','5','5 pessoas')">5 pessoas<span class="bb-drop-check">✓</span></div>
-        <div class="bb-drop-item" data-val="6" onclick="bbPick('party','6','6 pessoas')">6 pessoas<span class="bb-drop-check">✓</span></div>
-        <div class="bb-drop-item" data-val="7" onclick="bbPick('party','7','7 pessoas')">7 pessoas<span class="bb-drop-check">✓</span></div>
-        <div class="bb-drop-item" data-val="8" onclick="bbPick('party','8','8+ pessoas')">8+ pessoas<span class="bb-drop-check">✓</span></div>
+    <!-- TIME field + dropdown inside -->
+    <div class="bb-field" id="bbf-time" onclick="bbToggle('time')">
+      <div class="bb-label">Hora</div>
+      <div class="bb-val"><span id="bb-time-val">20:00</span> <span class="bb-arrow">▾</span></div>
+      <!-- Dropdown is a child of this field — positions naturally below it -->
+      <div class="bb-drop" id="bbdrop-time" onclick="event.stopPropagation()">
+        <div class="bb-drop-scroll">
+          <div class="bb-drop-group">Almoço</div>
+          <div class="bb-drop-item" data-v="12:00" onclick="bbPick('time','12:00','12:00')">12:00<span class="bb-chk">✓</span></div>
+          <div class="bb-drop-item" data-v="12:30" onclick="bbPick('time','12:30','12:30')">12:30<span class="bb-chk">✓</span></div>
+          <div class="bb-drop-item" data-v="13:00" onclick="bbPick('time','13:00','13:00')">13:00<span class="bb-chk">✓</span></div>
+          <div class="bb-drop-item" data-v="13:30" onclick="bbPick('time','13:30','13:30')">13:30<span class="bb-chk">✓</span></div>
+          <div class="bb-drop-item" data-v="14:00" onclick="bbPick('time','14:00','14:00')">14:00<span class="bb-chk">✓</span></div>
+          <div class="bb-drop-item" data-v="14:30" onclick="bbPick('time','14:30','14:30')">14:30<span class="bb-chk">✓</span></div>
+          <div class="bb-drop-sep"></div>
+          <div class="bb-drop-group">Jantar</div>
+          <div class="bb-drop-item" data-v="19:00" onclick="bbPick('time','19:00','19:00')">19:00<span class="bb-chk">✓</span></div>
+          <div class="bb-drop-item" data-v="19:30" onclick="bbPick('time','19:30','19:30')">19:30<span class="bb-chk">✓</span></div>
+          <div class="bb-drop-item sel" data-v="20:00" onclick="bbPick('time','20:00','20:00')">20:00<span class="bb-chk">✓</span></div>
+          <div class="bb-drop-item" data-v="20:30" onclick="bbPick('time','20:30','20:30')">20:30<span class="bb-chk">✓</span></div>
+          <div class="bb-drop-item" data-v="21:00" onclick="bbPick('time','21:00','21:00')">21:00<span class="bb-chk">✓</span></div>
+          <div class="bb-drop-item" data-v="21:30" onclick="bbPick('time','21:30','21:30')">21:30<span class="bb-chk">✓</span></div>
+          <div class="bb-drop-item" data-v="22:00" onclick="bbPick('time','22:00','22:00')">22:00<span class="bb-chk">✓</span></div>
+          <div class="bb-drop-item" data-v="22:30" onclick="bbPick('time','22:30','22:30')">22:30<span class="bb-chk">✓</span></div>
+        </div>
       </div>
     </div>
 
-    <div class="trust-row">
-      <div class="trust-item"><span class="trust-check">✓</span> 100% gratuito</div>
-      <div class="trust-item"><span class="trust-check">✓</span> Confirmação imediata</div>
-      <div class="trust-item"><span class="trust-check">✓</span> Sem chamadas</div>
+    <!-- PARTY field + dropdown inside -->
+    <div class="bb-field" id="bbf-party" onclick="bbToggle('party')">
+      <div class="bb-label">Pessoas</div>
+      <div class="bb-val"><span id="bb-party-val">2 pessoas</span> <span class="bb-arrow">▾</span></div>
+      <!-- Dropdown is a child of this field -->
+      <div class="bb-drop" id="bbdrop-party" onclick="event.stopPropagation()">
+        <div class="bb-drop-scroll">
+          <div class="bb-drop-item" data-v="1" onclick="bbPick('party','1','1 pessoa')">1 pessoa<span class="bb-chk">✓</span></div>
+          <div class="bb-drop-item sel" data-v="2" onclick="bbPick('party','2','2 pessoas')">2 pessoas<span class="bb-chk">✓</span></div>
+          <div class="bb-drop-item" data-v="3" onclick="bbPick('party','3','3 pessoas')">3 pessoas<span class="bb-chk">✓</span></div>
+          <div class="bb-drop-item" data-v="4" onclick="bbPick('party','4','4 pessoas')">4 pessoas<span class="bb-chk">✓</span></div>
+          <div class="bb-drop-item" data-v="5" onclick="bbPick('party','5','5 pessoas')">5 pessoas<span class="bb-chk">✓</span></div>
+          <div class="bb-drop-item" data-v="6" onclick="bbPick('party','6','6 pessoas')">6 pessoas<span class="bb-chk">✓</span></div>
+          <div class="bb-drop-item" data-v="7" onclick="bbPick('party','7','7 pessoas')">7 pessoas<span class="bb-chk">✓</span></div>
+          <div class="bb-drop-item" data-v="8" onclick="bbPick('party','8','8+ pessoas')">8+ pessoas<span class="bb-chk">✓</span></div>
+        </div>
+      </div>
     </div>
+
+    <button class="bb-search" onclick="goSearch()">Ver mesas →</button>
   </div>
 </div>
 
@@ -412,14 +412,14 @@
   <div class="cchip" data-cuisine="Vegana">🥗 Vegana</div>
 </div>
 
-<!-- RESTAURANTS -->
+<!-- RESTAURANTS GRID -->
 <div class="section">
   <div class="section-head">
     <div class="section-title" id="grid-title">Restaurantes disponíveis hoje</div>
     <a class="section-link" href="/pages/restaurantes.html">Ver todos →</a>
   </div>
   <div class="rest-grid" id="restaurants-grid">
-    <p style="color:var(--muted); grid-column:1/-1; padding:24px 0;"><span class="loading-spin"></span>A carregar...</p>
+    <p style="color:var(--muted);grid-column:1/-1;padding:24px 0"><span class="loading-spin"></span>A carregar...</p>
   </div>
 </div>
 
@@ -432,12 +432,12 @@
       <div class="how-step">
         <div class="how-num">1</div>
         <h3>Escolhe data e hora</h3>
-        <p>Seleciona quando queres jantar e para quantas pessoas — vê disponibilidade em tempo real.</p>
+        <p>Seleciona quando queres jantar e para quantas pessoas. Vê a disponibilidade em tempo real.</p>
       </div>
       <div class="how-step">
         <div class="how-num">2</div>
         <h3>Escolhe o restaurante</h3>
-        <p>Filtra por cozinha, bairro ou preço. Clica no que te apetece.</p>
+        <p>Filtra por cozinha, bairro ou preço. Clica no restaurante que mais te apetece.</p>
       </div>
       <div class="how-step">
         <div class="how-num">3</div>
@@ -472,26 +472,10 @@
     <div class="why-eyebrow">Porquê Da Mesa</div>
     <div class="why-title">Feito para quem ama comer bem.</div>
     <div class="why-grid">
-      <div class="why-item">
-        <span class="why-icon">🎉</span>
-        <h3>Sempre gratuito</h3>
-        <p>Reservar é 100% grátis para o cliente. Sem taxas escondidas, sem surpresas na conta.</p>
-      </div>
-      <div class="why-item">
-        <span class="why-icon">⚡</span>
-        <h3>Instantâneo</h3>
-        <p>Confirmação imediata por email. Sem esperas, sem chamadas telefónicas.</p>
-      </div>
-      <div class="why-item">
-        <span class="why-icon">📍</span>
-        <h3>Feito para Lisboa</h3>
-        <p>Focados em Lisboa. Conhecemos os restaurantes e os bairros como ninguém.</p>
-      </div>
-      <div class="why-item">
-        <span class="why-icon">🔓</span>
-        <h3>Sem conta obrigatória</h3>
-        <p>Reserva como convidado. Cria conta só se quiseres guardar o histórico.</p>
-      </div>
+      <div class="why-item"><span class="why-icon">🎉</span><h3>Sempre gratuito</h3><p>Reservar é 100% grátis para o cliente. Sem taxas escondidas, nunca.</p></div>
+      <div class="why-item"><span class="why-icon">⚡</span><h3>Instantâneo</h3><p>Confirmação imediata por email. Sem esperas nem chamadas telefónicas.</p></div>
+      <div class="why-item"><span class="why-icon">📍</span><h3>Feito para Lisboa</h3><p>Focados em Lisboa. Conhecemos os restaurantes como ninguém.</p></div>
+      <div class="why-item"><span class="why-icon">🔓</span><h3>Sem conta obrigatória</h3><p>Reserva como convidado. Cria conta só se quiseres guardar o histórico.</p></div>
     </div>
   </div>
 </div>
@@ -506,144 +490,132 @@
   </div>
 </footer>
 
-<!-- Booking bar custom dropdowns -->
+<!-- BOOKING BAR LOGIC -->
 <script>
-  const todayLisbon = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Lisbon' })
-  let _bbTime = '20:00', _bbParty = '2', _bbDate = todayLisbon
+  const _today = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Lisbon' })
+  let _date = _today, _time = '20:00', _party = '2'
 
-  // Init date input
-  document.getElementById('bb-date').value = todayLisbon
-  document.getElementById('bb-date').min   = todayLisbon
+  const _di = document.getElementById('bb-date')
+  _di.value = _today
+  _di.min   = _today
 
   function bbDateChange() {
-    const val = document.getElementById('bb-date').value
-    _bbDate = val || todayLisbon
-    const isToday = _bbDate === todayLisbon
-    document.getElementById('bb-date-val').textContent = isToday ? 'Hoje'
-      : new Date(_bbDate + 'T12:00').toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' })
+    _date = _di.value || _today
+    const d = document.getElementById('bb-date-val')
+    if (_date === _today) {
+      d.textContent = 'Hoje'
+    } else {
+      d.textContent = new Date(_date + 'T12:00').toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' })
+    }
   }
 
   function bbToggle(name) {
-    const drop = document.getElementById('bbdrop-' + name)
+    const drop  = document.getElementById('bbdrop-' + name)
     const field = document.getElementById('bbf-' + name)
-    const isOpen = drop.classList.contains('open')
+    const wasOpen = drop.classList.contains('open')
     bbCloseAll()
-    if (!isOpen) {
-      // Position using fixed coords so hero overflow:hidden doesn't clip it
-      const rect = field.getBoundingClientRect()
-      drop.style.top  = (rect.bottom + 6) + 'px'
-      drop.style.left = rect.left + 'px'
-      drop.style.maxHeight = (window.innerHeight - rect.bottom - 16) + 'px'
-      drop.style.overflowY = 'auto'
+    if (!wasOpen) {
       drop.classList.add('open')
-      field.classList.add('is-open')
+      field.classList.add('open')
     }
   }
 
   function bbCloseAll() {
     document.querySelectorAll('.bb-drop.open').forEach(d => d.classList.remove('open'))
-    document.querySelectorAll('.bb-field.is-open').forEach(f => f.classList.remove('is-open'))
+    document.querySelectorAll('.bb-field.open').forEach(f => f.classList.remove('open'))
   }
 
   function bbPick(name, val, label) {
-    if (name === 'time')  { _bbTime  = val; document.getElementById('bb-time-val').textContent  = label }
-    if (name === 'party') { _bbParty = val; document.getElementById('bb-party-val').textContent = label }
-    // Update checkmarks
-    document.querySelectorAll(`#bbdrop-${name} .bb-drop-item`).forEach(item => {
-      item.classList.toggle('sel', item.dataset.val === val)
-    })
+    if (name === 'time')  { _time  = val; document.getElementById('bb-time-val').textContent  = label }
+    if (name === 'party') { _party = val; document.getElementById('bb-party-val').textContent = label }
+    document.querySelectorAll('#bbdrop-' + name + ' .bb-drop-item')
+      .forEach(i => i.classList.toggle('sel', i.dataset.v === val))
     bbCloseAll()
   }
 
   function goSearch() {
-    const params = new URLSearchParams()
-    params.set('date',  _bbDate)
-    params.set('time',  _bbTime)
-    params.set('party', _bbParty)
-    window.location.href = '/pages/restaurantes.html?' + params.toString()
+    window.location.href = '/pages/restaurantes.html?' + new URLSearchParams({ date: _date, time: _time, party: _party })
   }
 
   document.addEventListener('click', e => {
-    if (!e.target.closest('.bb-field') && !e.target.closest('.bb-drop')) bbCloseAll()
+    if (!e.target.closest('#booking-bar')) bbCloseAll()
   })
   document.addEventListener('keydown', e => { if (e.key === 'Escape') bbCloseAll() })
 </script>
 
+<!-- RESTAURANTS + AUTH -->
 <script type="module">
   import { supabase } from '/src/js/supabase.js'
   import { trackEvent } from '/src/js/analytics.js'
   import { initCookieBanner } from '/src/js/cookies.js'
   initCookieBanner()
 
-  const { data: { session } } = await supabase.auth.getSession()
-  if (session) {
-    const btn = document.getElementById('nav-login-btn')
-    btn.textContent = 'A minha conta'; btn.href = '/pages/dashboard.html'
-  }
-
-  let allRestaurants = [], availMap = {}
-  const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Lisbon' })
-
-  const { data } = await supabase.from('restaurants').select('*').eq('status','active').order('name')
-  allRestaurants = data ?? []
-
-  // Tonight's availability at 20:00
-  const { data: bookings } = await supabase.from('bookings')
-    .select('restaurant_id, party_size')
-    .eq('booking_date', today).eq('booking_time', '20:00:00')
-    .in('status', ['pending','confirmed'])
-  if (bookings) bookings.forEach(b => { availMap[b.restaurant_id] = (availMap[b.restaurant_id]??0) + b.party_size })
-
-  render(allRestaurants)
-  trackEvent('page_view', { page: 'home' })
-
-  function citySlug(c) { return (c??'portugal').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,'-') }
-
-  function render(list) {
-    const grid = document.getElementById('restaurants-grid')
-    if (!list.length) {
-      grid.innerHTML = '<p style="color:var(--muted);grid-column:1/-1;padding:24px 0">Nenhum restaurante encontrado.</p>'
-      return
+  ;(async () => {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (session) {
+      const b = document.getElementById('nav-login-btn')
+      b.textContent = 'A minha conta'
+      b.href = '/pages/dashboard.html'
     }
-    const party = parseInt(document.getElementById('bb-party')?.value) || 2
-    grid.innerHTML = list.map((r, i) => {
-      const booked = availMap[r.id] ?? 0
-      const cap = r.capacity ?? 50
-      const hasRoom = booked + party <= cap
-      const slots = hasRoom ? ['19:30','20:00','20:30'].map(t => `<span class="avail-pill">${t}</span>`).join('') : ''
-      const photo = r.cover_image ? `background-image:url(${r.cover_image})` : ''
-      const photoClass = r.cover_image ? '' : ' rest-card-photo-empty'
-      const photoContent = r.cover_image ? '' : '🍽️'
-      const pro = r.plan === 'pro' ? `<div class="pro-badge-card">⭐ Pro</div>` : ''
-      return `
-        <a class="rest-card fade-up" href="/restaurante/${citySlug(r.city)}/${r.slug}" style="animation-delay:${i*0.05}s">
-          <div class="rest-card-photo${photoClass}" style="${photo}">
-            ${photoContent}${pro}
+
+    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Lisbon' })
+    let all = [], avail = {}
+
+    const { data } = await supabase.from('restaurants').select('*').eq('status','active').order('name')
+    all = data ?? []
+
+    const { data: bk } = await supabase.from('bookings')
+      .select('restaurant_id,party_size')
+      .eq('booking_date', today)
+      .eq('booking_time', '20:00:00')
+      .in('status', ['pending','confirmed'])
+    if (bk) bk.forEach(b => { avail[b.restaurant_id] = (avail[b.restaurant_id] ?? 0) + b.party_size })
+
+    render(all)
+    trackEvent('page_view', { page: 'home' })
+
+    function citySlug(c) {
+      return (c ?? 'portugal').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,'-')
+    }
+
+    function render(list) {
+      const grid = document.getElementById('restaurants-grid')
+      if (!list.length) {
+        grid.innerHTML = '<p style="color:var(--muted);grid-column:1/-1;padding:24px 0">Nenhum restaurante encontrado.</p>'
+        return
+      }
+      grid.innerHTML = list.map(r => {
+        const hasRoom = (avail[r.id] ?? 0) + 2 <= (r.capacity ?? 50)
+        const slots = hasRoom ? ['19:30','20:00','20:30'].map(t => `<span class="avail-pill">${t}</span>`).join('') : ''
+        const photo = r.cover_image
+          ? `<img src="${r.cover_image}" alt="${r.name}" loading="lazy">`
+          : `<div class="rest-card-photo-icon">🍽️</div>`
+        return `<a class="rest-card" href="/restaurante/${citySlug(r.city)}/${r.slug}">
+          <div class="rest-card-photo">
+            ${photo}
+            ${r.plan === 'pro' ? '<div class="pro-badge-card">⭐ Pro</div>' : ''}
             ${slots ? `<div class="avail-pills">${slots}</div>` : ''}
           </div>
           <div class="rest-card-body">
             <div class="rest-card-name">${r.name}</div>
-            <div class="rest-card-meta">
-              <span>${r.cuisine_type??''}</span>·
-              <span class="price-pill">${r.price_range??'€€'}</span>·
-              <span>📍 ${r.city??'Lisboa'}</span>
-            </div>
+            <div class="rest-card-meta">${r.cuisine_type ?? ''} · <span class="price-pill">${r.price_range ?? '€€'}</span> · 📍 ${r.city ?? 'Lisboa'}</div>
           </div>
         </a>`
-    }).join('')
-  }
+      }).join('')
+    }
 
-  document.getElementById('cuisine-chips').addEventListener('click', e => {
-    const chip = e.target.closest('.cchip'); if (!chip) return
-    document.querySelectorAll('.cchip').forEach(c => c.classList.remove('active'))
-    chip.classList.add('active')
-    const c = chip.dataset.cuisine
-    const filtered = c ? allRestaurants.filter(r => r.cuisine_type===c||(r.cuisines??[]).includes(c)) : allRestaurants
-    document.getElementById('grid-title').textContent = c ? `Restaurantes · ${c}` : 'Restaurantes disponíveis hoje'
-    render(filtered)
-  })
+    document.getElementById('cuisine-chips').addEventListener('click', e => {
+      const chip = e.target.closest('.cchip')
+      if (!chip) return
+      document.querySelectorAll('.cchip').forEach(c => c.classList.remove('active'))
+      chip.classList.add('active')
+      const c = chip.dataset.cuisine
+      document.getElementById('grid-title').textContent = c ? `Restaurantes · ${c}` : 'Restaurantes disponíveis hoje'
+      render(c ? all.filter(r => r.cuisine_type === c || (r.cuisines ?? []).includes(c)) : all)
+    })
+  })()
 </script>
 
-<script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(()=>{})</script>
+<script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {})</script>
 </body>
 </html>
