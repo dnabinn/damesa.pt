@@ -130,8 +130,11 @@
     .bb-field:first-child { border-radius: 18px 0 0 18px; }
     .bb-field:hover { background: #faf8f5; }
     .bb-field.is-open { background: #fdf1ee; }
-    .bb-field-static { cursor: default; }
-    .bb-field-static:hover { background: #fff; }
+    .bb-field-date { cursor: pointer; }
+    .bb-field-date input[type=date] {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer;
+      width: 100%; height: 100%; font-size: 16px;
+    }
     .bb-label {
       font-size: 10px; font-weight: 600; text-transform: uppercase;
       letter-spacing: 0.9px; color: var(--muted); margin-bottom: 4px;
@@ -328,10 +331,11 @@
 
     <div class="booking-bar" id="booking-bar">
 
-      <!-- DATE — locked to today on homepage -->
-      <div class="bb-field bb-field-static">
+      <!-- DATE — native calendar picker, branded field -->
+      <div class="bb-field bb-field-date">
         <div class="bb-label">Data</div>
-        <div class="bb-value">📅 Hoje <span class="bb-lock" title="Ver outras datas em Restaurantes">🔒</span></div>
+        <div class="bb-value">📅 <span id="bb-date-val">Hoje</span></div>
+        <input type="date" id="bb-date" onchange="bbDateChange()" />
       </div>
 
       <!-- TIME — custom dropdown -->
@@ -505,7 +509,19 @@
 <!-- Booking bar custom dropdowns -->
 <script>
   const todayLisbon = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Lisbon' })
-  let _bbTime = '20:00', _bbParty = '2'
+  let _bbTime = '20:00', _bbParty = '2', _bbDate = todayLisbon
+
+  // Init date input
+  document.getElementById('bb-date').value = todayLisbon
+  document.getElementById('bb-date').min   = todayLisbon
+
+  function bbDateChange() {
+    const val = document.getElementById('bb-date').value
+    _bbDate = val || todayLisbon
+    const isToday = _bbDate === todayLisbon
+    document.getElementById('bb-date-val').textContent = isToday ? 'Hoje'
+      : new Date(_bbDate + 'T12:00').toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' })
+  }
 
   function bbToggle(name) {
     const drop = document.getElementById('bbdrop-' + name)
@@ -541,7 +557,7 @@
 
   function goSearch() {
     const params = new URLSearchParams()
-    params.set('date',  todayLisbon)
+    params.set('date',  _bbDate)
     params.set('time',  _bbTime)
     params.set('party', _bbParty)
     window.location.href = '/pages/restaurantes.html?' + params.toString()
