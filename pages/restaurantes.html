@@ -623,13 +623,39 @@
     setDropSel('fdrop-city', urlCity)
   }
 
-  // Date default = today
+  // Date default = today (or from homepage booking bar)
   const todayLisbon = new Date().toLocaleDateString('en-CA', { timeZone:'Europe/Lisbon' })
-  document.getElementById('sb-date').value = todayLisbon
+  const urlDate  = urlParams.get('date')
+  const urlTime  = urlParams.get('time')
+  const urlParty = urlParams.get('party')
+
+  document.getElementById('sb-date').value = urlDate || todayLisbon
+
+  if (urlTime) {
+    _selectedTime = urlTime
+    document.getElementById('fpill-time-val').textContent = urlTime
+    document.getElementById('fpill-time').classList.add('active')
+    setDropSel('fdrop-time', urlTime)
+  }
+  if (urlParty) {
+    _selectedParty = parseInt(urlParty) || 2
+    document.getElementById('fpill-party-val').textContent =
+      urlParty === '8' ? '8+ pessoas' : `${urlParty} ${+urlParty===1?'pessoa':'pessoas'}`
+    setDropSel('fdrop-party', urlParty)
+  }
+
+  // Update date pill label
+  window.onDateChange()
 
   // Place markers + render
   all.forEach(r => placeMarker(r))
-  renderList()
+
+  // If date+time from homepage, immediately load availability
+  if (urlDate && urlTime) {
+    loadAvailability(urlDate, urlTime)
+  } else {
+    renderList()
+  }
 
   // ── RENDER ───────────────────────────────────────────
   function renderList() {

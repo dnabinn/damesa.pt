@@ -8,8 +8,6 @@
   <meta name="keywords" content="reservar restaurante lisboa, reservas restaurantes online, restaurantes em lisboa, mesa restaurante, reserva instantânea, cozinha portuguesa lisboa" />
   <meta name="robots" content="index, follow" />
   <link rel="canonical" href="https://damesa.pt/" />
-
-  <!-- Open Graph -->
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://damesa.pt/" />
   <meta property="og:title" content="Da Mesa — Reserva o teu restaurante em Lisboa" />
@@ -17,131 +15,217 @@
   <meta property="og:image" content="https://damesa.pt/assets/og-image.jpg" />
   <meta property="og:locale" content="pt_PT" />
   <meta property="og:site_name" content="Da Mesa" />
-
-  <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Da Mesa — Reserva o teu restaurante em Lisboa" />
-  <meta name="twitter:description" content="Reserva mesa em restaurantes em Lisboa. Gratuito, instantâneo, sem taxas." />
-
-  <!-- Schema.org -->
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "WebSite",
-    "name": "Da Mesa",
-    "url": "https://damesa.pt",
-    "description": "Plataforma de reservas de restaurantes em Lisboa. Sem taxas de reserva.",
-    "inLanguage": "pt-PT",
-    "potentialAction": {
-      "@type": "SearchAction",
-      "target": "https://damesa.pt/restaurantes.html?q={search_term_string}",
-      "query-input": "required name=search_term_string"
-    }
-  }
-  </script>
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "Organization",
-    "name": "Da Mesa",
-    "url": "https://damesa.pt",
-    "logo": "https://damesa.pt/assets/icons/icon-192.png",
-    "contactPoint": {
-      "@type": "ContactPoint",
-      "email": "ola@damesa.pt",
-      "contactType": "customer support",
-      "availableLanguage": "Portuguese"
-    },
-    "areaServed": {
-      "@type": "City",
-      "name": "Lisboa"
-    }
-  }
-  </script>
-
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"Da Mesa","url":"https://damesa.pt","description":"Plataforma de reservas de restaurantes em Lisboa. Sem taxas de reserva.","inLanguage":"pt-PT","potentialAction":{"@type":"SearchAction","target":"https://damesa.pt/restaurantes?q={search_term_string}","query-input":"required name=search_term_string"}}</script>
   <link rel="manifest" href="/assets/manifest.json" />
   <link rel="icon" href="/assets/icons/icon-192.png" />
   <link rel="apple-touch-icon" href="/assets/icons/icon-192.png" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="Da Mesa" />
   <meta name="theme-color" content="#1c1612" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --bg: #faf7f2;
-      --card: #ffffff;
-      --text: #1c1612;
-      --muted: #7a6a5e;
-      --accent: #c0392b;
-      --border: #e8dfd4;
-      --radius: 12px;
+      --bg: #faf7f2; --card: #fff; --text: #1c1612; --muted: #8a7a6e;
+      --accent: #c0392b; --border: #e8dfd4; --radius: 14px;
     }
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); }
     a { color: inherit; text-decoration: none; }
-
-    /* NAV */
-    nav { display: flex; align-items: center; justify-content: space-between; padding: 16px 24px; background: #fff; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
-    .logo { font-family: Georgia, serif; font-size: 22px; font-weight: normal; letter-spacing: -0.5px; }
-    .logo span { color: var(--accent); }
-    .nav-links { display: flex; gap: 24px; align-items: center; font-size: 14px; color: var(--muted); }
-    .nav-links a:hover { color: var(--text); }
-    .nav-cta { background: var(--text); color: #fff !important; padding: 8px 18px; border-radius: 8px; font-size: 13px; }
-
-    /* HERO */
-    .hero { padding: 80px 24px 60px; text-align: center; max-width: 680px; margin: 0 auto; }
-    .hero h1 { font-family: Georgia, serif; font-size: clamp(36px, 5vw, 56px); font-weight: normal; line-height: 1.15; margin-bottom: 16px; }
-    .hero p { color: var(--muted); font-size: 18px; margin-bottom: 40px; }
-    .search-bar { display: flex; gap: 0; background: #fff; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.06); max-width: 520px; margin: 0 auto; }
-    .search-bar input { flex: 1; border: none; padding: 16px 20px; font-size: 15px; outline: none; background: transparent; }
-    .search-bar button { background: var(--accent); color: #fff; border: none; padding: 16px 24px; font-size: 14px; cursor: pointer; white-space: nowrap; }
-
-    /* CUISINES */
-    .section { padding: 48px 24px; max-width: 1100px; margin: 0 auto; }
-    .section-title { font-family: Georgia, serif; font-size: 26px; font-weight: normal; margin-bottom: 24px; }
-    .chips { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 40px; }
-    .chip { padding: 8px 18px; border: 1px solid var(--border); border-radius: 100px; font-size: 13px; cursor: pointer; transition: all 0.15s; background: #fff; }
-    .chip:hover, .chip.active { background: var(--text); color: #fff; border-color: var(--text); }
-
-    /* CARDS */
-    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
-    .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; cursor: pointer; transition: transform 0.15s, box-shadow 0.15s; }
-    .card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
-    .card-img { height: 180px; background: #e8dfd4; background-size: cover; background-position: center; }
-    .card-body { padding: 16px; }
-    .card-name { font-size: 17px; font-weight: 600; margin-bottom: 4px; }
-    .card-meta { font-size: 13px; color: var(--muted); display: flex; gap: 12px; }
-    .card-badge { background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 2px 8px; font-size: 11px; }
-
-    /* SEO SECTIONS */
-    .seo-section { padding: 64px 24px; max-width: 1100px; margin: 0 auto; }
-    .seo-section + .seo-section { border-top: 1px solid var(--border); }
-    .seo-section h2 { font-family: Georgia, serif; font-size: 28px; font-weight: normal; margin-bottom: 12px; }
-    .seo-section .lead { color: var(--muted); font-size: 16px; max-width: 640px; margin-bottom: 40px; line-height: 1.7; }
-    .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 24px; }
-    .step { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px 24px; }
-    .step-num { font-family: Georgia, serif; font-size: 32px; color: var(--accent); margin-bottom: 12px; }
-    .step h3 { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
-    .step p { font-size: 14px; color: var(--muted); line-height: 1.6; }
-    .bairros { display: flex; gap: 10px; flex-wrap: wrap; }
-    .bairro-tag { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 10px 18px; font-size: 14px; transition: all 0.15s; }
-    .bairro-tag:hover { background: var(--text); color: #fff; border-color: var(--text); }
-    .why-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
-    .why-item { padding: 4px 0; }
-    .why-item h3 { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
-    .why-item p { font-size: 14px; color: var(--muted); line-height: 1.6; }
-
-    /* FOOTER */
-    footer { text-align: center; padding: 40px 24px; color: var(--muted); font-size: 13px; border-top: 1px solid var(--border); margin-top: 60px; }
-    footer strong { color: var(--text); font-family: Georgia, serif; }
-    /* Loading */
     @keyframes spin { to { transform: rotate(360deg); } }
-    .loading-text { display:inline-flex; align-items:center; gap:8px; opacity:0.7; }
-    .loading-text::after { content:''; display:inline-block; width:12px; height:12px; border:1.5px solid currentColor; border-top-color:transparent; border-radius:50%; animation:spin 0.7s linear infinite; flex-shrink:0; }
+    @keyframes fadeUp { from { opacity:0; transform:translateY(18px); } to { opacity:1; transform:none; } }
+    .fade-up { animation: fadeUp 0.5s ease both; }
+
+    /* ── NAV ── */
+    nav {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 24px; background: transparent;
+      position: absolute; top: 0; left: 0; right: 0; z-index: 100;
+    }
+    .logo { font-family: Georgia, serif; font-size: 22px; font-weight: normal; color: #fff; letter-spacing: -0.5px; }
+    .logo span { color: #e07060; }
+    .nav-links { display: flex; gap: 20px; align-items: center; font-size: 14px; color: rgba(255,255,255,0.8); }
+    .nav-links a:hover { color: #fff; }
+    .nav-cta { background: rgba(255,255,255,0.15); backdrop-filter: blur(8px); color: #fff !important; padding: 8px 18px; border-radius: 100px; font-size: 13px; border: 1px solid rgba(255,255,255,0.25); transition: background 0.15s; }
+    .nav-cta:hover { background: rgba(255,255,255,0.25); }
+    @media(max-width:500px) { .nav-links a:not(.nav-cta) { display:none; } }
+
+    /* ── HERO ── */
+    .hero-wrap {
+      min-height: 540px; position: relative; display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(160deg, #1c1612 0%, #2d1f14 50%, #1a120a 100%);
+      overflow: hidden;
+    }
+    .hero-overlay {
+      position: absolute; inset: 0;
+      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/></filter><rect width="200" height="200" filter="url(%23n)" opacity="0.03"/></svg>') center/cover;
+      opacity: 0.4;
+    }
+    /* Decorative warm orb */
+    .hero-orb {
+      position: absolute; width: 600px; height: 600px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(192,57,43,0.18) 0%, transparent 70%);
+      top: -100px; right: -100px; pointer-events: none;
+    }
+    .hero-orb2 {
+      position: absolute; width: 400px; height: 400px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(218,165,32,0.10) 0%, transparent 70%);
+      bottom: -80px; left: 5%; pointer-events: none;
+    }
+
+    .hero-content { position: relative; z-index: 2; text-align: center; padding: 100px 24px 60px; width: 100%; max-width: 760px; }
+    .hero-label {
+      display: inline-flex; align-items: center; gap: 7px;
+      background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.18);
+      color: rgba(255,255,255,0.85); font-size: 12px; font-weight: 600;
+      padding: 5px 14px; border-radius: 100px; margin-bottom: 20px;
+      backdrop-filter: blur(4px); letter-spacing: 0.5px;
+    }
+    .hero h1 {
+      font-family: Georgia, serif; font-size: clamp(32px, 6vw, 58px);
+      font-weight: normal; line-height: 1.12; color: #fff; margin-bottom: 14px;
+    }
+    .hero h1 em { color: #e07060; font-style: normal; }
+    .hero-sub { color: rgba(255,255,255,0.65); font-size: clamp(15px, 2vw, 17px); margin-bottom: 36px; }
+
+    /* Booking bar */
+    .booking-bar {
+      background: #fff; border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.35); overflow: visible;
+      display: flex; align-items: stretch; max-width: 700px; margin: 0 auto 28px;
+    }
+    .bb-field {
+      flex: 1; display: flex; flex-direction: column; padding: 12px 18px;
+      border-right: 1px solid var(--border); position: relative; cursor: pointer;
+      min-width: 0;
+    }
+    .bb-field:last-of-type { border-right: none; }
+    .bb-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); margin-bottom: 3px; }
+    .bb-value { font-size: 14px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .bb-field select, .bb-field input[type=date] {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer;
+      width: 100%; height: 100%; font-size: 16px;
+    }
+    .bb-btn {
+      background: var(--accent); color: #fff; border: none;
+      padding: 0 28px; font-size: 15px; font-weight: 600; cursor: pointer;
+      border-radius: 0 16px 16px 0; white-space: nowrap; flex-shrink: 0;
+      transition: background 0.15s; min-width: 130px;
+    }
+    .bb-btn:hover { background: #a93226; }
+
+    /* Mobile booking bar: stack */
+    @media(max-width: 600px) {
+      .booking-bar { flex-direction: column; border-radius: 14px; }
+      .bb-field { border-right: none; border-bottom: 1px solid var(--border); }
+      .bb-field:last-of-type { border-bottom: none; }
+      .bb-btn { border-radius: 0 0 14px 14px; padding: 16px; }
+    }
+
+    /* Trust pills */
+    .trust-pills { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+    .trust-pill { display: flex; align-items: center; gap: 6px; color: rgba(255,255,255,0.65); font-size: 13px; }
+    .trust-pill-dot { color: #e07060; font-size: 15px; }
+
+    /* ── CUISINES ── */
+    .cuisines-bar {
+      background: #fff; border-bottom: 1px solid var(--border);
+      padding: 14px 24px; display: flex; gap: 8px;
+      overflow-x: auto; scrollbar-width: none;
+    }
+    .cuisines-bar::-webkit-scrollbar { display: none; }
+    .cchip {
+      padding: 7px 16px; border: 1.5px solid var(--border); border-radius: 100px;
+      font-size: 13px; font-weight: 500; cursor: pointer; background: #fff; white-space: nowrap;
+      flex-shrink: 0; transition: all 0.15s;
+    }
+    .cchip:hover { border-color: #b0a090; }
+    .cchip.active { background: var(--text); color: #fff; border-color: var(--text); }
+
+    /* ── SECTION ── */
+    .section { max-width: 1140px; margin: 0 auto; padding: 48px 24px 0; }
+    .section-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 8px; }
+    .section-title { font-family: Georgia, serif; font-size: 26px; font-weight: normal; }
+    .section-link { font-size: 14px; color: var(--accent); font-weight: 500; }
+    .section-link:hover { text-decoration: underline; }
+
+    /* ── RESTAURANT GRID ── */
+    .rest-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; margin-bottom: 56px; }
+    .rest-card {
+      background: var(--card); border-radius: var(--radius);
+      box-shadow: 0 1px 8px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04);
+      overflow: hidden; cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s; display: block;
+    }
+    .rest-card:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(0,0,0,0.10); }
+    .rest-card-photo {
+      height: 190px; background: var(--border) center/cover no-repeat;
+      position: relative;
+    }
+    .rest-card-photo-empty { background: linear-gradient(135deg, #e8dfd4, #d4c8bc); display: flex; align-items: center; justify-content: center; font-size: 40px; opacity: 0.4; }
+    .pro-badge-card {
+      position: absolute; top: 10px; right: 10px;
+      background: linear-gradient(135deg, #b8860b, #daa520); color: #fff;
+      font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 100px;
+      letter-spacing: 0.5px; text-transform: uppercase;
+    }
+    .avail-pills {
+      position: absolute; bottom: 10px; left: 10px; display: flex; gap: 5px; flex-wrap: wrap;
+    }
+    .avail-pill {
+      background: rgba(28,22,18,0.82); backdrop-filter: blur(4px);
+      color: #fff; font-size: 11px; font-weight: 600;
+      padding: 3px 9px; border-radius: 6px;
+    }
+    .rest-card-body { padding: 14px 16px 16px; }
+    .rest-card-name { font-size: 16px; font-weight: 600; margin-bottom: 5px; }
+    .rest-card-meta { font-size: 12px; color: var(--muted); display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .price-pill { background: var(--bg); border: 1px solid var(--border); border-radius: 5px; padding: 1px 7px; font-size: 11px; font-weight: 600; color: var(--text); }
+
+    /* Loading */
+    .loading-spin { display:inline-block; width:13px; height:13px; border:2px solid var(--border); border-top-color:var(--muted); border-radius:50%; animation:spin 0.7s linear infinite; vertical-align:middle; margin-right:6px; }
+
+    /* ── HOW IT WORKS ── */
+    .how-section { background: var(--text); color: #fff; padding: 72px 24px; margin-top: 56px; }
+    .how-inner { max-width: 1100px; margin: 0 auto; }
+    .how-title { font-family: Georgia, serif; font-size: 30px; font-weight: normal; margin-bottom: 8px; }
+    .how-sub { color: rgba(255,255,255,0.55); font-size: 15px; margin-bottom: 48px; }
+    .how-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 32px; }
+    .how-step {}
+    .how-num { font-family: Georgia, serif; font-size: 48px; color: #e07060; line-height: 1; margin-bottom: 14px; }
+    .how-step h3 { font-size: 17px; font-weight: 600; margin-bottom: 8px; }
+    .how-step p { font-size: 14px; color: rgba(255,255,255,0.55); line-height: 1.7; }
+
+    /* ── CUISINES BROWSE ── */
+    .browse-section { max-width: 1140px; margin: 64px auto 0; padding: 0 24px; }
+    .cuisine-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin-bottom: 56px; }
+    .cuisine-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 20px 16px; text-align: center; cursor: pointer;
+      transition: all 0.15s; display: block;
+    }
+    .cuisine-card:hover { background: var(--text); color: #fff; border-color: var(--text); transform: translateY(-1px); }
+    .cuisine-card-icon { font-size: 28px; margin-bottom: 8px; }
+    .cuisine-card-name { font-size: 13px; font-weight: 500; }
+
+    /* ── WHY ── */
+    .why-section { background: #fff; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 64px 24px; }
+    .why-inner { max-width: 1100px; margin: 0 auto; }
+    .why-title { font-family: Georgia, serif; font-size: 28px; font-weight: normal; margin-bottom: 40px; text-align: center; }
+    .why-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 32px; }
+    .why-item { text-align: center; }
+    .why-icon { font-size: 32px; margin-bottom: 12px; }
+    .why-item h3 { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
+    .why-item p { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+    /* ── FOOTER ── */
+    footer { text-align: center; padding: 32px 24px; color: var(--muted); font-size: 13px; }
+    footer strong { color: var(--text); font-family: Georgia, serif; }
+    footer a { color: var(--muted); }
+    footer a:hover { color: var(--text); }
   </style>
 </head>
 <body>
 
+<!-- NAV -->
 <nav>
   <a href="/pages/index.html" class="logo">Da <span>Mesa</span></a>
   <div class="nav-links">
@@ -150,184 +234,324 @@
     <a href="/pages/login.html" class="nav-cta" id="nav-login-btn">Entrar</a>
   </div>
 </nav>
-<script type="module">
-  import { supabase } from '/src/js/supabase.js'
-  const { data: { session } } = await supabase.auth.getSession()
-  if (session) {
-    const btn = document.getElementById('nav-login-btn')
-    btn.textContent = 'A minha conta'
-    btn.href = '/pages/dashboard.html'
-  }
-</script>
 
-<div class="hero">
-  <h1>Reserva a tua mesa.<br>Sem taxas.</h1>
-  <p>Os melhores restaurantes de Lisboa, com reserva instantânea e gratuita.</p>
-  <div class="search-bar">
-    <input type="text" id="search-input" placeholder="Pesquisar restaurante ou cozinha..." />
-    <button onclick="searchRestaurants()">Pesquisar</button>
+<!-- HERO -->
+<div class="hero-wrap">
+  <div class="hero-overlay"></div>
+  <div class="hero-orb"></div>
+  <div class="hero-orb2"></div>
+  <div class="hero-content fade-up">
+    <div class="hero-label">🍽️ Lisboa · Reserva gratuita e instantânea</div>
+    <h1>A mesa certa,<br>na hora <em>certa.</em></h1>
+    <p class="hero-sub">Os melhores restaurantes de Lisboa — reserva em segundos, sem taxas.</p>
+
+    <!-- Booking bar -->
+    <div class="booking-bar" id="booking-bar">
+      <div class="bb-field">
+        <div class="bb-label">Data</div>
+        <div class="bb-value" id="bb-date-val">Hoje</div>
+        <input type="date" id="bb-date" onchange="updateBar()" />
+      </div>
+      <div class="bb-field">
+        <div class="bb-label">Hora</div>
+        <div class="bb-value" id="bb-time-val">Jantar</div>
+        <select id="bb-time" onchange="updateBar()">
+          <option value="">Qualquer hora</option>
+          <optgroup label="Almoço">
+            <option value="12:00">12:00</option><option value="12:30">12:30</option>
+            <option value="13:00">13:00</option><option value="13:30">13:30</option>
+            <option value="14:00">14:00</option><option value="14:30">14:30</option>
+          </optgroup>
+          <optgroup label="Jantar">
+            <option value="19:00">19:00</option><option value="19:30">19:30</option>
+            <option value="20:00" selected>20:00</option><option value="20:30">20:30</option>
+            <option value="21:00">21:00</option><option value="21:30">21:30</option>
+            <option value="22:00">22:00</option><option value="22:30">22:30</option>
+          </optgroup>
+        </select>
+      </div>
+      <div class="bb-field">
+        <div class="bb-label">Pessoas</div>
+        <div class="bb-value" id="bb-party-val">2 pessoas</div>
+        <select id="bb-party" onchange="updateBar()">
+          <option value="1">1 pessoa</option>
+          <option value="2" selected>2 pessoas</option>
+          <option value="3">3 pessoas</option>
+          <option value="4">4 pessoas</option>
+          <option value="5">5 pessoas</option>
+          <option value="6">6 pessoas</option>
+          <option value="7">7 pessoas</option>
+          <option value="8">8+ pessoas</option>
+        </select>
+      </div>
+      <button class="bb-btn" onclick="goSearch()">Ver mesas →</button>
+    </div>
+
+    <!-- Trust pills -->
+    <div class="trust-pills">
+      <div class="trust-pill"><span class="trust-pill-dot">✓</span> 100% gratuito</div>
+      <div class="trust-pill"><span class="trust-pill-dot">✓</span> Confirmação imediata</div>
+      <div class="trust-pill"><span class="trust-pill-dot">✓</span> Sem chamadas</div>
+    </div>
   </div>
 </div>
 
+<!-- CUISINE CHIPS BAR -->
+<div class="cuisines-bar" id="cuisine-chips">
+  <div class="cchip active" data-cuisine="">Todos</div>
+  <div class="cchip" data-cuisine="Portuguesa">🍖 Portuguesa</div>
+  <div class="cchip" data-cuisine="Nepalesa">🏔️ Nepalesa</div>
+  <div class="cchip" data-cuisine="Indiana">🍛 Indiana</div>
+  <div class="cchip" data-cuisine="Italiana">🍝 Italiana</div>
+  <div class="cchip" data-cuisine="Japonesa">🍣 Japonesa</div>
+  <div class="cchip" data-cuisine="Marisco">🦞 Marisco</div>
+  <div class="cchip" data-cuisine="Grelhados">🥩 Grelhados</div>
+  <div class="cchip" data-cuisine="Mediterrânea">🫒 Mediterrânea</div>
+  <div class="cchip" data-cuisine="Vegana">🥗 Vegana</div>
+</div>
+
+<!-- RESTAURANTS -->
 <div class="section">
-  <div class="chips" id="cuisine-chips">
-    <div class="chip active" data-cuisine="">Todos</div>
-    <div class="chip" data-cuisine="Portuguesa">Portuguesa</div>
-    <div class="chip" data-cuisine="Marisco">Marisco</div>
-    <div class="chip" data-cuisine="Italiana">Italiana</div>
-    <div class="chip" data-cuisine="Japonesa">Japonesa</div>
-    <div class="chip" data-cuisine="Contemporânea">Contemporânea</div>
-    <div class="chip" data-cuisine="Vegan">Vegan</div>
-    <div class="chip" data-cuisine="Grelhados">Grelhados</div>
+  <div class="section-head">
+    <div class="section-title" id="grid-title">Restaurantes disponíveis</div>
+    <a class="section-link" href="/pages/restaurantes.html">Ver todos →</a>
   </div>
-
-  <h2 class="section-title">Restaurantes em Lisboa</h2>
-  <div class="grid" id="restaurants-grid">
-    <p style="color:var(--muted)"><span class="loading-text">A carregar restaurantes</span></p>
+  <div class="rest-grid" id="restaurants-grid">
+    <p style="color:var(--muted); grid-column:1/-1; padding:24px 0;"><span class="loading-spin"></span>A carregar...</p>
   </div>
 </div>
 
-<!-- SEO: Como funciona -->
-<div class="seo-section">
-  <h2>Como funciona</h2>
-  <p class="lead">Reservar um restaurante em Lisboa nunca foi tão simples. Três passos e a tua mesa está garantida — sem taxas, sem conta obrigatória.</p>
-  <div class="steps">
-    <div class="step">
-      <div class="step-num">1</div>
-      <h3>Escolhe o restaurante</h3>
-      <p>Pesquisa por nome, cozinha ou bairro. Temos restaurantes portugueses, de marisco, italianos, japoneses e muito mais em Lisboa.</p>
-    </div>
-    <div class="step">
-      <div class="step-num">2</div>
-      <h3>Seleciona data e hora</h3>
-      <p>Vê a disponibilidade em tempo real e escolhe o horário que preferes. Reservas disponíveis a qualquer hora do dia.</p>
-    </div>
-    <div class="step">
-      <div class="step-num">3</div>
-      <h3>Confirma a reserva</h3>
-      <p>Recebes confirmação imediata por SMS e email. Sem taxas de reserva, sem surpresas.</p>
+<!-- HOW IT WORKS -->
+<div class="how-section">
+  <div class="how-inner">
+    <div class="how-title">Reservar nunca foi tão simples.</div>
+    <div class="how-sub">Três passos. Mesa garantida.</div>
+    <div class="how-grid">
+      <div class="how-step">
+        <div class="how-num">1</div>
+        <h3>Escolhe data e hora</h3>
+        <p>Seleciona quando queres jantar, para quantas pessoas — e vê a disponibilidade em tempo real.</p>
+      </div>
+      <div class="how-step">
+        <div class="how-num">2</div>
+        <h3>Escolhe o restaurante</h3>
+        <p>Filtra por cozinha, bairro ou preço. Clica no restaurante que te apetece.</p>
+      </div>
+      <div class="how-step">
+        <div class="how-num">3</div>
+        <h3>Confirmação imediata</h3>
+        <p>Recebes confirmação por email com o teu código de reserva. Sem taxas, sem surpresas.</p>
+      </div>
     </div>
   </div>
 </div>
 
-<!-- SEO: Bairros -->
-<div class="seo-section">
-  <h2>Restaurantes por bairro em Lisboa</h2>
-  <p class="lead">Descobre os melhores restaurantes em todos os bairros de Lisboa — do Chiado à Mouraria, de Belém ao Parque das Nações.</p>
-  <div class="bairros">
-    <a class="bairro-tag" href="/pages/restaurantes.html?bairro=chiado">Chiado</a>
-    <a class="bairro-tag" href="/pages/restaurantes.html?bairro=bairro-alto">Bairro Alto</a>
-    <a class="bairro-tag" href="/pages/restaurantes.html?bairro=alfama">Alfama</a>
-    <a class="bairro-tag" href="/pages/restaurantes.html?bairro=belem">Belém</a>
-    <a class="bairro-tag" href="/pages/restaurantes.html?bairro=intendente">Intendente</a>
-    <a class="bairro-tag" href="/pages/restaurantes.html?bairro=mouraria">Mouraria</a>
-    <a class="bairro-tag" href="/pages/restaurantes.html?bairro=campo-de-ourique">Campo de Ourique</a>
-    <a class="bairro-tag" href="/pages/restaurantes.html?bairro=lx-factory">LX Factory</a>
-    <a class="bairro-tag" href="/pages/restaurantes.html?bairro=parque-das-nacoes">Parque das Nações</a>
-    <a class="bairro-tag" href="/pages/restaurantes.html?bairro=principe-real">Príncipe Real</a>
+<!-- BROWSE BY CUISINE -->
+<div class="browse-section">
+  <div class="section-head">
+    <div class="section-title">Explorar por cozinha</div>
+    <a class="section-link" href="/pages/cozinhas.html">Ver todas →</a>
+  </div>
+  <div class="cuisine-grid">
+    <a class="cuisine-card" href="/pages/restaurantes.html?cuisine=Portuguesa"><div class="cuisine-card-icon">🍖</div><div class="cuisine-card-name">Portuguesa</div></a>
+    <a class="cuisine-card" href="/pages/restaurantes.html?cuisine=Nepalesa"><div class="cuisine-card-icon">🏔️</div><div class="cuisine-card-name">Nepalesa</div></a>
+    <a class="cuisine-card" href="/pages/restaurantes.html?cuisine=Indiana"><div class="cuisine-card-icon">🍛</div><div class="cuisine-card-name">Indiana</div></a>
+    <a class="cuisine-card" href="/pages/restaurantes.html?cuisine=Italiana"><div class="cuisine-card-icon">🍝</div><div class="cuisine-card-name">Italiana</div></a>
+    <a class="cuisine-card" href="/pages/restaurantes.html?cuisine=Japonesa"><div class="cuisine-card-icon">🍣</div><div class="cuisine-card-name">Japonesa</div></a>
+    <a class="cuisine-card" href="/pages/restaurantes.html?cuisine=Marisco"><div class="cuisine-card-icon">🦞</div><div class="cuisine-card-name">Marisco</div></a>
+    <a class="cuisine-card" href="/pages/restaurantes.html?cuisine=Grelhados"><div class="cuisine-card-icon">🥩</div><div class="cuisine-card-name">Grelhados</div></a>
+    <a class="cuisine-card" href="/pages/restaurantes.html?cuisine=Vegana"><div class="cuisine-card-icon">🥗</div><div class="cuisine-card-name">Vegana</div></a>
   </div>
 </div>
 
-<!-- SEO: Porquê Da Mesa -->
-<div class="seo-section">
-  <h2>Porquê reservar com Da Mesa?</h2>
-  <p class="lead">A Da Mesa é a plataforma de reservas de restaurantes em Lisboa pensada para quem quer uma experiência simples, rápida e sem custos extra.</p>
-  <div class="why-grid">
-    <div class="why-item">
-      <h3>Sem taxas de reserva</h3>
-      <p>Reservar um restaurante em Lisboa através da Da Mesa é sempre gratuito. Sem surpresas na conta.</p>
-    </div>
-    <div class="why-item">
-      <h3>Confirmação imediata</h3>
-      <p>Recebes confirmação por SMS e email assim que a reserva é feita. Sem esperas nem chamadas telefónicas.</p>
-    </div>
-    <div class="why-item">
-      <h3>Restaurantes verificados</h3>
-      <p>Todos os restaurantes na Da Mesa são verificados e parceiros ativos da plataforma.</p>
-    </div>
-    <div class="why-item">
-      <h3>Disponibilidade real</h3>
-      <p>A disponibilidade é atualizada em tempo real. O que vês é o que existe — sem reservas duplicadas.</p>
+<!-- WHY DA MESA -->
+<div class="why-section">
+  <div class="why-inner">
+    <div class="why-title">Porquê Da Mesa?</div>
+    <div class="why-grid">
+      <div class="why-item">
+        <div class="why-icon">🎉</div>
+        <h3>Sempre gratuito</h3>
+        <p>Reservar é 100% grátis para o cliente. Sem taxas escondidas, sem surpresas.</p>
+      </div>
+      <div class="why-item">
+        <div class="why-icon">⚡</div>
+        <h3>Instantâneo</h3>
+        <p>Confirmação imediata por email assim que reservas. Sem esperas nem chamadas.</p>
+      </div>
+      <div class="why-item">
+        <div class="why-icon">📍</div>
+        <h3>Feito para Lisboa</h3>
+        <p>Focados em Lisboa. Conhecemos os restaurantes e os bairros como ninguém.</p>
+      </div>
+      <div class="why-item">
+        <div class="why-icon">🔒</div>
+        <h3>Sem conta obrigatória</h3>
+        <p>Podes reservar como convidado. Cria conta só se quiseres guardar o histórico.</p>
+      </div>
     </div>
   </div>
 </div>
 
 <footer>
-  <strong>Da Mesa</strong> — Reservas de restaurantes em Lisboa · <a href="mailto:ola@damesa.pt">ola@damesa.pt</a> · <a href="/pages/login.html">Entrar como restaurante</a> · <a href="/pages/privacy.html">Privacidade</a> · <a href="/pages/terms.html">Termos</a>
+  <strong>Da Mesa</strong> — Reservas de restaurantes em Lisboa ·
+  <a href="mailto:ola@damesa.pt">ola@damesa.pt</a> ·
+  <a href="/pages/login.html">Entrar como restaurante</a> ·
+  <a href="/pages/privacy.html">Privacidade</a> ·
+  <a href="/pages/terms.html">Termos</a>
 </footer>
 
+<!-- Booking bar state -->
+<script>
+  // Defaults
+  const todayLisbon = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Lisbon' })
+  document.getElementById('bb-date').value = todayLisbon
+  document.getElementById('bb-date').min = todayLisbon
+
+  function updateBar() {
+    const date  = document.getElementById('bb-date').value
+    const time  = document.getElementById('bb-time').value
+    const party = document.getElementById('bb-party').value
+
+    const isToday = date === todayLisbon
+    document.getElementById('bb-date-val').textContent = !date ? 'Qualquer dia'
+      : isToday ? 'Hoje'
+      : new Date(date + 'T12:00').toLocaleDateString('pt-PT', { day:'numeric', month:'short' })
+
+    document.getElementById('bb-time-val').textContent = time || 'Qualquer hora'
+    document.getElementById('bb-party-val').textContent = party === '8' ? '8+ pessoas' : `${party} ${+party===1?'pessoa':'pessoas'}`
+  }
+
+  function goSearch() {
+    const date  = document.getElementById('bb-date').value
+    const time  = document.getElementById('bb-time').value
+    const party = document.getElementById('bb-party').value
+    const params = new URLSearchParams()
+    if (date)  params.set('date', date)
+    if (time)  params.set('time', time)
+    if (party) params.set('party', party)
+    window.location.href = '/pages/restaurantes.html?' + params.toString()
+  }
+
+  updateBar()
+</script>
+
 <script type="module">
-  import { getRestaurants } from '/src/js/restaurants.js'
+  import { supabase } from '/src/js/supabase.js'
   import { trackEvent } from '/src/js/analytics.js'
   import { initCookieBanner } from '/src/js/cookies.js'
   initCookieBanner()
 
-  let allRestaurants = []
+  // Auth nav
+  const { data: { session } } = await supabase.auth.getSession()
+  if (session) {
+    const btn = document.getElementById('nav-login-btn')
+    btn.textContent = 'A minha conta'; btn.href = '/pages/dashboard.html'
+  }
 
-  async function load(cuisine = '') {
-    const { restaurants, error } = await getRestaurants(cuisine ? { cuisine } : {})
-    if (error) { console.error(error); return }
-    allRestaurants = restaurants ?? []
-    render(allRestaurants)
-    trackEvent('page_view', { page: 'home', cuisine_filter: cuisine })
+  let allRestaurants = [], activeAvailMap = {}
+  const todayLisbon = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Lisbon' })
+
+  // ── LOAD RESTAURANTS ───────────────────────────────────
+  const { data } = await supabase.from('restaurants').select('*').eq('status','active').order('name')
+  allRestaurants = data ?? []
+
+  // ── LOAD TONIGHT'S AVAILABILITY (20:00 default) ────────
+  async function loadAvailability(date, time) {
+    const { data: bookings } = await supabase.from('bookings')
+      .select('restaurant_id, party_size')
+      .eq('booking_date', date).eq('booking_time', time + ':00')
+      .in('status', ['pending','confirmed'])
+    activeAvailMap = {}
+    if (bookings) bookings.forEach(b => {
+      activeAvailMap[b.restaurant_id] = (activeAvailMap[b.restaurant_id] ?? 0) + b.party_size
+    })
+  }
+
+  // Load tonight's slots
+  await loadAvailability(todayLisbon, '20:00')
+  render(allRestaurants)
+  updateGridTitle()
+  trackEvent('page_view', { page: 'home' })
+
+  function updateGridTitle() {
+    const cuisine = document.querySelector('.cchip.active')?.dataset.cuisine
+    document.getElementById('grid-title').textContent = cuisine
+      ? `Restaurantes · ${cuisine}`
+      : 'Restaurantes disponíveis hoje'
   }
 
   function citySlug(city) {
-    return (city ?? 'portugal').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-')
+    return (city ?? 'portugal').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,'-')
   }
 
   function render(list) {
     const grid = document.getElementById('restaurants-grid')
     if (!list.length) {
-      grid.innerHTML = '<p style="color:var(--muted)">Nenhum restaurante encontrado.</p>'
+      grid.innerHTML = '<p style="color:var(--muted);grid-column:1/-1;padding:24px 0">Nenhum restaurante encontrado.</p>'
       return
     }
-    grid.innerHTML = list.map(r => `
-      <a class="card" href="/restaurante/${citySlug(r.city)}/${r.slug}">
-        <div class="card-img" style="${r.cover_image ? `background-image:url(${r.cover_image})` : ''}"></div>
-        <div class="card-body">
-          <div class="card-name">${r.name}</div>
-          <div class="card-meta">
-            <span>${r.cuisine_type ?? ''}</span>
-            <span class="card-badge">${r.price_range ?? '€€'}</span>
-            <span>${r.city}</span>
+
+    // Show tonight's available slots on each card (3 slots around 20:00)
+    const DEMO_SLOTS = ['19:30','20:00','20:30','21:00']
+    const party = parseInt(document.getElementById('bb-party')?.value) || 2
+
+    grid.innerHTML = list.map(r => {
+      const booked = activeAvailMap[r.id] ?? 0
+      const cap = r.capacity ?? 50
+      const hasRoom = booked + party <= cap
+
+      const proBadge = r.plan === 'pro' ? `<div class="pro-badge-card">⭐ Pro</div>` : ''
+      const slots = hasRoom
+        ? DEMO_SLOTS.slice(0,3).map(t => `<span class="avail-pill">${t}</span>`).join('')
+        : ''
+      const availHtml = slots ? `<div class="avail-pills">${slots}</div>` : ''
+
+      const photoStyle = r.cover_image ? `background-image:url(${r.cover_image})` : ''
+      const photoExtra = r.cover_image ? '' : ' rest-card-photo-empty'
+      const photoContent = r.cover_image ? '' : '🍽️'
+
+      return `
+        <a class="rest-card fade-up" href="/restaurante/${citySlug(r.city)}/${r.slug}" style="animation-delay:${list.indexOf(r)*0.04}s">
+          <div class="rest-card-photo${photoExtra}" style="${photoStyle}">
+            ${photoContent}
+            ${proBadge}
+            ${availHtml}
           </div>
-        </div>
-      </a>
-    `).join('')
+          <div class="rest-card-body">
+            <div class="rest-card-name">${r.name}</div>
+            <div class="rest-card-meta">
+              <span>${r.cuisine_type ?? ''}</span>
+              <span>·</span>
+              <span class="price-pill">${r.price_range ?? '€€'}</span>
+              <span>·</span>
+              <span>📍 ${r.city ?? 'Lisboa'}</span>
+            </div>
+          </div>
+        </a>`
+    }).join('')
   }
 
-  // Cuisine filter chips
-  document.getElementById('cuisine-chips').addEventListener('click', (e) => {
-    const chip = e.target.closest('.chip')
-    if (!chip) return
-    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'))
+  // Cuisine chips
+  document.getElementById('cuisine-chips').addEventListener('click', e => {
+    const chip = e.target.closest('.cchip'); if (!chip) return
+    document.querySelectorAll('.cchip').forEach(c => c.classList.remove('active'))
     chip.classList.add('active')
-    load(chip.dataset.cuisine)
+    const cuisine = chip.dataset.cuisine
+    render(cuisine ? allRestaurants.filter(r => r.cuisine_type === cuisine || (r.cuisines??[]).includes(cuisine)) : allRestaurants)
+    updateGridTitle()
   })
-
-  // Search
-  window.searchRestaurants = function() {
-    const q = document.getElementById('search-input').value.toLowerCase()
-    const filtered = allRestaurants.filter(r =>
-      r.name.toLowerCase().includes(q) || (r.cuisine_type ?? '').toLowerCase().includes(q)
-    )
-    render(filtered)
-  }
-
-  document.getElementById('search-input').addEventListener('keyup', (e) => {
-    if (e.key === 'Enter') window.searchRestaurants()
-  })
-
-  load()
 </script>
 
-<!-- PWA Service Worker -->
+<!-- Handle URL params from booking bar (passed from other page) -->
 <script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js').catch(() => {})
-  }
+  const _params = new URLSearchParams(location.search)
+  if (_params.get('date')) document.getElementById('bb-date').value = _params.get('date')
+  if (_params.get('time')) { document.getElementById('bb-time').value = _params.get('time') }
+  if (_params.get('party')) document.getElementById('bb-party').value = _params.get('party')
+  updateBar()
 </script>
 
+<script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(()=>{})</script>
 </body>
 </html>
