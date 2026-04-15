@@ -50,7 +50,8 @@
     /* ── TOP FILTERS ──────────────────────────────────── */
     .top-filters {
       background:#fff; border-bottom:1px solid var(--border);
-      padding:12px 16px 10px; flex-shrink:0; z-index:200;
+      padding:12px 16px 10px; flex-shrink:0;
+      position:relative; z-index:500; overflow:visible;
     }
 
     /* Search */
@@ -117,10 +118,12 @@
     }
 
     /* ── CUSTOM DROPDOWN ──────────────────────────────── */
+    /* Absolute inside .top-filters (position:relative; z-index:500; overflow:visible)
+       so they paint above the map panel which has no explicit z-index */
     .fdrop {
-      position:fixed; top:0; left:0; /* positioned via JS using getBoundingClientRect */
+      position:absolute; top:0; left:0; /* positioned via JS relative to .top-filters */
       background:#fff; border:1px solid var(--border); border-radius:14px;
-      box-shadow:0 8px 32px rgba(0,0,0,0.11); z-index:9999;
+      box-shadow:0 8px 32px rgba(0,0,0,0.11); z-index:600;
       min-width:190px; overflow:hidden; display:none;
     }
     .fdrop.open { display:block; }
@@ -326,9 +329,6 @@
         <span class="fpill-lbl" id="fpill-city-val">Lisboa</span>
         <span class="fpill-arrow">▾</span>
       </div>
-      <div class="fdrop" id="fdrop-city">
-        <div class="fdrop-body" id="fdrop-city-body"></div>
-      </div>
     </div>
 
     <!-- Date (native input) -->
@@ -347,8 +347,39 @@
         <span class="fpill-lbl" id="fpill-time-val">Qualquer hora</span>
         <span class="fpill-arrow">▾</span>
       </div>
-      <div class="fdrop" id="fdrop-time">
-        <div class="fdrop-body">
+    </div>
+
+    <!-- Party -->
+    <div class="fpill-wrap">
+      <div class="fpill" id="fpill-party" onclick="toggleDrop('party')">
+        <span class="fpill-icon">👥</span>
+        <span class="fpill-lbl" id="fpill-party-val">2 pessoas</span>
+        <span class="fpill-arrow">▾</span>
+      </div>
+    </div>
+
+    <!-- Price -->
+    <div class="fpill-wrap">
+      <div class="fpill" id="fpill-price" onclick="toggleDrop('price')">
+        <span class="fpill-icon">💶</span>
+        <span class="fpill-lbl" id="fpill-price-val">Preço</span>
+        <span class="fpill-arrow">▾</span>
+      </div>
+    </div>
+
+  </div><!-- /.filter-pills -->
+
+  <!-- All dropdowns live here — direct children of .top-filters (position:relative; z-index:500)
+       so they always paint above the map panel -->
+
+  <!-- City dropdown -->
+  <div class="fdrop" id="fdrop-city">
+    <div class="fdrop-body" id="fdrop-city-body"></div>
+  </div>
+
+  <!-- Time dropdown -->
+  <div class="fdrop" id="fdrop-time">
+    <div class="fdrop-body">
           <div class="fdrop-item sel" data-val="" onclick="pickTime('')">
             <span>Qualquer hora</span><span class="fdrop-check">✓</span>
           </div>
@@ -372,52 +403,36 @@
           <div class="fdrop-item" data-val="22:00" onclick="pickTime('22:00')"><span>22:00</span><span class="fdrop-check">✓</span></div>
           <div class="fdrop-item" data-val="22:30" onclick="pickTime('22:30')"><span>22:30</span><span class="fdrop-check">✓</span></div>
           <div class="fdrop-item" data-val="23:00" onclick="pickTime('23:00')"><span>23:00</span><span class="fdrop-check">✓</span></div>
-        </div>
-      </div>
     </div>
+  </div><!-- /#fdrop-time -->
 
-    <!-- Party -->
-    <div class="fpill-wrap">
-      <div class="fpill" id="fpill-party" onclick="toggleDrop('party')">
-        <span class="fpill-icon">👥</span>
-        <span class="fpill-lbl" id="fpill-party-val">2 pessoas</span>
-        <span class="fpill-arrow">▾</span>
-      </div>
-      <div class="fdrop" id="fdrop-party">
-        <div class="fdrop-body">
-          <div class="fdrop-item" data-val="1" onclick="pickParty(1,'1 pessoa')"><span>1 pessoa</span><span class="fdrop-check">✓</span></div>
-          <div class="fdrop-item sel" data-val="2" onclick="pickParty(2,'2 pessoas')"><span>2 pessoas</span><span class="fdrop-check">✓</span></div>
-          <div class="fdrop-item" data-val="3" onclick="pickParty(3,'3 pessoas')"><span>3 pessoas</span><span class="fdrop-check">✓</span></div>
-          <div class="fdrop-item" data-val="4" onclick="pickParty(4,'4 pessoas')"><span>4 pessoas</span><span class="fdrop-check">✓</span></div>
-          <div class="fdrop-item" data-val="5" onclick="pickParty(5,'5 pessoas')"><span>5 pessoas</span><span class="fdrop-check">✓</span></div>
-          <div class="fdrop-item" data-val="6" onclick="pickParty(6,'6 pessoas')"><span>6 pessoas</span><span class="fdrop-check">✓</span></div>
-          <div class="fdrop-item" data-val="7" onclick="pickParty(7,'7 pessoas')"><span>7 pessoas</span><span class="fdrop-check">✓</span></div>
-          <div class="fdrop-item" data-val="8" onclick="pickParty(8,'8+ pessoas')"><span>8+ pessoas</span><span class="fdrop-check">✓</span></div>
-        </div>
-      </div>
+  <!-- Party dropdown -->
+  <div class="fdrop" id="fdrop-party">
+    <div class="fdrop-body">
+      <div class="fdrop-item" data-val="1" onclick="pickParty(1,'1 pessoa')"><span>1 pessoa</span><span class="fdrop-check">✓</span></div>
+      <div class="fdrop-item sel" data-val="2" onclick="pickParty(2,'2 pessoas')"><span>2 pessoas</span><span class="fdrop-check">✓</span></div>
+      <div class="fdrop-item" data-val="3" onclick="pickParty(3,'3 pessoas')"><span>3 pessoas</span><span class="fdrop-check">✓</span></div>
+      <div class="fdrop-item" data-val="4" onclick="pickParty(4,'4 pessoas')"><span>4 pessoas</span><span class="fdrop-check">✓</span></div>
+      <div class="fdrop-item" data-val="5" onclick="pickParty(5,'5 pessoas')"><span>5 pessoas</span><span class="fdrop-check">✓</span></div>
+      <div class="fdrop-item" data-val="6" onclick="pickParty(6,'6 pessoas')"><span>6 pessoas</span><span class="fdrop-check">✓</span></div>
+      <div class="fdrop-item" data-val="7" onclick="pickParty(7,'7 pessoas')"><span>7 pessoas</span><span class="fdrop-check">✓</span></div>
+      <div class="fdrop-item" data-val="8" onclick="pickParty(8,'8+ pessoas')"><span>8+ pessoas</span><span class="fdrop-check">✓</span></div>
     </div>
-
-    <!-- Price -->
-    <div class="fpill-wrap">
-      <div class="fpill" id="fpill-price" onclick="toggleDrop('price')">
-        <span class="fpill-icon">💶</span>
-        <span class="fpill-lbl" id="fpill-price-val">Preço</span>
-        <span class="fpill-arrow">▾</span>
-      </div>
-      <div class="fdrop" id="fdrop-price">
-        <div class="fdrop-body">
-          <div class="fdrop-item sel" data-val="" onclick="pickPrice('','Preço')"><span>Todos os preços</span><span class="fdrop-check">✓</span></div>
-          <div class="fdrop-divider"></div>
-          <div class="fdrop-item" data-val="€" onclick="pickPrice('€','€ Económico')"><span>€ &nbsp; Económico</span><span class="fdrop-check">✓</span></div>
-          <div class="fdrop-item" data-val="€€" onclick="pickPrice('€€','€€ Moderado')"><span>€€ &nbsp; Moderado</span><span class="fdrop-check">✓</span></div>
-          <div class="fdrop-item" data-val="€€€" onclick="pickPrice('€€€','€€€ Sofisticado')"><span>€€€ &nbsp; Sofisticado</span><span class="fdrop-check">✓</span></div>
-          <div class="fdrop-item" data-val="€€€€" onclick="pickPrice('€€€€','€€€€ Fine dining')"><span>€€€€ &nbsp; Fine dining</span><span class="fdrop-check">✓</span></div>
-        </div>
-      </div>
-    </div>
-
   </div>
-</div>
+
+  <!-- Price dropdown -->
+  <div class="fdrop" id="fdrop-price">
+    <div class="fdrop-body">
+      <div class="fdrop-item sel" data-val="" onclick="pickPrice('','Preço')"><span>Todos os preços</span><span class="fdrop-check">✓</span></div>
+      <div class="fdrop-divider"></div>
+      <div class="fdrop-item" data-val="€" onclick="pickPrice('€','€ Económico')"><span>€ &nbsp; Económico</span><span class="fdrop-check">✓</span></div>
+      <div class="fdrop-item" data-val="€€" onclick="pickPrice('€€','€€ Moderado')"><span>€€ &nbsp; Moderado</span><span class="fdrop-check">✓</span></div>
+      <div class="fdrop-item" data-val="€€€" onclick="pickPrice('€€€','€€€ Sofisticado')"><span>€€€ &nbsp; Sofisticado</span><span class="fdrop-check">✓</span></div>
+      <div class="fdrop-item" data-val="€€€€" onclick="pickPrice('€€€€','€€€€ Fine dining')"><span>€€€€ &nbsp; Fine dining</span><span class="fdrop-check">✓</span></div>
+    </div>
+  </div>
+
+</div><!-- /.top-filters -->
 
 <!-- CUISINE CHIPS -->
 <div class="chips-bar" id="cuisine-chips"></div>
@@ -450,18 +465,20 @@
 <script>
   let _openDrop = null
   function toggleDrop(name) {
-    const drop = document.getElementById('fdrop-' + name)
-    const pill = document.getElementById('fpill-' + name)
-    if (!drop) return
+    const drop    = document.getElementById('fdrop-' + name)
+    const pill    = document.getElementById('fpill-' + name)
+    const filters = document.querySelector('.top-filters')
+    if (!drop || !pill || !filters) return
     const isOpen = drop.classList.contains('open')
     closeAllDrops()
     if (!isOpen) {
-      // Position relative to pill using fixed coords so overflow:auto doesn't clip it
-      const rect = pill.getBoundingClientRect()
-      drop.style.top  = (rect.bottom + 6) + 'px'
-      drop.style.left = rect.left + 'px'
-      // Keep dropdown within viewport width
-      drop.style.maxHeight = (window.innerHeight - rect.bottom - 16) + 'px'
+      // Position dropdown relative to .top-filters (position:relative; z-index:500)
+      // so it paints above the map panel in desktop view
+      const fRect = filters.getBoundingClientRect()
+      const pRect = pill.getBoundingClientRect()
+      drop.style.top  = (pRect.bottom - fRect.top + 6) + 'px'
+      drop.style.left = Math.max(0, pRect.left - fRect.left) + 'px'
+      drop.style.maxHeight = (window.innerHeight - pRect.bottom - 16) + 'px'
       drop.style.overflowY = 'auto'
       drop.classList.add('open')
       pill.classList.add('open')
@@ -635,7 +652,9 @@
   const urlTime  = urlParams.get('time')
   const urlParty = urlParams.get('party')
 
-  document.getElementById('sb-date').value = urlDate || todayLisbon
+  const sbDate = document.getElementById('sb-date')
+  sbDate.min   = todayLisbon  // only today + future dates selectable
+  sbDate.value = urlDate || todayLisbon
 
   if (urlTime) {
     _selectedTime = urlTime
