@@ -545,6 +545,37 @@
   }
 
   // ── FILTER HANDLERS ─────────────────────────────────
+
+  // Hide time slots that have already passed (+ 30 min buffer) when today is selected
+  function filterTimePills(date) {
+    const todayLisbon = new Date().toLocaleDateString('en-CA', { timeZone:'Europe/Lisbon' })
+    const isToday = date === todayLisbon
+    let cutoff = null
+    if (isToday) {
+      const now = new Date(new Date().toLocaleString('en-US', { timeZone:'Europe/Lisbon' }))
+      now.setMinutes(now.getMinutes() + 30)
+      const hh = String(now.getHours()).padStart(2,'0')
+      const mm = String(now.getMinutes() < 30 ? '00' : '30').padStart(2,'0')
+      // round up to next half-hour
+      const totalMins = now.getHours() * 60 + now.getMinutes()
+      const roundedMins = Math.ceil(totalMins / 30) * 30
+      cutoff = String(Math.floor(roundedMins / 60)).padStart(2,'0') + ':' + String(roundedMins % 60).padStart(2,'0')
+    }
+    document.querySelectorAll('#fdrop-time .fdrop-item[data-val]').forEach(item => {
+      const val = item.dataset.val
+      if (!val) { item.style.display = ''; return } // "Qualquer hora" always visible
+      const hidden = cutoff && val < cutoff
+      item.style.display = hidden ? 'none' : ''
+    })
+    // If selected time is now hidden, reset it
+    if (cutoff && _selectedTime && _selectedTime < cutoff) {
+      _selectedTime = ''
+      document.getElementById('fpill-time-val').textContent = 'Qualquer hora'
+      document.getElementById('fpill-time').classList.remove('active')
+      setDropSel('fdrop-time', '')
+    }
+  }
+
   window.onDateChange = function() {
     const date = document.getElementById('sb-date').value
     const todayLisbon = new Date().toLocaleDateString('en-CA', { timeZone:'Europe/Lisbon' })
@@ -553,6 +584,7 @@
       : isToday ? 'Hoje'
       : new Date(date + 'T12:00').toLocaleDateString('pt-PT', { day:'numeric', month:'short' })
     document.getElementById('fpill-date').classList.toggle('active', !!date && !isToday)
+    filterTimePills(date)
     if (date && _selectedTime) loadAvailability(date, _selectedTime)
     else { availabilityMap = {}; renderList() }
   }

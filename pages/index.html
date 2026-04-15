@@ -499,6 +499,32 @@
   _di.value = _today
   _di.min   = _today
 
+  // Hide past time slots (+ 30 min buffer) when today is selected
+  function bbFilterTimes(date) {
+    const isToday = date === _today
+    let cutoff = null
+    if (isToday) {
+      const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Europe/Lisbon' }))
+      const totalMins = now.getHours() * 60 + now.getMinutes() + 30
+      const roundedMins = Math.ceil(totalMins / 30) * 30
+      cutoff = String(Math.floor(roundedMins / 60)).padStart(2, '0') + ':' + String(roundedMins % 60).padStart(2, '0')
+    }
+    document.querySelectorAll('#bbdrop-time .bb-drop-item[data-v]').forEach(item => {
+      const val = item.dataset.v
+      const hidden = cutoff && val < cutoff
+      item.style.display = hidden ? 'none' : ''
+    })
+    // If selected time is now past, reset to first visible slot
+    if (cutoff && _time && _time < cutoff) {
+      const first = document.querySelector('#bbdrop-time .bb-drop-item[data-v]:not([style*="none"])')
+      if (first) {
+        _time = first.dataset.v
+        document.getElementById('bb-time-val').textContent = _time
+        document.querySelectorAll('#bbdrop-time .bb-drop-item').forEach(i => i.classList.toggle('sel', i.dataset.v === _time))
+      }
+    }
+  }
+
   function bbDateChange() {
     _date = _di.value || _today
     const d = document.getElementById('bb-date-val')
@@ -507,7 +533,11 @@
     } else {
       d.textContent = new Date(_date + 'T12:00').toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' })
     }
+    bbFilterTimes(_date)
   }
+
+  // Run on load so past slots are hidden immediately
+  bbFilterTimes(_today)
 
   function bbToggle(name) {
     const drop  = document.getElementById('bbdrop-' + name)
