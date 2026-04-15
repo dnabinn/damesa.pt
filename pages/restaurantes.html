@@ -112,9 +112,9 @@
 
     /* ── CUSTOM DROPDOWN ──────────────────────────────── */
     .fdrop {
-      position:absolute; top:calc(100% + 6px); left:0;
+      position:fixed; top:0; left:0; /* positioned via JS using getBoundingClientRect */
       background:#fff; border:1px solid var(--border); border-radius:14px;
-      box-shadow:0 8px 32px rgba(0,0,0,0.11); z-index:600;
+      box-shadow:0 8px 32px rgba(0,0,0,0.11); z-index:9999;
       min-width:190px; overflow:hidden; display:none;
     }
     .fdrop.open { display:block; }
@@ -441,6 +441,13 @@
     const isOpen = drop.classList.contains('open')
     closeAllDrops()
     if (!isOpen) {
+      // Position relative to pill using fixed coords so overflow:auto doesn't clip it
+      const rect = pill.getBoundingClientRect()
+      drop.style.top  = (rect.bottom + 6) + 'px'
+      drop.style.left = rect.left + 'px'
+      // Keep dropdown within viewport width
+      drop.style.maxHeight = (window.innerHeight - rect.bottom - 16) + 'px'
+      drop.style.overflowY = 'auto'
       drop.classList.add('open')
       pill.classList.add('open')
       _openDrop = name
