@@ -120,23 +120,34 @@
       box-shadow: 0 24px 64px rgba(0,0,0,0.40), 0 0 0 1px rgba(255,255,255,0.06);
       display: flex; align-items: stretch;
       max-width: 680px; margin: 0 auto 28px;
-      overflow: hidden;
     }
     .bb-field {
       flex: 1; display: flex; flex-direction: column; padding: 14px 20px;
-      border-right: 1px solid var(--border); position: relative; cursor: pointer;
-      min-width: 0; transition: background 0.12s;
+      border-right: 1px solid var(--border); cursor: pointer; min-width: 0;
+      transition: background 0.12s; user-select: none; position: relative;
+      border-radius: 0;
     }
+    .bb-field:first-child { border-radius: 18px 0 0 18px; }
     .bb-field:hover { background: #faf8f5; }
+    .bb-field.is-open { background: #fdf1ee; }
+    .bb-field-static { cursor: default; }
+    .bb-field-static:hover { background: #fff; }
     .bb-label {
       font-size: 10px; font-weight: 600; text-transform: uppercase;
       letter-spacing: 0.9px; color: var(--muted); margin-bottom: 4px;
+      font-family: var(--sans);
     }
-    .bb-value { font-size: 14px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .bb-field select, .bb-field input[type=date] {
-      position: absolute; inset: 0; opacity: 0; cursor: pointer;
-      width: 100%; height: 100%; font-size: 16px;
+    .bb-value {
+      font-size: 14px; font-weight: 600; color: var(--text);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      display: flex; align-items: center; gap: 6px; font-family: var(--sans);
     }
+    .bb-arrow {
+      font-size: 9px; color: var(--muted); margin-left: auto;
+      transition: transform 0.18s; flex-shrink: 0;
+    }
+    .bb-field.is-open .bb-arrow { transform: rotate(180deg); color: var(--accent); }
+    .bb-lock { font-size: 11px; color: var(--muted); margin-left: auto; }
     .bb-btn {
       background: var(--accent); color: #fff; border: none;
       padding: 0 30px; font-size: 14px; font-weight: 600; cursor: pointer;
@@ -145,9 +156,38 @@
       font-family: var(--sans);
     }
     .bb-btn:hover { background: var(--accent-dark); }
+
+    /* ── CUSTOM DROPDOWN PANEL ────────────────────── */
+    .bb-drop {
+      position: fixed; z-index: 9999;
+      background: #fff; border: 1px solid var(--border);
+      border-radius: 16px; overflow: hidden; display: none;
+      box-shadow: 0 16px 48px rgba(0,0,0,0.16), 0 0 0 1px rgba(0,0,0,0.04);
+      min-width: 200px;
+    }
+    .bb-drop.open { display: block; }
+    .bb-drop-inner { overflow-y: auto; }
+    .bb-drop-group {
+      font-size: 10px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 1px; color: var(--muted); padding: 12px 18px 4px;
+      font-family: var(--sans);
+    }
+    .bb-drop-divider { height: 1px; background: var(--border); margin: 6px 0; }
+    .bb-drop-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 11px 18px; font-size: 14px; font-weight: 500; cursor: pointer;
+      color: var(--text); transition: background 0.1s; gap: 12px;
+      font-family: var(--sans);
+    }
+    .bb-drop-item:hover { background: #fdf1ee; color: var(--accent); }
+    .bb-drop-item.sel { color: var(--accent); font-weight: 600; background: #fdf1ee; }
+    .bb-drop-check { font-size: 13px; flex-shrink: 0; opacity: 0; }
+    .bb-drop-item.sel .bb-drop-check { opacity: 1; }
+
     @media(max-width: 580px) {
       .booking-bar { flex-direction: column; border-radius: 16px; }
       .bb-field { border-right: none; border-bottom: 1px solid var(--border); }
+      .bb-field:first-child { border-radius: 16px 16px 0 0; }
       .bb-btn { border-radius: 0 0 16px 16px; padding: 16px; }
     }
 
@@ -286,42 +326,64 @@
     <h1>A mesa certa,<br>na hora <em>certa.</em></h1>
     <p class="hero-sub">Os melhores restaurantes de Lisboa — reserva em segundos, sem taxas.</p>
 
-    <div class="booking-bar">
-      <div class="bb-field">
+    <div class="booking-bar" id="booking-bar">
+
+      <!-- DATE — locked to today on homepage -->
+      <div class="bb-field bb-field-static">
         <div class="bb-label">Data</div>
-        <div class="bb-value" id="bb-date-val">Hoje</div>
-        <input type="date" id="bb-date" onchange="updateBar()" />
+        <div class="bb-value">📅 Hoje <span class="bb-lock" title="Ver outras datas em Restaurantes">🔒</span></div>
       </div>
-      <div class="bb-field">
+
+      <!-- TIME — custom dropdown -->
+      <div class="bb-field" id="bbf-time" onclick="bbToggle('time')">
         <div class="bb-label">Hora</div>
-        <div class="bb-value" id="bb-time-val">20:00</div>
-        <select id="bb-time" onchange="updateBar()">
-          <option value="">Qualquer hora</option>
-          <optgroup label="Almoço">
-            <option value="12:00">12:00</option><option value="12:30">12:30</option>
-            <option value="13:00">13:00</option><option value="13:30">13:30</option>
-            <option value="14:00">14:00</option><option value="14:30">14:30</option>
-          </optgroup>
-          <optgroup label="Jantar">
-            <option value="19:00">19:00</option><option value="19:30">19:30</option>
-            <option value="20:00" selected>20:00</option><option value="20:30">20:30</option>
-            <option value="21:00">21:00</option><option value="21:30">21:30</option>
-            <option value="22:00">22:00</option><option value="22:30">22:30</option>
-          </optgroup>
-        </select>
+        <div class="bb-value"><span id="bb-time-val">20:00</span><span class="bb-arrow">▾</span></div>
       </div>
-      <div class="bb-field">
+
+      <!-- PARTY — custom dropdown -->
+      <div class="bb-field" id="bbf-party" onclick="bbToggle('party')">
         <div class="bb-label">Pessoas</div>
-        <div class="bb-value" id="bb-party-val">2 pessoas</div>
-        <select id="bb-party" onchange="updateBar()">
-          <option value="1">1 pessoa</option>
-          <option value="2" selected>2 pessoas</option>
-          <option value="3">3 pessoas</option><option value="4">4 pessoas</option>
-          <option value="5">5 pessoas</option><option value="6">6 pessoas</option>
-          <option value="7">7 pessoas</option><option value="8">8+ pessoas</option>
-        </select>
+        <div class="bb-value"><span id="bb-party-val">2 pessoas</span><span class="bb-arrow">▾</span></div>
       </div>
+
       <button class="bb-btn" onclick="goSearch()">Ver mesas →</button>
+    </div>
+
+    <!-- TIME dropdown -->
+    <div class="bb-drop" id="bbdrop-time">
+      <div class="bb-drop-inner">
+        <div class="bb-drop-group">Almoço</div>
+        <div class="bb-drop-item" data-val="12:00" onclick="bbPick('time','12:00','12:00')">12:00<span class="bb-drop-check">✓</span></div>
+        <div class="bb-drop-item" data-val="12:30" onclick="bbPick('time','12:30','12:30')">12:30<span class="bb-drop-check">✓</span></div>
+        <div class="bb-drop-item" data-val="13:00" onclick="bbPick('time','13:00','13:00')">13:00<span class="bb-drop-check">✓</span></div>
+        <div class="bb-drop-item" data-val="13:30" onclick="bbPick('time','13:30','13:30')">13:30<span class="bb-drop-check">✓</span></div>
+        <div class="bb-drop-item" data-val="14:00" onclick="bbPick('time','14:00','14:00')">14:00<span class="bb-drop-check">✓</span></div>
+        <div class="bb-drop-item" data-val="14:30" onclick="bbPick('time','14:30','14:30')">14:30<span class="bb-drop-check">✓</span></div>
+        <div class="bb-drop-divider"></div>
+        <div class="bb-drop-group">Jantar</div>
+        <div class="bb-drop-item" data-val="19:00" onclick="bbPick('time','19:00','19:00')">19:00<span class="bb-drop-check">✓</span></div>
+        <div class="bb-drop-item" data-val="19:30" onclick="bbPick('time','19:30','19:30')">19:30<span class="bb-drop-check">✓</span></div>
+        <div class="bb-drop-item sel" data-val="20:00" onclick="bbPick('time','20:00','20:00')">20:00<span class="bb-drop-check">✓</span></div>
+        <div class="bb-drop-item" data-val="20:30" onclick="bbPick('time','20:30','20:30')">20:30<span class="bb-drop-check">✓</span></div>
+        <div class="bb-drop-item" data-val="21:00" onclick="bbPick('time','21:00','21:00')">21:00<span class="bb-drop-check">✓</span></div>
+        <div class="bb-drop-item" data-val="21:30" onclick="bbPick('time','21:30','21:30')">21:30<span class="bb-drop-check">✓</span></div>
+        <div class="bb-drop-item" data-val="22:00" onclick="bbPick('time','22:00','22:00')">22:00<span class="bb-drop-check">✓</span></div>
+        <div class="bb-drop-item" data-val="22:30" onclick="bbPick('time','22:30','22:30')">22:30<span class="bb-drop-check">✓</span></div>
+      </div>
+    </div>
+
+    <!-- PARTY dropdown -->
+    <div class="bb-drop" id="bbdrop-party">
+      <div class="bb-drop-inner">
+        <div class="bb-drop-item" data-val="1" onclick="bbPick('party','1','1 pessoa')">1 pessoa<span class="bb-drop-check">✓</span></div>
+        <div class="bb-drop-item sel" data-val="2" onclick="bbPick('party','2','2 pessoas')">2 pessoas<span class="bb-drop-check">✓</span></div>
+        <div class="bb-drop-item" data-val="3" onclick="bbPick('party','3','3 pessoas')">3 pessoas<span class="bb-drop-check">✓</span></div>
+        <div class="bb-drop-item" data-val="4" onclick="bbPick('party','4','4 pessoas')">4 pessoas<span class="bb-drop-check">✓</span></div>
+        <div class="bb-drop-item" data-val="5" onclick="bbPick('party','5','5 pessoas')">5 pessoas<span class="bb-drop-check">✓</span></div>
+        <div class="bb-drop-item" data-val="6" onclick="bbPick('party','6','6 pessoas')">6 pessoas<span class="bb-drop-check">✓</span></div>
+        <div class="bb-drop-item" data-val="7" onclick="bbPick('party','7','7 pessoas')">7 pessoas<span class="bb-drop-check">✓</span></div>
+        <div class="bb-drop-item" data-val="8" onclick="bbPick('party','8','8+ pessoas')">8+ pessoas<span class="bb-drop-check">✓</span></div>
+      </div>
     </div>
 
     <div class="trust-row">
@@ -440,43 +502,55 @@
   </div>
 </footer>
 
-<!-- Booking bar logic -->
+<!-- Booking bar custom dropdowns -->
 <script>
   const todayLisbon = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Lisbon' })
-  document.getElementById('bb-date').value = todayLisbon
-  document.getElementById('bb-date').min  = todayLisbon
+  let _bbTime = '20:00', _bbParty = '2'
 
-  // Apply URL params if coming back from restaurantes
-  const _p = new URLSearchParams(location.search)
-  if (_p.get('date'))  document.getElementById('bb-date').value  = _p.get('date')
-  if (_p.get('time'))  document.getElementById('bb-time').value  = _p.get('time')
-  if (_p.get('party')) document.getElementById('bb-party').value = _p.get('party')
+  function bbToggle(name) {
+    const drop = document.getElementById('bbdrop-' + name)
+    const field = document.getElementById('bbf-' + name)
+    const isOpen = drop.classList.contains('open')
+    bbCloseAll()
+    if (!isOpen) {
+      // Position using fixed coords so hero overflow:hidden doesn't clip it
+      const rect = field.getBoundingClientRect()
+      drop.style.top  = (rect.bottom + 6) + 'px'
+      drop.style.left = rect.left + 'px'
+      drop.style.maxHeight = (window.innerHeight - rect.bottom - 16) + 'px'
+      drop.style.overflowY = 'auto'
+      drop.classList.add('open')
+      field.classList.add('is-open')
+    }
+  }
 
-  function updateBar() {
-    const date  = document.getElementById('bb-date').value
-    const time  = document.getElementById('bb-time').value
-    const party = document.getElementById('bb-party').value
-    const isToday = date === todayLisbon
-    document.getElementById('bb-date-val').textContent = !date ? 'Qualquer dia'
-      : isToday ? 'Hoje'
-      : new Date(date + 'T12:00').toLocaleDateString('pt-PT', { day:'numeric', month:'short' })
-    document.getElementById('bb-time-val').textContent = time || 'Qualquer hora'
-    document.getElementById('bb-party-val').textContent = party === '8' ? '8+ pessoas'
-      : `${party} ${+party===1?'pessoa':'pessoas'}`
+  function bbCloseAll() {
+    document.querySelectorAll('.bb-drop.open').forEach(d => d.classList.remove('open'))
+    document.querySelectorAll('.bb-field.is-open').forEach(f => f.classList.remove('is-open'))
+  }
+
+  function bbPick(name, val, label) {
+    if (name === 'time')  { _bbTime  = val; document.getElementById('bb-time-val').textContent  = label }
+    if (name === 'party') { _bbParty = val; document.getElementById('bb-party-val').textContent = label }
+    // Update checkmarks
+    document.querySelectorAll(`#bbdrop-${name} .bb-drop-item`).forEach(item => {
+      item.classList.toggle('sel', item.dataset.val === val)
+    })
+    bbCloseAll()
   }
 
   function goSearch() {
     const params = new URLSearchParams()
-    const date  = document.getElementById('bb-date').value
-    const time  = document.getElementById('bb-time').value
-    const party = document.getElementById('bb-party').value
-    if (date)  params.set('date', date)
-    if (time)  params.set('time', time)
-    if (party) params.set('party', party)
+    params.set('date',  todayLisbon)
+    params.set('time',  _bbTime)
+    params.set('party', _bbParty)
     window.location.href = '/pages/restaurantes.html?' + params.toString()
   }
 
-  updateBar()
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.bb-field') && !e.target.closest('.bb-drop')) bbCloseAll()
+  })
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') bbCloseAll() })
 </script>
 
 <script type="module">
