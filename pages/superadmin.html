@@ -61,6 +61,10 @@
     .action-btn { border:none; border-radius:6px; padding:5px 10px; font-size:12px; cursor:pointer; margin-right:4px; }
     .btn-activate { background:#e8f5e9; color:#2e7d32; }
     .btn-suspend { background:#fce4ec; color:#c62828; }
+    .plan-pro { display:inline-flex; align-items:center; gap:4px; background:linear-gradient(135deg,#b8860b,#daa520); color:#fff; padding:3px 9px; border-radius:100px; font-size:11px; font-weight:700; letter-spacing:0.5px; }
+    .plan-lite { display:inline-flex; align-items:center; gap:4px; background:var(--bg); border:1px solid var(--border); color:var(--muted); padding:3px 9px; border-radius:100px; font-size:11px; font-weight:600; }
+    .btn-plan-upgrade { background:linear-gradient(135deg,#b8860b,#daa520); color:#fff; border:none; border-radius:6px; padding:5px 10px; font-size:11px; font-weight:700; cursor:pointer; margin-right:4px; }
+    .btn-plan-downgrade { background:var(--bg); border:1px solid var(--border); color:var(--muted); border-radius:6px; padding:5px 10px; font-size:11px; cursor:pointer; margin-right:4px; }
 
     /* ADD RESTAURANT MODAL */
     .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:1000; align-items:center; justify-content:center; padding:16px; }
@@ -341,7 +345,7 @@
     <div class="table-wrap">
       <table>
         <thead>
-          <tr><th>Nome</th><th>Cozinha</th><th>Proprietário</th><th>Estado</th><th>Subscrição</th><th>Faturação</th><th>Ações</th><th></th></tr>
+          <tr><th>Nome</th><th>Cozinha</th><th>Proprietário</th><th>Estado</th><th>Plano</th><th>Subscrição</th><th>Faturação</th><th>Ações</th><th></th></tr>
         </thead>
         <tbody id="restaurants-tbody">
           <tr><td colspan="8" style="padding:32px;text-align:center;color:var(--muted)"><span class="loading-text">A carregar</span></td></tr>
@@ -563,7 +567,7 @@
     try {
       const { data, error } = await supabase
         .from('restaurants')
-        .select('id, name, slug, cuisine_type, status, subscription, owner_id, city, created_at, email, owner_legal_name, owner_iban, billing_status, contract_status, stripe_customer_id, damesa_email, description, cuisines')
+        .select('id, name, slug, cuisine_type, status, plan, subscription, owner_id, city, created_at, email, owner_legal_name, owner_iban, billing_status, contract_status, stripe_customer_id, damesa_email, description, cuisines')
         .order('created_at', { ascending: false })
       if (error) throw error
       allRestaurants = data ?? []
@@ -590,12 +594,20 @@
         ? `<span class="contract-sent">enviado</span>`
         : `<span class="contract-none">nenhum</span>`
       const safeName = (r.name ?? '').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;')
+      const plan = r.plan ?? 'lite'
+      const planBadge = plan === 'pro'
+        ? `<span class="plan-pro">⭐ Pro</span>`
+        : `<span class="plan-lite">Lite</span>`
+      const planToggle = plan === 'pro'
+        ? `<button class="btn-plan-downgrade" onclick="setPlan('${r.id}','lite')">→ Lite</button>`
+        : `<button class="btn-plan-upgrade" onclick="setPlan('${r.id}','pro')">⭐ → Pro</button>`
       return `
       <tr>
         <td><strong>${r.name}</strong><br><span style="font-size:11px;color:var(--muted)">${r.city ?? ''} · ${r.slug}</span></td>
         <td>${r.cuisine_type ?? '—'}</td>
         <td style="font-size:12px;color:var(--muted)">${r.owner_id ? r.owner_id.slice(0,8)+'…' : '—'}</td>
         <td><span class="status status-${r.status ?? 'pending'}">${r.status ?? 'pending'}</span></td>
+        <td>${planBadge}<br><div style="margin-top:5px">${planToggle}</div></td>
         <td><span class="sub-${r.subscription ?? 'free'}">${r.subscription ?? 'free'}</span></td>
         <td>${billingBadge}<br>${contractBadge}</td>
         <td>
@@ -620,6 +632,15 @@
   window.setRestStatus = async function(id, status) {
     await supabase.from('restaurants').update({ status }).eq('id', id)
     await loadRestaurants()
+  }
+
+  window.setPlan = async function(id, plan) {
+    const { error } = await supabase.from('restaurants').update({ plan }).eq('id', id)
+    if (error) { alert('Erro ao alterar plano: ' + error.message); return }
+    // Update local cache so renderRestaurants shows immediately
+    const r = allRestaurants.find(x => x.id === id)
+    if (r) r.plan = plan
+    renderRestaurants(allRestaurants)
   }
 
   // ── BOOKINGS ──────────────────────────────────────────────

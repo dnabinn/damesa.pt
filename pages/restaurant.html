@@ -449,6 +449,57 @@
     }
     @media (max-width: 860px) { .mobile-reserve-cta { display: block; } }
 
+    /* ── PRO BADGE ──────────────────────────────── */
+    .pro-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: linear-gradient(135deg, #b8860b, #daa520);
+      color: #fff; font-size: 11px; font-weight: 700;
+      padding: 3px 9px; border-radius: 100px;
+      letter-spacing: 0.5px; text-transform: uppercase;
+      box-shadow: 0 2px 8px rgba(184,134,11,0.4);
+      vertical-align: middle;
+    }
+    .pro-badge-sm {
+      font-size: 10px; padding: 2px 7px;
+    }
+
+    /* ── LITE INFO PAGE ──────────────────────────── */
+    .lite-page { max-width: 720px; margin: 0 auto; padding: 32px 24px 80px; }
+    .lite-section {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 24px; margin-bottom: 20px;
+    }
+    .lite-section-title {
+      font-size: 12px; text-transform: uppercase; letter-spacing: 1px;
+      color: var(--muted); font-weight: 600; margin-bottom: 12px;
+    }
+    .lite-description {
+      font-size: 15px; line-height: 1.7; color: var(--text);
+    }
+    .lite-details { display: flex; flex-direction: column; gap: 10px; }
+    .lite-detail-row { display: flex; align-items: flex-start; gap: 12px; font-size: 14px; }
+    .lite-detail-icon { font-size: 16px; flex-shrink: 0; width: 22px; text-align: center; margin-top: 1px; }
+    .lite-detail-text { color: var(--text); line-height: 1.5; }
+    .lite-detail-label { font-size: 11px; color: var(--muted); }
+    .lite-upgrade {
+      background: linear-gradient(135deg, #1c1612 0%, #2d2018 100%);
+      border-radius: var(--radius); padding: 28px 24px;
+      text-align: center; color: #fff; margin-bottom: 20px;
+    }
+    .lite-upgrade-title { font-family: Georgia, serif; font-size: 20px; margin-bottom: 8px; }
+    .lite-upgrade-sub { font-size: 13px; color: #b0a090; margin-bottom: 20px; line-height: 1.6; }
+    .lite-upgrade-btn {
+      display: inline-block; background: #c0392b; color: #fff;
+      padding: 12px 28px; border-radius: 100px;
+      font-size: 14px; font-weight: 600;
+      box-shadow: 0 4px 16px rgba(192,57,43,0.4);
+    }
+    .lite-notice {
+      background: #fff8e6; border: 1px solid #f0d070; border-radius: 10px;
+      padding: 14px 18px; display: flex; align-items: center; gap: 12px;
+      font-size: 13px; color: #7a5800; margin-bottom: 20px;
+    }
+
     /* ── FOOTER ─────────────────────────────────── */
     footer { text-align: center; padding: 40px 24px; color: var(--muted); font-size: 13px; border-top: 1px solid var(--border); }
     footer strong { color: var(--text); font-family: Georgia, serif; }
@@ -474,6 +525,7 @@
   <div class="hero-content">
     <div class="hero-badge" id="rest-cuisine"><span class="loading-text">A carregar</span></div>
     <h1 class="hero-name" id="rest-name"> </h1>
+    <div id="pro-badge-hero" style="display:none;margin-top:6px;"><span class="pro-badge">⭐ Pro</span></div>
     <div class="hero-meta">
       <span class="price-pill" id="rest-price"></span>
       <span class="hero-meta-item"><span class="icon">📍</span><span id="rest-address"></span></span>
@@ -697,7 +749,27 @@
 </div>
 
 <!-- MOBILE FLOATING CTA -->
-<button class="mobile-reserve-cta" onclick="switchTab('booking')">
+<!-- Lite info page (shown instead of tabs for plan=lite) -->
+<div id="lite-page" class="lite-page" style="display:none;">
+  <div class="lite-notice">
+    ℹ️ Este restaurante ainda não tem reservas online activas no Da Mesa.
+  </div>
+  <div class="lite-section">
+    <div class="lite-section-title">Sobre o restaurante</div>
+    <div class="lite-description" id="lite-description">—</div>
+  </div>
+  <div class="lite-section">
+    <div class="lite-section-title">Detalhes</div>
+    <div class="lite-details" id="lite-details"></div>
+  </div>
+  <div class="lite-upgrade">
+    <div class="lite-upgrade-title">Quer aceitar reservas online?</div>
+    <div class="lite-upgrade-sub">Com o Da Mesa Pro o seu restaurante aparece nas pesquisas, aceita reservas 24/7 e recebe confirmações automáticas por email.</div>
+    <a class="lite-upgrade-btn" href="mailto:ola@damesa.pt?subject=Quero o Da Mesa Pro&body=Olá, tenho interesse em aderir ao Da Mesa Pro para o meu restaurante.">Contactar Da Mesa →</a>
+  </div>
+</div>
+
+<button class="mobile-reserve-cta" id="mobile-reserve-cta" onclick="switchTab('booking')">
   Reservar mesa
 </button>
 
@@ -783,6 +855,36 @@
   document.getElementById('rest-cuisine').textContent = restaurant.cuisine_type ?? 'Restaurante'
   document.getElementById('rest-price').textContent = restaurant.price_range ?? ''
   document.getElementById('rest-address').textContent = restaurant.address ?? 'Lisboa'
+
+  // ── PLAN: LITE vs PRO ────────────────────────────────────
+  const isLite = (restaurant.plan ?? 'pro') === 'lite'
+  if (isLite) {
+    // Hide tabs, booking CTA, full content area — show lite info page
+    document.querySelector('.tabs-bar').style.display = 'none'
+    document.querySelector('.page-wrap').style.display = 'none'
+    document.getElementById('mobile-reserve-cta').style.display = 'none'
+    document.getElementById('lite-page').style.display = 'block'
+
+    // Fill lite content
+    document.getElementById('lite-description').textContent =
+      restaurant.description || 'Informação detalhada em breve.'
+
+    const details = []
+    if (restaurant.cuisine_type) details.push({ icon:'🍽️', label:'Cozinha', val: restaurant.cuisine_type })
+    if (restaurant.price_range)  details.push({ icon:'💶', label:'Preço médio', val: restaurant.price_range })
+    if (restaurant.address)      details.push({ icon:'📍', label:'Morada', val: restaurant.address })
+    if (restaurant.city)         details.push({ icon:'🏙️', label:'Cidade', val: restaurant.city })
+    if (restaurant.opening_hours)details.push({ icon:'🕐', label:'Horário', val: restaurant.opening_hours })
+    document.getElementById('lite-details').innerHTML = details.map(d =>
+      `<div class="lite-detail-row">
+        <span class="lite-detail-icon">${d.icon}</span>
+        <div><div class="lite-detail-label">${d.label}</div><div class="lite-detail-text">${d.val}</div></div>
+      </div>`
+    ).join('')
+  } else {
+    // Pro: show badge on hero
+    document.getElementById('pro-badge-hero').style.display = 'block'
+  }
 
   // ── TABS ─────────────────────────────────────────────────
   function switchTab(name) {
