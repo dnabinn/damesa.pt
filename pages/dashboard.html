@@ -102,6 +102,15 @@
     .btn-confirm-cancel { padding:10px 24px; background:var(--red); color:#fff; border:none; border-radius:8px; cursor:pointer; font-size:14px; }
     .btn-modal-close { padding:10px 24px; background:none; border:1px solid var(--border); border-radius:8px; cursor:pointer; font-size:14px; }
 
+    /* FAVORITES */
+    .fav-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:12px; }
+    .fav-card { background:#fff; border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; display:block; transition:box-shadow .15s; }
+    .fav-card:hover { box-shadow:0 4px 16px rgba(0,0,0,.08); }
+    .fav-card-photo { height:100px; background:var(--bg) center/cover no-repeat; position:relative; display:flex; align-items:center; justify-content:center; font-size:28px; color:var(--border); }
+    .fav-card-body { padding:10px 12px; }
+    .fav-card-name { font-size:14px; font-weight:600; margin-bottom:3px; }
+    .fav-card-meta { font-size:12px; color:var(--muted); }
+
     /* RESPONSIVE */
     @media(max-width:580px) {
       .stats-row { grid-template-columns:repeat(3,1fr); gap:8px; }
@@ -167,6 +176,15 @@
       <div class="section-title">Reservas anteriores</div>
     </div>
     <div class="booking-list" id="past-list"></div>
+  </div>
+
+  <!-- Favorites -->
+  <div class="section" id="favs-section" style="display:none">
+    <div class="section-header">
+      <div class="section-title">❤️ Guardados</div>
+      <a href="/pages/restaurantes.html" class="section-link">Explorar →</a>
+    </div>
+    <div class="fav-grid" id="favs-grid"></div>
   </div>
 
   <!-- Profile -->
@@ -283,6 +301,32 @@
       document.getElementById('past-section').style.display = 'block'
       document.getElementById('past-list').innerHTML = past.map(b => bookingCard(b, false)).join('')
     }
+
+    // ── Load & render favorites ────────────────────────────
+    try {
+      const { data: favs } = await supabase
+        .from('favorites')
+        .select('restaurant_id, restaurants(id, name, slug, city, cuisine_type, price_range, cover_image)')
+        .eq('user_id', userId)
+      if (favs && favs.length) {
+        document.getElementById('favs-section').style.display = 'block'
+        const citySlug = (c) => (c ?? 'portugal').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,'-')
+        document.getElementById('favs-grid').innerHTML = favs.map(f => {
+          const r = f.restaurants
+          if (!r) return ''
+          const photoStyle = r.cover_image ? `background-image:url(${r.cover_image})` : ''
+          const photoContent = r.cover_image ? '' : '🍽️'
+          return `<a class="fav-card" href="/restaurante/${citySlug(r.city)}/${r.slug}">
+            <div class="fav-card-photo" style="${photoStyle}">${photoContent}</div>
+            <div class="fav-card-body">
+              <div class="fav-card-name">${r.name}</div>
+              <div class="fav-card-meta">${r.cuisine_type ?? ''} · ${r.price_range ?? '€€'}</div>
+            </div>
+          </a>`
+        }).join('')
+      }
+    } catch(e) {}
+
 
     // ── Cancel logic ─────────────────────────────────────────
     let pendingCancelId = null

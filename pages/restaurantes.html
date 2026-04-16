@@ -301,6 +301,21 @@
       padding:14px 20px; text-align:center; color:var(--muted); font-size:12px; flex-shrink:0;
     }
     footer strong { color:var(--text); font-family:Georgia,serif; }
+
+    /* ── FAVORITES ────────────────────────────────────── */
+    .fav-btn {
+      position:absolute; bottom:8px; right:8px;
+      background:rgba(255,255,255,0.92); backdrop-filter:blur(4px);
+      border:none; border-radius:50%; width:30px; height:30px;
+      font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center;
+      box-shadow:0 1px 6px rgba(0,0,0,0.22); transition:transform 0.15s;
+      line-height:1; flex-shrink:0; z-index:2;
+    }
+    .fav-btn:hover { transform:scale(1.12); }
+
+    /* ── DIETARY TAGS ─────────────────────────────────── */
+    .dietary-tags { display:flex; gap:4px; flex-wrap:wrap; margin-top:5px; }
+    .dtag { font-size:10px; color:var(--muted); border:1px solid var(--border); border-radius:100px; padding:2px 7px; background:var(--bg); white-space:nowrap; }
   </style>
 </head>
 <body>
@@ -373,6 +388,15 @@
       </div>
     </div>
 
+    <!-- Dietary -->
+    <div class="fpill-wrap">
+      <div class="fpill" id="fpill-dietary" onclick="toggleDrop('dietary')">
+        <span class="fpill-icon">🥗</span>
+        <span class="fpill-lbl" id="fpill-dietary-val">Dieta</span>
+        <span class="fpill-arrow">▾</span>
+      </div>
+    </div>
+
   </div><!-- /.filter-pills -->
 
   <!-- All dropdowns live here — direct children of .top-filters (position:relative; z-index:500)
@@ -435,6 +459,18 @@
       <div class="fdrop-item" data-val="€€" onclick="pickPrice('€€','€€ Moderado')"><span>€€ &nbsp; Moderado</span><span class="fdrop-check">✓</span></div>
       <div class="fdrop-item" data-val="€€€" onclick="pickPrice('€€€','€€€ Sofisticado')"><span>€€€ &nbsp; Sofisticado</span><span class="fdrop-check">✓</span></div>
       <div class="fdrop-item" data-val="€€€€" onclick="pickPrice('€€€€','€€€€ Fine dining')"><span>€€€€ &nbsp; Fine dining</span><span class="fdrop-check">✓</span></div>
+    </div>
+  </div>
+
+  <!-- Dietary dropdown -->
+  <div class="fdrop" id="fdrop-dietary">
+    <div class="fdrop-body">
+      <div class="fdrop-item sel" data-val="" onclick="pickDietary('','Dieta')"><span>Todos</span><span class="fdrop-check">✓</span></div>
+      <div class="fdrop-divider"></div>
+      <div class="fdrop-item" data-val="vegetariano" onclick="pickDietary('vegetariano','🥦 Vegetariano')"><span>🥦 Vegetariano</span><span class="fdrop-check">✓</span></div>
+      <div class="fdrop-item" data-val="vegan" onclick="pickDietary('vegan','🌱 Vegan')"><span>🌱 Vegan</span><span class="fdrop-check">✓</span></div>
+      <div class="fdrop-item" data-val="sem-gluten" onclick="pickDietary('sem-gluten','🌾 Sem glúten')"><span>🌾 Sem glúten</span><span class="fdrop-check">✓</span></div>
+      <div class="fdrop-item" data-val="halal" onclick="pickDietary('halal','☪️ Halal')"><span>☪️ Halal</span><span class="fdrop-check">✓</span></div>
     </div>
   </div>
 
@@ -532,7 +568,8 @@
 
   let all = [], activeCuisine = '', availabilityMap = {}, weekCount = {}, markers = {}, map
   let defaultIcon, highlightIcon
-  let _selectedTime = '', _selectedParty = 2, _selectedPrice = '', _selectedCity = ''
+  let _selectedTime = '', _selectedParty = 2, _selectedPrice = '', _selectedCity = '', _selectedDietary = ''
+  let favSet = new Set()
 
   // ── MAP ─────────────────────────────────────────────
   map = L.map('map', { zoomControl: true }).setView([38.7169, -9.1399], 13)
@@ -632,6 +669,41 @@
     renderList()
   }
 
+  window.pickDietary = function(val, label) {
+    _selectedDietary = val
+    document.getElementById('fpill-dietary-val').textContent = label
+    document.getElementById('fpill-dietary').classList.toggle('active', !!val)
+    setDropSel('fdrop-dietary', val)
+    closeAllDrops()
+    renderList()
+  }
+
+  window.toggleFav = async function(id) {
+    if (favSet.has(id)) {
+      favSet.delete(id)
+      try {
+        if (session) await supabase.from('favorites').delete().match({ user_id: session.user.id, restaurant_id: id })
+        else {
+          const lf = JSON.parse(localStorage.getItem('dm_favs') || '[]')
+          localStorage.setItem('dm_favs', JSON.stringify(lf.filter(x => x !== id)))
+        }
+      } catch(e) {}
+    } else {
+      favSet.add(id)
+      try {
+        if (session) await supabase.from('favorites').upsert({ user_id: session.user.id, restaurant_id: id })
+        else {
+          const lf = JSON.parse(localStorage.getItem('dm_favs') || '[]')
+          localStorage.setItem('dm_favs', JSON.stringify([...new Set([...lf, id])]))
+        }
+      } catch(e) {}
+    }
+    // Update all heart buttons for this restaurant without full re-render
+    document.querySelectorAll(`.fav-btn[data-id="${id}"]`).forEach(btn => {
+      btn.textContent = favSet.has(id) ? '❤️' : '🤍'
+    })
+  }
+
   // ── AVAILABILITY ────────────────────────────────────
   async function loadAvailability(date, time) {
     document.getElementById('list-header').innerHTML =
@@ -669,6 +741,16 @@
     .gte('booking_date', week7ago)
     .in('status', ['pending','confirmed','completed'])
   if (wk) wk.forEach(b => { weekCount[b.restaurant_id] = (weekCount[b.restaurant_id] ?? 0) + 1 })
+
+  // Load favorites (localStorage for guests, Supabase for logged-in users)
+  try {
+    const lsFavs = JSON.parse(localStorage.getItem('dm_favs') || '[]')
+    lsFavs.forEach(id => favSet.add(id))
+    if (session) {
+      const { data: dbFavs } = await supabase.from('favorites').select('restaurant_id').eq('user_id', session.user.id)
+      if (dbFavs) dbFavs.forEach(f => favSet.add(f.restaurant_id))
+    }
+  } catch(e) {}
 
   // Build city dropdown
   const cities = [...new Set(all.map(r => r.city).filter(Boolean))].sort()
@@ -737,9 +819,10 @@
     const filtered = all.filter(r => {
       const matchCuisine = !activeCuisine || r.cuisine_type===activeCuisine || (r.cuisines??[]).includes(activeCuisine)
       const matchCity    = !_selectedCity || r.city===_selectedCity
-      const matchSearch  = !q || r.name.toLowerCase().includes(q) || (r.cuisine_type??'').toLowerCase().includes(q)
-      const matchPrice   = !_selectedPrice || r.price_range===_selectedPrice
-      return matchCuisine && matchCity && matchSearch && matchPrice
+      const matchSearch   = !q || r.name.toLowerCase().includes(q) || (r.cuisine_type??'').toLowerCase().includes(q)
+      const matchPrice    = !_selectedPrice || r.price_range===_selectedPrice
+      const matchDietary  = !_selectedDietary || (r.dietary_tags??[]).includes(_selectedDietary)
+      return matchCuisine && matchCity && matchSearch && matchPrice && matchDietary
     })
 
     document.getElementById('list-header').innerHTML =
@@ -777,12 +860,18 @@
       const slotsHtml = _selectedTime
         ? `<div class="rest-card-slots"><span class="slot-pill${!hasRoom?' full':''}">${_selectedTime}</span></div>`
         : ''
+      const DTAG_LABELS = { 'vegetariano':'🥦 Vegetariano','vegan':'🌱 Vegan','sem-gluten':'🌾 Sem glúten','halal':'☪️ Halal' }
+      const dietaryHtml = (r.dietary_tags??[]).length
+        ? `<div class="dietary-tags">${(r.dietary_tags).map(t=>`<span class="dtag">${DTAG_LABELS[t]??t}</span>`).join('')}</div>`
+        : ''
+      const favHeart = favSet.has(r.id) ? '❤️' : '🤍'
       return `
         <a class="rest-card" data-id="${r.id}" href="/restaurante/${citySlug(r.city)}/${r.slug}">
           <div class="rest-card-photo-wrap">
             <div class="rest-card-photo${photoExtra}" style="${photoStyle}">${photoContent}</div>
             ${proBadge}
             ${hotBadge}
+            <button class="fav-btn" data-id="${r.id}" onclick="event.preventDefault();event.stopPropagation();toggleFav('${r.id}')" aria-label="Guardar restaurante">${favHeart}</button>
           </div>
           <div class="rest-card-body">
             <div class="rest-card-name">${r.name}</div>
@@ -793,6 +882,7 @@
               <span class="meta-dot">·</span>
               <span>📍 ${r.city??'Lisboa'}</span>
             </div>
+            ${dietaryHtml}
             ${slotsHtml}
             ${socialProof}
           </div>

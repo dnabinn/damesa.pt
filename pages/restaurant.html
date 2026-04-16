@@ -104,6 +104,19 @@
       position: absolute; inset: 0;
       background: linear-gradient(to top, rgba(20,14,10,0.85) 0%, rgba(20,14,10,0.3) 50%, transparent 100%);
     }
+    .hero-actions {
+      display: flex; gap: 8px; margin-top: 12px;
+    }
+    .hero-action-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(255,255,255,0.15); backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.25); color: #fff;
+      border-radius: 100px; padding: 7px 14px; font-size: 13px; font-weight: 500;
+      cursor: pointer; transition: background 0.15s;
+    }
+    .hero-action-btn:hover { background: rgba(255,255,255,0.25); }
+    .hero-fav-btn.active { color: #ff6b81; border-color: rgba(255,107,129,0.5); }
+
     .hero-content {
       position: absolute; bottom: 0; left: 0; right: 0;
       padding: 32px;
@@ -541,6 +554,10 @@
         <span id="hero-rating-count" style="font-weight:400;opacity:0.7;"></span>
       </div>
     </div>
+    <div class="hero-actions">
+      <button class="hero-action-btn hero-fav-btn" id="hero-fav-btn" onclick="heroToggleFav()">🤍 Guardar</button>
+      <button class="hero-action-btn" onclick="shareRestaurant()">↗ Partilhar</button>
+    </div>
   </div>
 </div>
 
@@ -882,6 +899,60 @@
   document.getElementById('rest-cuisine').textContent = restaurant.cuisine_type ?? 'Restaurante'
   document.getElementById('rest-price').textContent = restaurant.price_range ?? ''
   document.getElementById('rest-address').textContent = restaurant.address ?? 'Lisboa'
+
+  // ── SHARE & FAVORITE ────────────────────────────────────
+  window.shareRestaurant = function() {
+    const shareData = {
+      title: restaurant.name,
+      text: `Reserva mesa no ${restaurant.name} — sem taxas!`,
+      url: window.location.href
+    }
+    if (navigator.share) {
+      navigator.share(shareData).catch(() => {})
+    } else {
+      navigator.clipboard.writeText(window.location.href).then(() => {
+        const btn = document.querySelector('.hero-action-btn:last-child')
+        const orig = btn.innerHTML
+        btn.innerHTML = '✓ Link copiado!'
+        setTimeout(() => { btn.innerHTML = orig }, 2000)
+      }).catch(() => {})
+    }
+  }
+
+  // Favorite state on restaurant page (uses localStorage, syncs with Supabase if logged in)
+  const restId = restaurant.id
+  let restFavSet = new Set(JSON.parse(localStorage.getItem('dm_favs') || '[]'))
+  try {
+    if (_session) {
+      const { data: dbFavs } = await supabase.from('favorites').select('restaurant_id').eq('user_id', _session.user.id)
+      if (dbFavs) dbFavs.forEach(f => restFavSet.add(f.restaurant_id))
+    }
+  } catch(e) {}
+  const favBtn = document.getElementById('hero-fav-btn')
+  function updateFavBtn() {
+    const isFav = restFavSet.has(restId)
+    favBtn.innerHTML = isFav ? '❤️ Guardado' : '🤍 Guardar'
+    favBtn.classList.toggle('active', isFav)
+  }
+  updateFavBtn()
+  window.heroToggleFav = async function() {
+    if (restFavSet.has(restId)) {
+      restFavSet.delete(restId)
+      try {
+        if (_session) await supabase.from('favorites').delete().match({ user_id: _session.user.id, restaurant_id: restId })
+        else { localStorage.setItem('dm_favs', JSON.stringify([...restFavSet])) }
+      } catch(e) {}
+    } else {
+      restFavSet.add(restId)
+      try {
+        if (_session) await supabase.from('favorites').upsert({ user_id: _session.user.id, restaurant_id: restId })
+        else { localStorage.setItem('dm_favs', JSON.stringify([...restFavSet])) }
+      } catch(e) {}
+    }
+    // Always update localStorage
+    localStorage.setItem('dm_favs', JSON.stringify([...restFavSet]))
+    updateFavBtn()
+  }
 
   // ── PLAN: LITE vs PRO ────────────────────────────────────
   const isLite = (restaurant.plan ?? 'pro') === 'lite'
