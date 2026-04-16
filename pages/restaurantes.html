@@ -685,7 +685,9 @@
   const urlParty = urlParams.get('party')
 
   const sbDate = document.getElementById('sb-date')
+  const maxDate = (() => { const d = new Date(); d.setMonth(d.getMonth() + 3); return d.toLocaleDateString('en-CA', { timeZone: 'Europe/Lisbon' }) })()
   sbDate.min   = todayLisbon  // only today + future dates selectable
+  sbDate.max   = maxDate      // max 3 months ahead
   sbDate.value = urlDate || todayLisbon
 
   if (urlTime) {

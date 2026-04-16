@@ -343,7 +343,7 @@
     <!-- DATE field — invisible native date input on top -->
     <div class="bb-field bb-field-date" id="bbf-date">
       <div class="bb-label">Data</div>
-      <div class="bb-val">📅 <span id="bb-date-val">Hoje</span></div>
+      <div class="bb-val">📅 <span id="bb-date-val">Hoje</span> <span class="bb-arrow">▾</span></div>
       <input type="date" id="bb-date" onchange="bbDateChange()" />
     </div>
 
@@ -496,8 +496,10 @@
   let _date = _today, _time = '20:00', _party = '2'
 
   const _di = document.getElementById('bb-date')
+  const _maxDate = (() => { const d = new Date(); d.setMonth(d.getMonth() + 3); return d.toLocaleDateString('en-CA', { timeZone: 'Europe/Lisbon' }) })()
   _di.value = _today
   _di.min   = _today
+  _di.max   = _maxDate
 
   // Hide past time slots (+ 30 min buffer) when today is selected
   function bbFilterTimes(date) {
