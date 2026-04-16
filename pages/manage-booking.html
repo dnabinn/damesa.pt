@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gerir Reserva — Da Mesa</title>
+  <meta name="robots" content="noindex" />
+  <link rel="icon" href="/assets/icons/icon-192.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #faf8f5; --card: #fff; --text: #1a1410; --muted: #8c7d72;
+      --accent: #b84530; --accent-dark: #9e3a28; --accent-light: #fdf1ee;
+      --border: #e8e0d8; --radius: 14px;
+      --serif: 'Playfair Display', Georgia, serif;
+      --sans: 'Inter', -apple-system, sans-serif;
+    }
+    body { font-family: var(--sans); background: var(--bg); color: var(--text); min-height: 100vh; -webkit-font-smoothing: antialiased; }
+    a { color: inherit; text-decoration: none; }
+
+    nav {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 24px; background: #fff; border-bottom: 1px solid var(--border);
+    }
+    .logo { font-family: var(--serif); font-size: 22px; color: var(--text); }
+    .logo span { color: var(--accent); }
+
+    .page { max-width: 540px; margin: 48px auto; padding: 0 20px 80px; }
+
+    .card {
+      background: var(--card); border-radius: var(--radius);
+      box-shadow: 0 4px 24px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.04);
+      padding: 32px;
+    }
+    .card-title {
+      font-family: var(--serif); font-size: 22px; font-weight: 400;
+      margin-bottom: 24px; letter-spacing: -0.2px;
+    }
+
+    .booking-detail { display: flex; flex-direction: column; gap: 12px; margin-bottom: 28px; }
+    .detail-row { display: flex; gap: 12px; align-items: flex-start; font-size: 14px; }
+    .detail-icon { font-size: 16px; flex-shrink: 0; width: 22px; }
+    .detail-label { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.7px; font-weight: 600; margin-bottom: 1px; }
+    .detail-value { font-weight: 600; font-size: 15px; }
+
+    .ref-badge {
+      display: inline-block; background: var(--accent-light); color: var(--accent);
+      font-size: 13px; font-weight: 700; padding: 6px 14px; border-radius: 100px;
+      letter-spacing: 0.5px; margin-bottom: 24px;
+    }
+
+    .status-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 12px; font-weight: 600; padding: 4px 12px; border-radius: 100px;
+      margin-bottom: 24px; margin-left: 8px;
+    }
+    .status-pending   { background: #fff8e1; color: #b8860b; }
+    .status-confirmed { background: #e8f5e9; color: #2e7d32; }
+    .status-cancelled { background: #fdecea; color: #c62828; }
+    .status-completed { background: var(--bg); color: var(--muted); border: 1px solid var(--border); }
+
+    .divider { height: 1px; background: var(--border); margin: 24px 0; }
+
+    /* Modify form */
+    .modify-section { display: none; }
+    .modify-section.open { display: block; }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.7px; color: var(--muted); margin-bottom: 6px; }
+    .form-group input, .form-group select {
+      width: 100%; padding: 11px 14px; border: 1.5px solid var(--border); border-radius: 10px;
+      font-size: 14px; font-family: var(--sans); background: #fff; color: var(--text);
+      transition: border-color 0.15s;
+    }
+    .form-group input:focus, .form-group select:focus { outline: none; border-color: var(--accent); }
+
+    .btn { display: block; width: 100%; padding: 13px; border-radius: 10px; font-size: 15px; font-weight: 600; font-family: var(--sans); cursor: pointer; border: none; transition: opacity 0.15s, background 0.15s; margin-bottom: 10px; }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: var(--accent-dark); }
+    .btn-secondary { background: #fff; color: var(--text); border: 1.5px solid var(--border); }
+    .btn-secondary:hover { border-color: #b0a398; }
+    .btn-danger { background: #fdecea; color: #c62828; border: 1.5px solid #f5c6c4; }
+    .btn-danger:hover { background: #fbcfcd; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .msg { padding: 14px 16px; border-radius: 10px; font-size: 14px; margin-bottom: 16px; display: none; }
+    .msg.show { display: block; }
+    .msg-success { background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
+    .msg-error   { background: #fdecea; color: #c62828; border: 1px solid #f5c6c4; }
+
+    .loading { text-align: center; padding: 60px 0; color: var(--muted); font-size: 15px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spin { display: inline-block; width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: var(--muted); border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; margin-right: 8px; }
+
+    .cancelled-notice { text-align: center; padding: 40px 0; }
+    .cancelled-notice .big-icon { font-size: 48px; margin-bottom: 16px; }
+    .cancelled-notice p { color: var(--muted); font-size: 14px; line-height: 1.6; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="/pages/index.html" class="logo">Da <span>Mesa</span></a>
+</nav>
+
+<div class="page">
+  <div class="card" id="main-card">
+    <div class="loading"><span class="spin"></span>A carregar reserva...</div>
+  </div>
+</div>
+
+<script type="module">
+  import { supabase } from '/src/js/supabase.js'
+
+  ;(async () => {
+    const token = new URLSearchParams(location.search).get('token')
+    const card  = document.getElementById('main-card')
+
+    if (!token) { card.innerHTML = '<p style="color:var(--muted);text-align:center;padding:40px 0;">Link inválido.</p>'; return }
+
+    // Fetch booking by cancel_token
+    const { data: booking, error } = await supabase
+      .from('bookings')
+      .select('*, restaurants(name, address, city, slug, city)')
+      .eq('cancel_token', token)
+      .single()
+
+    if (error || !booking) {
+      card.innerHTML = '<p style="color:var(--muted);text-align:center;padding:40px 0;">Reserva não encontrada. O link pode ter expirado.</p>'
+      return
+    }
+
+    const restaurant = booking.restaurants
+    const isCancelled = booking.status === 'cancelled'
+    const isCompleted = booking.status === 'completed'
+    const canModify   = !isCancelled && !isCompleted
+
+    const statusLabel = { pending: 'Pendente', confirmed: 'Confirmada', cancelled: 'Cancelada', completed: 'Concluída', no_show: 'Não apareceu' }
+    const occasionLabel = { birthday:'🎂 Aniversário', anniversary:'💑 Aniversário de casal', date:'💕 Encontro romântico', business:'💼 Negócios', celebration:'🥂 Celebração', farewell:'👋 Despedida', other:'✨ Ocasião especial' }
+
+    const bookingDateFmt = new Date(booking.booking_date + 'T12:00').toLocaleDateString('pt-PT', { weekday:'long', day:'numeric', month:'long', year:'numeric' })
+    const partyLabel = booking.party_size === 1 ? '1 pessoa' : `${booking.party_size} pessoas`
+
+    // Today's Lisbon date for min date
+    const todayLisbon = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Lisbon' })
+    const maxDate = (() => { const d = new Date(); d.setMonth(d.getMonth() + 3); return d.toLocaleDateString('en-CA', { timeZone: 'Europe/Lisbon' }) })()
+
+    card.innerHTML = `
+      <div class="card-title">Gerir Reserva</div>
+
+      <div>
+        <span class="ref-badge">REF #${booking.reference_code}</span>
+        <span class="status-badge status-${booking.status}">${statusLabel[booking.status] ?? booking.status}</span>
+      </div>
+
+      <div class="booking-detail">
+        <div class="detail-row">
+          <div class="detail-icon">🍽️</div>
+          <div><div class="detail-label">Restaurante</div><div class="detail-value">${restaurant?.name ?? '—'}</div></div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-icon">📅</div>
+          <div><div class="detail-label">Data</div><div class="detail-value">${bookingDateFmt}</div></div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-icon">⏰</div>
+          <div><div class="detail-label">Hora</div><div class="detail-value">${booking.booking_time?.slice(0,5)}</div></div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-icon">👥</div>
+          <div><div class="detail-label">Pessoas</div><div class="detail-value">${partyLabel}</div></div>
+        </div>
+        ${booking.occasion ? `<div class="detail-row">
+          <div class="detail-icon">🎉</div>
+          <div><div class="detail-label">Ocasião</div><div class="detail-value">${occasionLabel[booking.occasion] ?? booking.occasion}</div></div>
+        </div>` : ''}
+        ${booking.special_requests ? `<div class="detail-row">
+          <div class="detail-icon">💬</div>
+          <div><div class="detail-label">Pedido especial</div><div class="detail-value">${booking.special_requests}</div></div>
+        </div>` : ''}
+      </div>
+
+      <div id="msg-success" class="msg msg-success">✓ Reserva atualizada com sucesso!</div>
+      <div id="msg-error"   class="msg msg-error">Erro ao atualizar reserva. Tenta novamente.</div>
+
+      ${isCancelled ? `
+        <div class="cancelled-notice">
+          <div class="big-icon">❌</div>
+          <p>Esta reserva foi cancelada.<br>Podes fazer uma nova reserva em <a href="/pages/restaurantes.html" style="color:var(--accent)">damesa.pt</a>.</p>
+        </div>
+      ` : isCompleted ? `
+        <div class="cancelled-notice">
+          <div class="big-icon">✅</div>
+          <p>Esta reserva já foi concluída.<br>Esperamos que tenhas gostado!</p>
+        </div>
+      ` : `
+        <div class="divider"></div>
+
+        <!-- Modify section (toggle) -->
+        <div id="modify-section" class="modify-section">
+          <div style="font-size:13px;font-weight:600;margin-bottom:16px;color:var(--text);">Alterar reserva</div>
+          <div class="form-group">
+            <label>Nova data</label>
+            <input type="date" id="new-date" min="${todayLisbon}" max="${maxDate}" value="${booking.booking_date}" />
+          </div>
+          <div class="form-group">
+            <label>Nova hora</label>
+            <select id="new-time">
+              <option value="12:00" ${booking.booking_time?.startsWith('12:00')?'selected':''}>12:00</option>
+              <option value="12:30" ${booking.booking_time?.startsWith('12:30')?'selected':''}>12:30</option>
+              <option value="13:00" ${booking.booking_time?.startsWith('13:00')?'selected':''}>13:00</option>
+              <option value="13:30" ${booking.booking_time?.startsWith('13:30')?'selected':''}>13:30</option>
+              <option value="14:00" ${booking.booking_time?.startsWith('14:00')?'selected':''}>14:00</option>
+              <option value="14:30" ${booking.booking_time?.startsWith('14:30')?'selected':''}>14:30</option>
+              <option value="19:00" ${booking.booking_time?.startsWith('19:00')?'selected':''}>19:00</option>
+              <option value="19:30" ${booking.booking_time?.startsWith('19:30')?'selected':''}>19:30</option>
+              <option value="20:00" ${booking.booking_time?.startsWith('20:00')?'selected':''}>20:00</option>
+              <option value="20:30" ${booking.booking_time?.startsWith('20:30')?'selected':''}>20:30</option>
+              <option value="21:00" ${booking.booking_time?.startsWith('21:00')?'selected':''}>21:00</option>
+              <option value="21:30" ${booking.booking_time?.startsWith('21:30')?'selected':''}>21:30</option>
+              <option value="22:00" ${booking.booking_time?.startsWith('22:00')?'selected':''}>22:00</option>
+              <option value="22:30" ${booking.booking_time?.startsWith('22:30')?'selected':''}>22:30</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Número de pessoas</label>
+            <select id="new-party">
+              ${[1,2,3,4,5,6,7,8].map(n => `<option value="${n}" ${booking.party_size===n?'selected':''}>${n === 8 ? '8+ pessoas' : n === 1 ? '1 pessoa' : n + ' pessoas'}</option>`).join('')}
+            </select>
+          </div>
+          <button class="btn btn-primary" id="confirm-modify-btn" onclick="confirmModify()">Guardar alterações</button>
+          <button class="btn btn-secondary" onclick="toggleModify(false)">Cancelar</button>
+          <div class="divider"></div>
+        </div>
+
+        <button class="btn btn-secondary" id="modify-btn" onclick="toggleModify(true)">✏️ Alterar data / hora / pessoas</button>
+        <button class="btn btn-danger" id="cancel-btn" onclick="cancelBooking()">✕ Cancelar reserva</button>
+
+        <p style="font-size:12px;color:var(--muted);text-align:center;margin-top:12px;line-height:1.6;">
+          Para cancelamentos com menos de 24h de antecedência,<br>considera contactar o restaurante diretamente.
+        </p>
+      `}
+
+      <div class="divider"></div>
+      <a href="/pages/restaurantes.html" style="font-size:13px;color:var(--muted);">← Ver outros restaurantes</a>
+    `
+
+    // Functions
+    window.toggleModify = function(open) {
+      document.getElementById('modify-section').classList.toggle('open', open)
+      document.getElementById('modify-btn').style.display = open ? 'none' : 'block'
+    }
+
+    window.confirmModify = async function() {
+      const btn = document.getElementById('confirm-modify-btn')
+      btn.textContent = 'A guardar...'; btn.disabled = true
+      hideMsg()
+
+      const newDate  = document.getElementById('new-date').value
+      const newTime  = document.getElementById('new-time').value
+      const newParty = parseInt(document.getElementById('new-party').value)
+
+      const { error } = await supabase.from('bookings').update({
+        booking_date: newDate,
+        booking_time: newTime,
+        party_size: newParty,
+        updated_at: new Date().toISOString()
+      }).eq('cancel_token', token)
+
+      if (error) {
+        showMsg('error', 'Erro ao atualizar reserva. Tenta novamente.')
+        btn.textContent = 'Guardar alterações'; btn.disabled = false
+        return
+      }
+
+      showMsg('success', '✓ Reserva atualizada com sucesso!')
+      // Update displayed date
+      const newDateFmt = new Date(newDate + 'T12:00').toLocaleDateString('pt-PT', { weekday:'long', day:'numeric', month:'long', year:'numeric' })
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+      btn.textContent = 'Guardar alterações'; btn.disabled = false
+      toggleModify(false)
+    }
+
+    window.cancelBooking = async function() {
+      const confirmed = window.confirm('Tens a certeza que queres cancelar esta reserva?')
+      if (!confirmed) return
+
+      const btn = document.getElementById('cancel-btn')
+      btn.textContent = 'A cancelar...'; btn.disabled = true
+      hideMsg()
+
+      const { error } = await supabase.from('bookings').update({
+        status: 'cancelled',
+        updated_at: new Date().toISOString()
+      }).eq('cancel_token', token)
+
+      if (error) {
+        showMsg('error', 'Erro ao cancelar. Tenta novamente.')
+        btn.textContent = '✕ Cancelar reserva'; btn.disabled = false
+        return
+      }
+
+      // Reload to show cancelled state
+      location.reload()
+    }
+
+    function showMsg(type, text) {
+      const el = document.getElementById(`msg-${type}`)
+      if (!el) return
+      el.textContent = text; el.classList.add('show')
+      setTimeout(() => el.classList.remove('show'), 5000)
+    }
+    function hideMsg() {
+      document.querySelectorAll('.msg').forEach(m => m.classList.remove('show'))
+    }
+  })()
+</script>
+
+</body>
+</html>

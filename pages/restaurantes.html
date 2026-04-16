@@ -209,6 +209,12 @@
       letter-spacing:0.5px; text-transform:uppercase;
       box-shadow:0 2px 8px rgba(0,0,0,0.25);
     }
+    .hot-badge-card {
+      position:absolute; top:8px; left:8px;
+      background:rgba(15,17,23,0.75); backdrop-filter:blur(6px);
+      color:#fff; font-size:10px; font-weight:700;
+      padding:3px 8px; border-radius:100px; letter-spacing:0.3px;
+    }
     .rest-card-body { padding:12px 14px 14px; }
     .rest-card-name { font-size:15px; font-weight:600; margin-bottom:4px; color:var(--text); }
     .rest-card-meta {
@@ -524,7 +530,7 @@
     'Contemporânea':'✨','Brasileira':'🌿','Árabe':'🧆','Tailandesa':'🌶️','Mexicana':'🌮'
   }
 
-  let all = [], activeCuisine = '', availabilityMap = {}, markers = {}, map
+  let all = [], activeCuisine = '', availabilityMap = {}, weekCount = {}, markers = {}, map
   let defaultIcon, highlightIcon
   let _selectedTime = '', _selectedParty = 2, _selectedPrice = '', _selectedCity = ''
 
@@ -656,6 +662,14 @@
     .select('*').eq('status','active').order('name')
   all = restaurants ?? []
 
+  // Last 7 days booking count per restaurant (hot badge + social proof)
+  const week7ago = new Date(Date.now() - 7 * 86400000).toLocaleDateString('en-CA', { timeZone: 'Europe/Lisbon' })
+  const { data: wk } = await supabase.from('bookings')
+    .select('restaurant_id')
+    .gte('booking_date', week7ago)
+    .in('status', ['pending','confirmed','completed'])
+  if (wk) wk.forEach(b => { weekCount[b.restaurant_id] = (weekCount[b.restaurant_id] ?? 0) + 1 })
+
   // Build city dropdown
   const cities = [...new Set(all.map(r => r.city).filter(Boolean))].sort()
   const cityBodyEl = document.getElementById('fdrop-city-body')
@@ -755,6 +769,11 @@
       const proBadge = (r.plan === 'pro')
         ? `<div class="pro-badge-card">⭐ Pro</div>`
         : ''
+      const count = weekCount[r.id] ?? 0
+      const hotBadge = count >= 3 ? `<div class="hot-badge-card">🔥 Popular</div>` : ''
+      const socialProof = count > 0
+        ? `<div style="font-size:11px;color:var(--muted);margin-top:4px;">🕐 ${count} reserva${count !== 1 ? 's' : ''} esta semana</div>`
+        : ''
       const slotsHtml = _selectedTime
         ? `<div class="rest-card-slots"><span class="slot-pill${!hasRoom?' full':''}">${_selectedTime}</span></div>`
         : ''
@@ -763,6 +782,7 @@
           <div class="rest-card-photo-wrap">
             <div class="rest-card-photo${photoExtra}" style="${photoStyle}">${photoContent}</div>
             ${proBadge}
+            ${hotBadge}
           </div>
           <div class="rest-card-body">
             <div class="rest-card-name">${r.name}</div>
@@ -774,6 +794,7 @@
               <span>📍 ${r.city??'Lisboa'}</span>
             </div>
             ${slotsHtml}
+            ${socialProof}
           </div>
         </a>`
     }).join('')

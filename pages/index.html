@@ -240,6 +240,12 @@
       color: #fff; font-size: 10px; font-weight: 700;
       padding: 4px 10px; border-radius: 100px; letter-spacing: 0.5px;
     }
+    .hot-badge-card {
+      position: absolute; top: 10px; left: 10px;
+      background: rgba(15,17,23,0.75); backdrop-filter: blur(6px);
+      color: #fff; font-size: 10px; font-weight: 700;
+      padding: 4px 10px; border-radius: 100px; letter-spacing: 0.3px;
+    }
     .avail-pills { position: absolute; bottom: 10px; left: 10px; display: flex; gap: 5px; }
     .avail-pill {
       background: rgba(15,17,23,0.80); backdrop-filter: blur(6px);
@@ -591,17 +597,26 @@
     }
 
     const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Lisbon' })
-    let all = [], avail = {}
+    const week7ago = new Date(Date.now() - 7 * 86400000).toLocaleDateString('en-CA', { timeZone: 'Europe/Lisbon' })
+    let all = [], avail = {}, weekCount = {}
 
     const { data } = await supabase.from('restaurants').select('*').eq('status','active').order('name')
     all = data ?? []
 
+    // Today's availability (for slot pills)
     const { data: bk } = await supabase.from('bookings')
       .select('restaurant_id,party_size')
       .eq('booking_date', today)
       .eq('booking_time', '20:00:00')
       .in('status', ['pending','confirmed'])
     if (bk) bk.forEach(b => { avail[b.restaurant_id] = (avail[b.restaurant_id] ?? 0) + b.party_size })
+
+    // Last 7 days booking count per restaurant (for hot badge + social proof)
+    const { data: wk } = await supabase.from('bookings')
+      .select('restaurant_id')
+      .gte('booking_date', week7ago)
+      .in('status', ['pending','confirmed','completed'])
+    if (wk) wk.forEach(b => { weekCount[b.restaurant_id] = (weekCount[b.restaurant_id] ?? 0) + 1 })
 
     render(all)
     trackEvent('page_view', { page: 'home' })
@@ -622,15 +637,22 @@
         const photo = r.cover_image
           ? `<img src="${r.cover_image}" alt="${r.name}" loading="lazy">`
           : `<div class="rest-card-photo-icon">🍽️</div>`
+        const count = weekCount[r.id] ?? 0
+        const isHot = count >= 3
+        const socialProof = count > 0
+          ? `<div style="font-size:11px;color:var(--muted);margin-top:4px;">🕐 ${count} reserva${count !== 1 ? 's' : ''} esta semana</div>`
+          : ''
         return `<a class="rest-card" href="/restaurante/${citySlug(r.city)}/${r.slug}">
           <div class="rest-card-photo">
             ${photo}
             ${r.plan === 'pro' ? '<div class="pro-badge-card">⭐ Pro</div>' : ''}
+            ${isHot ? '<div class="hot-badge-card">🔥 Popular</div>' : ''}
             ${slots ? `<div class="avail-pills">${slots}</div>` : ''}
           </div>
           <div class="rest-card-body">
             <div class="rest-card-name">${r.name}</div>
             <div class="rest-card-meta">${r.cuisine_type ?? ''} · <span class="price-pill">${r.price_range ?? '€€'}</span> · 📍 ${r.city ?? 'Lisboa'}</div>
+            ${socialProof}
           </div>
         </a>`
       }).join('')

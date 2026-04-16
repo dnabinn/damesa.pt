@@ -737,7 +737,10 @@
         <td>${b.diner_name}</td>
         <td>${b.party_size}</td>
         <td style="font-size:12px;color:var(--muted)">${b.diner_phone}<br>${b.diner_email}</td>
-        <td style="font-size:12px;color:var(--muted)">${b.special_requests || '—'}</td>
+        <td style="font-size:12px;color:var(--muted)">
+          ${b.occasion ? `<span style="font-weight:600;color:var(--accent)">${occasionLabel(b.occasion)}</span><br>` : ''}
+          ${b.special_requests || (!b.occasion ? '—' : '')}
+        </td>
         <td><span class="status status-${b.status}">${translateStatus(b.status)}</span></td>
         <td>
           ${b.status === 'pending' ? `<button class="action-btn btn-confirm" onclick="updateStatus('${b.id}','confirmed')">Confirmar</button>` : ''}
@@ -766,6 +769,9 @@
 
   function translateStatus(s) {
     return { pending:'Pendente', confirmed:'Confirmada', cancelled:'Cancelada', completed:'Concluída', no_show:'Não apareceu' }[s] ?? s
+  }
+  function occasionLabel(o) {
+    return { birthday:'🎂 Aniversário', anniversary:'💑 Aniversário de casal', date:'💕 Encontro romântico', business:'💼 Negócios', celebration:'🥂 Celebração', farewell:'👋 Despedida', other:'✨ Ocasião especial' }[o] ?? o
   }
 
   subscribeToBookings(restaurant.id, () => loadBookings())

@@ -730,8 +730,21 @@
               <input type="tel" id="diner-phone" placeholder="+351 9XX XXX XXX" />
             </div>
             <div class="form-group">
+              <label>Ocasião (opcional)</label>
+              <select id="occasion" style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:var(--sans);background:#fff;color:var(--text);cursor:pointer;appearance:none;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238c7d72' stroke-width='1.5' fill='none'/%3E%3C/svg%3E\");background-repeat:no-repeat;background-position:right 14px center;">
+                <option value="">Sem ocasião especial</option>
+                <option value="birthday">🎂 Aniversário</option>
+                <option value="anniversary">💑 Aniversário de casal</option>
+                <option value="date">💕 Encontro romântico</option>
+                <option value="business">💼 Jantar de negócios</option>
+                <option value="celebration">🥂 Celebração especial</option>
+                <option value="farewell">👋 Despedida</option>
+                <option value="other">✨ Outra ocasião</option>
+              </select>
+            </div>
+            <div class="form-group">
               <label>Pedido especial (opcional)</label>
-              <input type="text" id="special-requests" placeholder="Alergias, aniversário..." />
+              <input type="text" id="special-requests" placeholder="Alergias, pedidos especiais..." />
             </div>
             <button class="bcta" onclick="submitBooking()">Confirmar reserva</button>
             <button class="back-btn" onclick="goS(1)">← Voltar</button>
@@ -743,6 +756,14 @@
               <div class="conf-icon">🎉</div>
               <div class="conf-ref" id="conf-ref">REF #--------</div>
               <p class="conf-msg">Mesa reservada! Enviámos a confirmação para o seu email.</p>
+              <a id="cal-btn" href="#" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:7px;background:#fff;border:1.5px solid var(--border);color:var(--text);padding:10px 20px;border-radius:100px;font-size:13px;font-weight:600;margin-bottom:10px;transition:border-color 0.15s;">
+                📅 Adicionar ao Google Calendar
+              </a>
+              <br>
+              <a id="manage-btn" href="#" style="display:inline-flex;align-items:center;gap:6px;color:var(--muted);font-size:13px;margin-bottom:16px;">
+                ✏️ Alterar ou cancelar reserva
+              </a>
+              <br>
               <a href="/pages/restaurantes.html" class="conf-back">← Ver outros restaurantes</a>
             </div>
           </div>
@@ -1040,13 +1061,15 @@
     const btn = document.querySelector('#bs2 .bcta')
     btn.textContent = 'A confirmar...'
     btn.disabled = true
+    const bookingDate = document.getElementById('bdate').value
+    const bookingTime = selectedSlot.dataset.time
     const { booking, error } = await createBooking({
       restaurantId: restaurant.id,
       dinerName: name, dinerEmail: email, dinerPhone: phone,
-      bookingDate: document.getElementById('bdate').value,
-      bookingTime: selectedSlot.dataset.time,
+      bookingDate, bookingTime,
       partySize: parseInt(document.getElementById('bparty').value),
       specialRequests: document.getElementById('special-requests').value,
+      occasion: document.getElementById('occasion').value || null,
       dinerId: _session?.user?.id || null
     })
     if (error) {
@@ -1054,6 +1077,27 @@
       btn.textContent = 'Confirmar reserva'; btn.disabled = false; return
     }
     document.getElementById('conf-ref').textContent = `REF #${booking.reference_code}`
+
+    // Google Calendar link
+    const dtStart = (bookingDate + 'T' + bookingTime).replace(/-|:/g, '') + '00'
+    const dtEnd   = (() => {
+      const d = new Date(bookingDate + 'T' + bookingTime); d.setHours(d.getHours() + 2)
+      return d.toISOString().replace(/-|:|\..*$/g, '').slice(0, 15) + '00'
+    })()
+    const calUrl = 'https://calendar.google.com/calendar/render?action=TEMPLATE' +
+      '&text=' + encodeURIComponent(`Reserva ${restaurant.name}`) +
+      '&dates=' + dtStart + '/' + dtEnd +
+      '&details=' + encodeURIComponent(`REF #${booking.reference_code} · ${restaurant.name} · Da Mesa`) +
+      '&location=' + encodeURIComponent(restaurant.address || restaurant.city || 'Lisboa')
+    document.getElementById('cal-btn').href = calUrl
+
+    // Manage booking link
+    if (booking.cancel_token) {
+      document.getElementById('manage-btn').href = `/pages/manage-booking.html?token=${booking.cancel_token}`
+    } else {
+      document.getElementById('manage-btn').style.display = 'none'
+    }
+
     trackEvent('booking_created', { restaurant_id: restaurant.id, party_size: booking.party_size })
     goS(3)
   }

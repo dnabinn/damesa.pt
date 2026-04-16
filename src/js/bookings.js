@@ -4,23 +4,28 @@ import { supabase } from './supabase.js'
 export async function createBooking(bookingData) {
   const {
     restaurantId, dinerName, dinerEmail, dinerPhone,
-    bookingDate, bookingTime, partySize, specialRequests, dinerId
+    bookingDate, bookingTime, partySize, specialRequests, occasion, dinerId
   } = bookingData
+
+  const row = {
+    restaurant_id: restaurantId,
+    diner_id: dinerId || null,
+    diner_name: dinerName,
+    diner_email: dinerEmail,
+    diner_phone: dinerPhone,
+    booking_date: bookingDate,
+    booking_time: bookingTime,
+    party_size: partySize,
+    special_requests: specialRequests || null,
+    status: 'pending'
+  }
+  // occasion & cancel_token only inserted if columns exist (added via migration)
+  if (occasion) row.occasion = occasion
+  // cancel_token generated server-side by DB default; we read it back via .select()
 
   const { data, error } = await supabase
     .from('bookings')
-    .insert({
-      restaurant_id: restaurantId,
-      diner_id: dinerId || null,
-      diner_name: dinerName,
-      diner_email: dinerEmail,
-      diner_phone: dinerPhone,
-      booking_date: bookingDate,
-      booking_time: bookingTime,
-      party_size: partySize,
-      special_requests: specialRequests,
-      status: 'pending'
-    })
+    .insert(row)
     .select()
     .single()
 
