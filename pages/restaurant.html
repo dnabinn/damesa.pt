@@ -455,6 +455,38 @@
     }
     .no-fee-badge .check { color: #27ae60; }
 
+    /* ── WAITLIST ────────────────────────────────── */
+    .waitlist-section {
+      margin-top: 16px; border: 1px solid var(--border);
+      border-radius: var(--radius); background: var(--bg);
+      overflow: hidden;
+    }
+    .waitlist-trigger {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 18px; gap: 12px; flex-wrap: wrap;
+    }
+    .waitlist-trigger span { font-size: 13px; color: var(--muted); }
+    .waitlist-open-btn {
+      background: none; border: 1px solid var(--border); border-radius: 8px;
+      padding: 7px 14px; font-size: 13px; color: var(--text); cursor: pointer;
+      font-family: var(--sans); font-weight: 500; white-space: nowrap;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .waitlist-open-btn:hover { border-color: var(--text); background: #fff; }
+    .waitlist-form-wrap {
+      display: none; padding: 0 18px 18px; border-top: 1px solid var(--border);
+    }
+    .waitlist-form-wrap.open { display: block; }
+    .wl-title { font-size: 14px; font-weight: 600; padding: 14px 0 10px; }
+    .wl-row { display: flex; gap: 10px; }
+    .wl-row .form-group { flex: 1; }
+    .waitlist-confirmed {
+      padding: 20px 18px; text-align: center;
+    }
+    .waitlist-confirmed .wl-ok-icon { font-size: 28px; margin-bottom: 8px; }
+    .waitlist-confirmed .wl-ok-title { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+    .waitlist-confirmed .wl-ok-msg { font-size: 13px; color: var(--muted); }
+
     /* ── MOBILE FLOATING CTA ─────────────────────── */
     .mobile-reserve-cta {
       display: none; position: fixed; bottom: 20px; left: 50%;
@@ -785,6 +817,52 @@
             </div>
           </div>
 
+        </div>
+      </div>
+      </div>
+
+      <!-- WAITLIST -->
+      <div class="waitlist-section" id="waitlist-section">
+        <div class="waitlist-trigger" id="waitlist-trigger">
+          <span>Não encontrou o horário certo?</span>
+          <button class="waitlist-open-btn" onclick="openWaitlist()">Entrar na lista de espera →</button>
+        </div>
+        <div class="waitlist-form-wrap" id="waitlist-form-wrap">
+          <div class="wl-title">Lista de espera</div>
+          <div class="wl-row">
+            <div class="form-group">
+              <label>Nome</label>
+              <input type="text" id="wl-name" placeholder="O seu nome" />
+            </div>
+            <div class="form-group">
+              <label>Email</label>
+              <input type="email" id="wl-email" placeholder="email@exemplo.pt" />
+            </div>
+          </div>
+          <div class="wl-row">
+            <div class="form-group">
+              <label>Data preferida</label>
+              <input type="date" id="wl-date" />
+            </div>
+            <div class="form-group">
+              <label>Pessoas</label>
+              <select id="wl-party" style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:var(--sans);background:#fff;color:var(--text);">
+                <option value="1">1 pessoa</option>
+                <option value="2" selected>2 pessoas</option>
+                <option value="3">3 pessoas</option>
+                <option value="4">4 pessoas</option>
+                <option value="5">5 pessoas</option>
+                <option value="6">6+</option>
+              </select>
+            </div>
+          </div>
+          <button class="bcta" onclick="submitWaitlist()" style="margin-top:4px;">Entrar na lista →</button>
+          <button class="back-btn" onclick="closeWaitlist()" style="margin-top:8px;">Cancelar</button>
+        </div>
+        <div class="waitlist-confirmed" id="waitlist-confirmed" style="display:none;">
+          <div class="wl-ok-icon">✅</div>
+          <div class="wl-ok-title">Estás na lista de espera!</div>
+          <div class="wl-ok-msg">Avisamos-te assim que uma mesa fique disponível.</div>
         </div>
       </div>
       </div><!-- /tab-booking -->
@@ -1377,6 +1455,61 @@
   }
 
   trackEvent('restaurant_view', { slug, restaurant_id: restaurant.id })
+
+  // ── WAITLIST ──────────────────────────────────────────────
+  window.openWaitlist = function() {
+    document.getElementById('waitlist-form-wrap').classList.add('open')
+    document.getElementById('waitlist-trigger').style.display = 'none'
+    // Pre-fill from session
+    if (_session) {
+      const meta = _session.user.user_metadata
+      document.getElementById('wl-name').value = meta?.full_name ?? ''
+      document.getElementById('wl-email').value = _session.user.email ?? ''
+    }
+    // Pre-fill date with selected booking date if any
+    const bd = document.getElementById('bdate')?.value
+    if (bd) document.getElementById('wl-date').value = bd
+  }
+
+  window.closeWaitlist = function() {
+    document.getElementById('waitlist-form-wrap').classList.remove('open')
+    document.getElementById('waitlist-trigger').style.display = 'flex'
+  }
+
+  window.submitWaitlist = async function() {
+    const name  = document.getElementById('wl-name').value.trim()
+    const email = document.getElementById('wl-email').value.trim()
+    const date  = document.getElementById('wl-date').value
+    const party = parseInt(document.getElementById('wl-party').value) || 2
+
+    if (!name || !email || !date) {
+      alert('Por favor preenche o nome, email e data.')
+      return
+    }
+
+    const btn = document.querySelector('#waitlist-form-wrap .bcta')
+    btn.textContent = 'A entrar...'
+    btn.disabled = true
+
+    const { error } = await supabase.from('waitlist').insert({
+      restaurant_id: restaurant.id,
+      diner_name: name,
+      diner_email: email,
+      desired_date: date,
+      party_size: party
+    })
+
+    if (error) {
+      btn.textContent = 'Entrar na lista →'
+      btn.disabled = false
+      alert('Erro ao entrar na lista. Tenta novamente.')
+      return
+    }
+
+    document.getElementById('waitlist-form-wrap').style.display = 'none'
+    document.getElementById('waitlist-trigger').style.display = 'none'
+    document.getElementById('waitlist-confirmed').style.display = 'block'
+  }
 </script>
 
 <!-- LIGHTBOX -->
