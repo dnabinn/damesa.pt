@@ -305,6 +305,112 @@
     }
     footer strong { color:var(--text); font-family:Georgia,serif; }
 
+    /* ── CUSTOM CALENDAR ─────────────────────────────── */
+    .fdrop-cal { min-width:320px; padding:20px; }
+    .cal-header {
+      display:flex; align-items:center; justify-content:space-between;
+      margin-bottom:18px;
+    }
+    .cal-nav {
+      background:none; border:1.5px solid var(--border); border-radius:50%;
+      width:34px; height:34px; cursor:pointer; font-size:18px; color:var(--text);
+      display:flex; align-items:center; justify-content:center;
+      transition:all 0.15s; flex-shrink:0; line-height:1;
+    }
+    .cal-nav:hover { background:var(--bg); border-color:var(--text); }
+    .cal-nav:disabled { opacity:0.3; cursor:default; }
+    .cal-month-year { font-size:16px; font-weight:700; color:var(--text); letter-spacing:-0.2px; }
+    .cal-weekdays {
+      display:grid; grid-template-columns:repeat(7,1fr);
+      text-align:center; margin-bottom:6px;
+    }
+    .cal-weekdays span {
+      font-size:11px; font-weight:600; color:var(--muted);
+      text-transform:uppercase; letter-spacing:0.5px; padding:4px 0;
+    }
+    .cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:3px; }
+    .cal-day {
+      aspect-ratio:1; display:flex; align-items:center; justify-content:center;
+      border-radius:50%; font-size:13px; cursor:pointer; font-weight:500;
+      color:var(--text); transition:background 0.12s, color 0.12s;
+      user-select:none;
+    }
+    .cal-day:hover:not(.cal-day-disabled):not(.cal-day-sel) { background:var(--bg); }
+    .cal-day-today {
+      font-weight:700; position:relative;
+      border:2px solid var(--accent); color:var(--accent);
+    }
+    .cal-day-sel {
+      background:var(--accent) !important; color:#fff !important;
+      font-weight:700; border:none;
+    }
+    .cal-day-disabled { color:#d8d0c8; cursor:default; pointer-events:none; }
+    .cal-day-empty { pointer-events:none; }
+    .cal-footer {
+      display:flex; align-items:center; justify-content:space-between;
+      padding-top:14px; margin-top:14px; border-top:1px solid var(--border);
+    }
+    .cal-clear-btn {
+      font-size:13px; color:var(--muted); background:none; border:none;
+      cursor:pointer; padding:4px 0; transition:color 0.15s;
+    }
+    .cal-clear-btn:hover { color:var(--accent); }
+    .cal-confirm-btn {
+      font-size:13px; font-weight:600; color:var(--accent); background:none;
+      border:none; cursor:pointer; padding:4px 0;
+    }
+
+    /* ── TIME / PARTY GRID ────────────────────────────── */
+    .picker-panel { padding:16px 18px 18px; min-width:290px; }
+    .picker-any {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:11px 14px; border:1.5px solid var(--border); border-radius:10px;
+      font-size:14px; cursor:pointer; margin-bottom:14px;
+      color:var(--muted); transition:all 0.15s;
+    }
+    .picker-any:hover { border-color:#b0a398; color:var(--text); }
+    .picker-any.sel { border-color:var(--accent); background:var(--accent-light); color:var(--accent); font-weight:600; }
+    .picker-group-label {
+      font-size:10px; text-transform:uppercase; letter-spacing:1.2px;
+      color:var(--muted); font-weight:700; margin:10px 0 8px;
+    }
+    .picker-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:7px; margin-bottom:12px; }
+    .time-pill {
+      padding:10px 6px; border:1.5px solid var(--border); border-radius:10px;
+      font-size:13px; font-weight:500; text-align:center; cursor:pointer;
+      color:var(--text); transition:all 0.12s; user-select:none;
+    }
+    .time-pill:hover:not(.time-disabled) { border-color:var(--accent); color:var(--accent); background:var(--accent-light); }
+    .time-pill.sel { background:var(--accent); color:#fff; border-color:var(--accent); font-weight:600; }
+    .time-pill.time-disabled { color:#d8d0c8; cursor:default; pointer-events:none; }
+
+    /* ── MOBILE BOTTOM SHEET ──────────────────────────── */
+    .sheet-overlay {
+      display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4);
+      z-index:1990; backdrop-filter:blur(2px);
+    }
+    .sheet-overlay.open { display:block; }
+    @media(max-width:767px) {
+      .fdrop.fdrop-sheet {
+        position:fixed !important; bottom:0 !important; left:0 !important;
+        right:0 !important; top:auto !important;
+        border-radius:20px 20px 0 0; z-index:2000 !important;
+        max-height:88vh; overflow-y:auto;
+        box-shadow:0 -4px 40px rgba(0,0,0,0.18) !important;
+        animation:slideUp 0.28s cubic-bezier(0.32,0.72,0,1) !important;
+      }
+      @keyframes slideUp { from { transform:translateY(100%); opacity:0.6; } to { transform:translateY(0); opacity:1; } }
+      .fdrop-cal { min-width:unset; }
+      .picker-panel { min-width:unset; }
+      .sheet-handle {
+        width:36px; height:4px; background:var(--border);
+        border-radius:2px; margin:10px auto 4px; display:block;
+      }
+    }
+    @media(min-width:768px) {
+      .sheet-handle { display:none; }
+    }
+
     /* ── FAVORITES ────────────────────────────────────── */
     .fav-btn {
       position:absolute; bottom:8px; right:8px;
@@ -355,15 +461,16 @@
       </div>
     </div>
 
-    <!-- Date (native input) -->
+    <!-- Date (custom calendar) -->
     <div class="fpill-wrap">
-      <div class="fpill fpill-date" id="fpill-date" onclick="(function(){var i=document.getElementById('sb-date');try{i.showPicker()}catch(e){i.focus();i.click()}})()">
+      <div class="fpill" id="fpill-date" onclick="openCal()">
         <span class="fpill-icon">📅</span>
         <span class="fpill-lbl" id="fpill-date-val">Hoje</span>
         <span class="fpill-arrow">▾</span>
-        <input type="date" id="sb-date" onchange="onDateChange()" />
       </div>
     </div>
+    <!-- Hidden date value holder -->
+    <input type="date" id="sb-date" style="display:none" onchange="onDateChange()" />
 
     <!-- Time -->
     <div class="fpill-wrap">
@@ -403,54 +510,79 @@
 
   </div><!-- /.filter-pills -->
 
-  <!-- All dropdowns live here — direct children of .top-filters (position:relative; z-index:500)
-       so they always paint above the map panel -->
+  <!-- All dropdowns — direct children of .top-filters so they paint above the map -->
 
   <!-- City dropdown -->
-  <div class="fdrop" id="fdrop-city">
+  <div class="fdrop fdrop-sheet" id="fdrop-city">
+    <span class="sheet-handle"></span>
     <div class="fdrop-body" id="fdrop-city-body"></div>
   </div>
 
-  <!-- Time dropdown -->
-  <div class="fdrop" id="fdrop-time">
-    <div class="fdrop-body">
-          <div class="fdrop-item sel" data-val="" onclick="pickTime('')">
-            <span>Qualquer hora</span><span class="fdrop-check">✓</span>
-          </div>
-          <div class="fdrop-divider"></div>
-          <div class="fdrop-group">Almoço</div>
-          <div class="fdrop-item" data-val="12:00" onclick="pickTime('12:00')"><span>12:00</span><span class="fdrop-check">✓</span></div>
-          <div class="fdrop-item" data-val="12:30" onclick="pickTime('12:30')"><span>12:30</span><span class="fdrop-check">✓</span></div>
-          <div class="fdrop-item" data-val="13:00" onclick="pickTime('13:00')"><span>13:00</span><span class="fdrop-check">✓</span></div>
-          <div class="fdrop-item" data-val="13:30" onclick="pickTime('13:30')"><span>13:30</span><span class="fdrop-check">✓</span></div>
-          <div class="fdrop-item" data-val="14:00" onclick="pickTime('14:00')"><span>14:00</span><span class="fdrop-check">✓</span></div>
-          <div class="fdrop-item" data-val="14:30" onclick="pickTime('14:30')"><span>14:30</span><span class="fdrop-check">✓</span></div>
-          <div class="fdrop-item" data-val="15:00" onclick="pickTime('15:00')"><span>15:00</span><span class="fdrop-check">✓</span></div>
-          <div class="fdrop-divider"></div>
-          <div class="fdrop-group">Jantar</div>
-          <div class="fdrop-item" data-val="19:00" onclick="pickTime('19:00')"><span>19:00</span><span class="fdrop-check">✓</span></div>
-          <div class="fdrop-item" data-val="19:30" onclick="pickTime('19:30')"><span>19:30</span><span class="fdrop-check">✓</span></div>
-          <div class="fdrop-item" data-val="20:00" onclick="pickTime('20:00')"><span>20:00</span><span class="fdrop-check">✓</span></div>
-          <div class="fdrop-item" data-val="20:30" onclick="pickTime('20:30')"><span>20:30</span><span class="fdrop-check">✓</span></div>
-          <div class="fdrop-item" data-val="21:00" onclick="pickTime('21:00')"><span>21:00</span><span class="fdrop-check">✓</span></div>
-          <div class="fdrop-item" data-val="21:30" onclick="pickTime('21:30')"><span>21:30</span><span class="fdrop-check">✓</span></div>
-          <div class="fdrop-item" data-val="22:00" onclick="pickTime('22:00')"><span>22:00</span><span class="fdrop-check">✓</span></div>
-          <div class="fdrop-item" data-val="22:30" onclick="pickTime('22:30')"><span>22:30</span><span class="fdrop-check">✓</span></div>
-          <div class="fdrop-item" data-val="23:00" onclick="pickTime('23:00')"><span>23:00</span><span class="fdrop-check">✓</span></div>
+  <!-- Custom calendar dropdown -->
+  <div class="fdrop fdrop-cal fdrop-sheet" id="fdrop-date">
+    <span class="sheet-handle"></span>
+    <div class="cal-header">
+      <button class="cal-nav" id="cal-prev" onclick="calNav(-1)">‹</button>
+      <div class="cal-month-year" id="cal-month-year">—</div>
+      <button class="cal-nav" id="cal-next" onclick="calNav(1)">›</button>
     </div>
-  </div><!-- /#fdrop-time -->
+    <div class="cal-weekdays">
+      <span>Seg</span><span>Ter</span><span>Qua</span>
+      <span>Qui</span><span>Sex</span><span>Sáb</span><span>Dom</span>
+    </div>
+    <div class="cal-grid" id="cal-grid"></div>
+    <div class="cal-footer">
+      <button class="cal-clear-btn" onclick="clearCalDate()">Limpar</button>
+      <button class="cal-confirm-btn" onclick="closeAllDrops()">Confirmar</button>
+    </div>
+  </div>
 
-  <!-- Party dropdown -->
-  <div class="fdrop" id="fdrop-party">
-    <div class="fdrop-body">
-      <div class="fdrop-item" data-val="1" onclick="pickParty(1,'1 pessoa')"><span>1 pessoa</span><span class="fdrop-check">✓</span></div>
-      <div class="fdrop-item sel" data-val="2" onclick="pickParty(2,'2 pessoas')"><span>2 pessoas</span><span class="fdrop-check">✓</span></div>
-      <div class="fdrop-item" data-val="3" onclick="pickParty(3,'3 pessoas')"><span>3 pessoas</span><span class="fdrop-check">✓</span></div>
-      <div class="fdrop-item" data-val="4" onclick="pickParty(4,'4 pessoas')"><span>4 pessoas</span><span class="fdrop-check">✓</span></div>
-      <div class="fdrop-item" data-val="5" onclick="pickParty(5,'5 pessoas')"><span>5 pessoas</span><span class="fdrop-check">✓</span></div>
-      <div class="fdrop-item" data-val="6" onclick="pickParty(6,'6 pessoas')"><span>6 pessoas</span><span class="fdrop-check">✓</span></div>
-      <div class="fdrop-item" data-val="7" onclick="pickParty(7,'7 pessoas')"><span>7 pessoas</span><span class="fdrop-check">✓</span></div>
-      <div class="fdrop-item" data-val="8" onclick="pickParty(8,'8+ pessoas')"><span>8+ pessoas</span><span class="fdrop-check">✓</span></div>
+  <!-- Time picker grid -->
+  <div class="fdrop fdrop-sheet" id="fdrop-time">
+    <span class="sheet-handle"></span>
+    <div class="picker-panel">
+      <div class="picker-any sel" data-val="" onclick="pickTime('')">
+        <span>Qualquer hora</span><span style="font-size:13px;color:var(--accent)">✓</span>
+      </div>
+      <div class="picker-group-label">Almoço</div>
+      <div class="picker-grid">
+        <div class="time-pill" data-val="12:00" onclick="pickTime('12:00')">12:00</div>
+        <div class="time-pill" data-val="12:30" onclick="pickTime('12:30')">12:30</div>
+        <div class="time-pill" data-val="13:00" onclick="pickTime('13:00')">13:00</div>
+        <div class="time-pill" data-val="13:30" onclick="pickTime('13:30')">13:30</div>
+        <div class="time-pill" data-val="14:00" onclick="pickTime('14:00')">14:00</div>
+        <div class="time-pill" data-val="14:30" onclick="pickTime('14:30')">14:30</div>
+        <div class="time-pill" data-val="15:00" onclick="pickTime('15:00')">15:00</div>
+      </div>
+      <div class="picker-group-label">Jantar</div>
+      <div class="picker-grid">
+        <div class="time-pill" data-val="19:00" onclick="pickTime('19:00')">19:00</div>
+        <div class="time-pill" data-val="19:30" onclick="pickTime('19:30')">19:30</div>
+        <div class="time-pill" data-val="20:00" onclick="pickTime('20:00')">20:00</div>
+        <div class="time-pill" data-val="20:30" onclick="pickTime('20:30')">20:30</div>
+        <div class="time-pill" data-val="21:00" onclick="pickTime('21:00')">21:00</div>
+        <div class="time-pill" data-val="21:30" onclick="pickTime('21:30')">21:30</div>
+        <div class="time-pill" data-val="22:00" onclick="pickTime('22:00')">22:00</div>
+        <div class="time-pill" data-val="22:30" onclick="pickTime('22:30')">22:30</div>
+        <div class="time-pill" data-val="23:00" onclick="pickTime('23:00')">23:00</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Party picker grid -->
+  <div class="fdrop fdrop-sheet" id="fdrop-party">
+    <span class="sheet-handle"></span>
+    <div class="picker-panel">
+      <div class="picker-grid" style="grid-template-columns:repeat(3,1fr)">
+        <div class="time-pill" data-val="1" onclick="pickParty(1,'1 pessoa')">1 pessoa</div>
+        <div class="time-pill sel" data-val="2" onclick="pickParty(2,'2 pessoas')">2 pessoas</div>
+        <div class="time-pill" data-val="3" onclick="pickParty(3,'3 pessoas')">3 pessoas</div>
+        <div class="time-pill" data-val="4" onclick="pickParty(4,'4 pessoas')">4 pessoas</div>
+        <div class="time-pill" data-val="5" onclick="pickParty(5,'5 pessoas')">5 pessoas</div>
+        <div class="time-pill" data-val="6" onclick="pickParty(6,'6 pessoas')">6 pessoas</div>
+        <div class="time-pill" data-val="7" onclick="pickParty(7,'7 pessoas')">7 pessoas</div>
+        <div class="time-pill" data-val="8" onclick="pickParty(8,'8+ pessoas')">8+ pessoas</div>
+      </div>
     </div>
   </div>
 
@@ -505,11 +637,15 @@
   <strong>Da Mesa</strong> · <a href="mailto:ola@damesa.pt">ola@damesa.pt</a> · <a href="/pages/privacy.html">Privacidade</a> · <a href="/pages/terms.html">Termos</a>
 </footer>
 
+<div class="sheet-overlay" id="sheet-overlay" onclick="closeAllDrops()"></div>
+
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-<!-- Dropdown state -->
+<!-- Dropdown + Calendar state -->
 <script>
   let _openDrop = null
+  const _overlay = document.getElementById('sheet-overlay')
+
   function toggleDrop(name) {
     const drop    = document.getElementById('fdrop-' + name)
     const pill    = document.getElementById('fpill-' + name)
@@ -518,33 +654,116 @@
     const isOpen = drop.classList.contains('open')
     closeAllDrops()
     if (!isOpen) {
-      // Position dropdown relative to .top-filters (position:relative; z-index:500)
-      // so it paints above the map panel in desktop view
-      const fRect = filters.getBoundingClientRect()
-      const pRect = pill.getBoundingClientRect()
-      drop.style.top  = (pRect.bottom - fRect.top + 6) + 'px'
-      drop.style.left = Math.max(0, pRect.left - fRect.left) + 'px'
-      drop.style.maxHeight = (window.innerHeight - pRect.bottom - 16) + 'px'
-      drop.style.overflowY = 'auto'
+      const isMobile = window.innerWidth < 768
+      if (!isMobile) {
+        // Desktop: position relative to .top-filters
+        const fRect = filters.getBoundingClientRect()
+        const pRect = pill.getBoundingClientRect()
+        drop.style.top  = (pRect.bottom - fRect.top + 6) + 'px'
+        drop.style.left = Math.max(0, pRect.left - fRect.left) + 'px'
+        drop.style.maxHeight = (window.innerHeight - pRect.bottom - 20) + 'px'
+        drop.style.overflowY = 'auto'
+      } else {
+        // Mobile: bottom sheet — clear inline positioning
+        drop.style.top = ''; drop.style.left = '';
+        drop.style.maxHeight = ''; drop.style.overflowY = '';
+      }
       drop.classList.add('open')
       pill.classList.add('open')
+      _overlay.classList.add('open')
       _openDrop = name
     }
   }
+
   function closeAllDrops() {
     document.querySelectorAll('.fdrop.open').forEach(d => d.classList.remove('open'))
     document.querySelectorAll('.fpill.open').forEach(p => p.classList.remove('open'))
+    _overlay.classList.remove('open')
     _openDrop = null
   }
+
   document.addEventListener('click', e => {
-    if (!e.target.closest('.fpill-wrap') && !e.target.closest('.fdrop')) closeAllDrops()
+    if (!e.target.closest('.fpill-wrap') && !e.target.closest('.fdrop') && !e.target.closest('#sb-date') && e.target !== _overlay) closeAllDrops()
   })
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeAllDrops() })
 
   function setDropSel(dropId, val) {
-    document.querySelectorAll(`#${dropId} .fdrop-item`).forEach(item => {
+    // Works for both .fdrop-item and .time-pill / .picker-any
+    document.querySelectorAll(`#${dropId} [data-val]`).forEach(item => {
       item.classList.toggle('sel', item.dataset.val === String(val))
     })
+  }
+
+  // ── CUSTOM CALENDAR ─────────────────────────────────
+  const MONTHS_PT = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho',
+                     'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']
+  let _calYear, _calMonth
+
+  window.openCal = function() {
+    const todayStr = new Date().toLocaleDateString('en-CA', { timeZone:'Europe/Lisbon' })
+    const selDate  = document.getElementById('sb-date').value || todayStr
+    const [y, m]   = selDate.split('-').map(Number)
+    _calYear = y; _calMonth = m - 1
+    renderCal()
+    toggleDrop('date')
+  }
+
+  window.calNav = function(dir) {
+    _calMonth += dir
+    if (_calMonth < 0)  { _calMonth = 11; _calYear-- }
+    if (_calMonth > 11) { _calMonth = 0;  _calYear++ }
+    renderCal()
+  }
+
+  function renderCal() {
+    const todayStr = new Date().toLocaleDateString('en-CA', { timeZone:'Europe/Lisbon' })
+    const maxStr   = (() => {
+      const d = new Date(); d.setMonth(d.getMonth() + 3)
+      return d.toLocaleDateString('en-CA', { timeZone:'Europe/Lisbon' })
+    })()
+    const selStr = document.getElementById('sb-date').value || ''
+
+    document.getElementById('cal-month-year').textContent = `${MONTHS_PT[_calMonth]} ${_calYear}`
+
+    // Disable prev if showing current month
+    const [ty, tm] = todayStr.split('-').map(Number)
+    document.getElementById('cal-prev').disabled = (_calYear === ty && _calMonth === tm - 1)
+
+    // First weekday of month (Mon=0)
+    const firstDay = new Date(_calYear, _calMonth, 1).getDay()
+    const offset   = firstDay === 0 ? 6 : firstDay - 1
+    const days     = new Date(_calYear, _calMonth + 1, 0).getDate()
+
+    let html = ''
+    for (let i = 0; i < offset; i++) html += '<div class="cal-day cal-day-empty"></div>'
+    for (let d = 1; d <= days; d++) {
+      const ds = `${_calYear}-${String(_calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`
+      const past    = ds < todayStr
+      const beyond  = ds > maxStr
+      const isToday = ds === todayStr
+      const isSel   = ds === selStr
+      let cls = 'cal-day'
+      if (past || beyond)  cls += ' cal-day-disabled'
+      else if (isSel)      cls += ' cal-day-sel'
+      else if (isToday)    cls += ' cal-day-today'
+      const click = (!past && !beyond) ? `onclick="pickCalDay('${ds}')"` : ''
+      html += `<div class="${cls}" ${click}>${d}</div>`
+    }
+    document.getElementById('cal-grid').innerHTML = html
+  }
+
+  window.pickCalDay = function(ds) {
+    document.getElementById('sb-date').value = ds
+    if (typeof onDateChange === 'function') onDateChange()
+    renderCal() // re-render to show selection
+    // Auto-close on mobile after pick
+    if (window.innerWidth < 768) setTimeout(closeAllDrops, 180)
+  }
+
+  window.clearCalDate = function() {
+    document.getElementById('sb-date').value = ''
+    if (typeof onDateChange === 'function') onDateChange()
+    closeAllDrops()
   }
 </script>
 
