@@ -200,7 +200,7 @@
     .bb-tpill.bb-tpill-dis { color:#d8d0c8; cursor:default; pointer-events:none; }
 
     /* ── SHEET OVERLAY (mobile bottom sheet) ── */
-    .bb-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.35); z-index:490; }
+    .bb-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:490; backdrop-filter:blur(2px); }
     .bb-overlay.open { display:block; }
     @media(max-width:640px) {
       .bb-drop {
@@ -642,7 +642,7 @@
       : new Date(ds + 'T12:00').toLocaleDateString('pt-PT', { day:'numeric', month:'short' })
     bbRenderCal()
     bbFilterTimes(_date)
-    if (window.innerWidth <= 640) setTimeout(bbCloseAll, 180)
+    // No auto-close — user taps Confirmar or overlay to dismiss
   }
 
   function bbClearDate() {

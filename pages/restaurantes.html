@@ -387,7 +387,7 @@
     /* ── MOBILE BOTTOM SHEET ──────────────────────────── */
     .sheet-overlay {
       display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4);
-      z-index:1990; backdrop-filter:blur(2px);
+      z-index:1990;
     }
     .sheet-overlay.open { display:block; }
     @media(max-width:767px) {
@@ -756,8 +756,7 @@
     document.getElementById('sb-date').value = ds
     if (typeof onDateChange === 'function') onDateChange()
     renderCal() // re-render to show selection
-    // Auto-close on mobile after pick
-    if (window.innerWidth < 768) setTimeout(closeAllDrops, 180)
+    // No auto-close — user taps Confirmar or overlay to dismiss
   }
 
   window.clearCalDate = function() {
