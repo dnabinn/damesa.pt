@@ -551,6 +551,67 @@
       font-size: 13px; color: #7a5800; margin-bottom: 20px;
     }
 
+    /* ── PRO SUGGEST SECTION ─────────────────── */
+    .lite-pro-suggest {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 24px; margin-bottom: 20px;
+    }
+    .pro-suggest-intro {
+      display: flex; align-items: flex-start; gap: 12px;
+      margin-bottom: 20px; padding-bottom: 18px; border-bottom: 1px solid var(--border);
+    }
+    .pro-suggest-lightning {
+      font-size: 24px; flex-shrink: 0; line-height: 1;
+    }
+    .pro-suggest-intro p {
+      font-size: 14px; color: var(--muted); line-height: 1.6; margin: 0;
+    }
+    .pro-suggest-intro strong { color: var(--text); }
+    .pro-suggest-grid {
+      display: flex; flex-direction: column; gap: 12px; margin-bottom: 18px;
+    }
+    .pro-suggest-card {
+      display: flex; align-items: center; gap: 14px;
+      border: 1px solid var(--border); border-radius: 12px;
+      overflow: hidden; background: var(--bg);
+      transition: border-color 0.15s, box-shadow 0.15s;
+      text-decoration: none; color: inherit;
+    }
+    .pro-suggest-card:hover {
+      border-color: var(--accent); box-shadow: 0 2px 16px rgba(192,57,43,0.1);
+    }
+    .psc-photo {
+      width: 76px; min-width: 76px; height: 76px;
+      background: #e8dfd4 center/cover no-repeat;
+      flex-shrink: 0;
+    }
+    .psc-body { flex: 1; padding: 12px 0; min-width: 0; }
+    .psc-name { font-size: 14px; font-weight: 600; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .psc-meta { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+    .psc-instant {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: #e8f5e9; color: #2e7d32;
+      font-size: 11px; font-weight: 600; letter-spacing: 0.2px;
+      padding: 2px 8px; border-radius: 100px;
+    }
+    .psc-cta {
+      flex-shrink: 0; padding: 12px 16px;
+    }
+    .psc-btn {
+      display: inline-block; background: var(--accent); color: #fff;
+      font-size: 12px; font-weight: 600; padding: 8px 14px;
+      border-radius: 8px; white-space: nowrap;
+      transition: background 0.15s;
+    }
+    .psc-btn:hover { background: #9e3a28; }
+    .pro-suggest-all {
+      display: block; text-align: center; font-size: 13px;
+      color: var(--accent); font-weight: 600;
+      padding: 10px; border-radius: 8px;
+      transition: background 0.15s;
+    }
+    .pro-suggest-all:hover { background: #fdf1ef; }
+
     /* ── FOOTER ─────────────────────────────────── */
     footer { text-align: center; padding: 40px 24px; color: var(--muted); font-size: 13px; border-top: 1px solid var(--border); }
     footer strong { color: var(--text); font-family: var(--serif); }
@@ -884,6 +945,17 @@
     <div class="lite-section-title">Detalhes</div>
     <div class="lite-details" id="lite-details"></div>
   </div>
+  <!-- PRO RESTAURANTS — shown below lite info -->
+  <div class="lite-pro-suggest" id="lite-pro-suggest" style="display:none;">
+    <div class="lite-section-title">Reserva instantânea disponível em</div>
+    <div class="pro-suggest-intro">
+      <span class="pro-suggest-lightning">⚡</span>
+      <p>Estes restaurantes confirmam a tua mesa <strong>em segundos</strong> — sem chamadas, sem espera, totalmente gratuito.</p>
+    </div>
+    <div class="pro-suggest-grid" id="pro-suggest-grid"></div>
+    <a href="/pages/restaurantes.html" class="pro-suggest-all">Ver todos os restaurantes com reserva instantânea →</a>
+  </div>
+
   <div class="lite-upgrade">
     <div class="lite-upgrade-title">Quer aceitar reservas online?</div>
     <div class="lite-upgrade-sub">Com o Da Mesa Pro o seu restaurante aparece nas pesquisas, aceita reservas 24/7 e recebe confirmações automáticas por email.</div>
@@ -1057,6 +1129,39 @@
         <div><div class="lite-detail-label">${d.label}</div><div class="lite-detail-text">${d.val}</div></div>
       </div>`
     ).join('')
+
+    // Load pro restaurants to suggest (prefer same cuisine, exclude current)
+    const _cSlug = c => (c ?? 'portugal').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,'-')
+    const { data: proRests } = await supabase
+      .from('restaurants')
+      .select('id, name, slug, city, cuisine_type, price_range, cover_image, plan')
+      .eq('status', 'active')
+      .eq('plan', 'pro')
+      .neq('id', restaurant.id)
+      .limit(6)
+    if (proRests && proRests.length > 0) {
+      // Sort: same cuisine first
+      const sorted = [...proRests].sort((a, b) => {
+        const aMatch = a.cuisine_type === restaurant.cuisine_type ? 0 : 1
+        const bMatch = b.cuisine_type === restaurant.cuisine_type ? 0 : 1
+        return aMatch - bMatch
+      }).slice(0, 3)
+      document.getElementById('pro-suggest-grid').innerHTML = sorted.map(r => `
+        <a class="pro-suggest-card" href="/restaurante/${_cSlug(r.city)}/${r.slug}">
+          <div class="psc-photo" style="${r.cover_image ? `background-image:url(${r.cover_image})` : 'background:#e8dfd4'}">
+            ${!r.cover_image ? '<div style="display:flex;align-items:center;justify-content:center;height:100%;font-size:24px;">🍽️</div>' : ''}
+          </div>
+          <div class="psc-body">
+            <div class="psc-name">${r.name}</div>
+            <div class="psc-meta">${[r.cuisine_type, r.price_range, r.city].filter(Boolean).join(' · ')}</div>
+            <span class="psc-instant">⚡ Reserva imediata</span>
+          </div>
+          <div class="psc-cta">
+            <span class="psc-btn">Reservar →</span>
+          </div>
+        </a>`).join('')
+      document.getElementById('lite-pro-suggest').style.display = 'block'
+    }
   } else {
     // Pro: show badge on hero
     document.getElementById('pro-badge-hero').style.display = 'block'
