@@ -1328,6 +1328,10 @@
       .limit(1)
     if (data?.length) {
       document.getElementById('review-form-section').style.display = 'block'
+      // Pre-fill name from profile if available
+      const meta = _session.user.user_metadata
+      const fullName = meta?.full_name ?? meta?.name ?? ''
+      if (fullName) document.getElementById('review-name').value = fullName
     } else {
       document.getElementById('review-no-booking').style.display = 'block'
     }
@@ -1362,11 +1366,13 @@
       user_id: _session.user.id
     })
     if (error) { alert('Erro ao publicar avaliação.'); btn.textContent = 'Publicar avaliação'; btn.disabled = false; return }
-    document.getElementById('review-name').value = ''
-    document.getElementById('review-comment').value = ''
-    selectedRating = 0
-    starEls.forEach(x => x.classList.remove('active'))
-    btn.textContent = 'Publicar avaliação'; btn.disabled = false
+    // Hide form, show thank-you
+    document.getElementById('review-form-section').innerHTML = `
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:28px;text-align:center;">
+        <div style="font-size:36px;margin-bottom:12px;">🙏</div>
+        <div style="font-family:var(--serif);font-size:18px;margin-bottom:8px;">Obrigado pela avaliação!</div>
+        <div style="color:var(--muted);font-size:14px;">A tua opinião ajuda outros clientes a escolher.</div>
+      </div>`
     await loadReviews()
   }
 
