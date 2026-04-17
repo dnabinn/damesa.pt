@@ -199,21 +199,25 @@
     .bb-tpill.sel { background:var(--accent); color:#fff; border-color:var(--accent); font-weight:600; }
     .bb-tpill.bb-tpill-dis { color:#d8d0c8; cursor:default; pointer-events:none; }
 
-    /* ── SHEET OVERLAY (mobile bottom sheet) ── */
-    .bb-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:490; backdrop-filter:blur(2px); }
-    .bb-overlay.open { display:block; }
+    /* ── MOBILE BOTTOM SHEET ── */
     @media(max-width:640px) {
       .bb-drop {
         position:fixed !important; bottom:0 !important; left:0 !important;
         right:0 !important; top:auto !important;
-        border-radius:20px 20px 0 0 !important; z-index:500 !important;
+        border-radius:20px 20px 0 0 !important; z-index:9999 !important;
         max-height:88vh; overflow-y:auto;
-        box-shadow:0 -4px 40px rgba(0,0,0,0.18) !important;
+        box-shadow:0 -4px 40px rgba(0,0,0,0.22) !important;
         animation:bbSlideUp 0.28s cubic-bezier(0.32,0.72,0,1) !important;
         min-width:unset !important;
       }
       @keyframes bbSlideUp { from { transform:translateY(100%); } to { transform:translateY(0); } }
       .bb-sheet-handle { display:block !important; }
+      /* Dim behind sheet via body pseudo — no DOM node intercepting touches */
+      body.bb-picker-open::before {
+        content:''; position:fixed; inset:0; z-index:9998;
+        background:rgba(0,0,0,0.45); backdrop-filter:blur(2px);
+        pointer-events:none;
+      }
     }
     .bb-sheet-handle {
       display:none; width:36px; height:4px; background:var(--border);
@@ -491,8 +495,6 @@
   </div>
 </div>
 
-<div class="bb-overlay" id="bb-overlay" onclick="bbCloseAll()"></div>
-
 <!-- CUISINE CHIPS -->
 <div class="cuisines-bar" id="cuisine-chips">
   <div class="cchip active" data-cuisine="">Todos</div>
@@ -590,7 +592,6 @@
   const _today = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Lisbon' })
   const _maxDate = (() => { const d = new Date(); d.setMonth(d.getMonth() + 3); return d.toLocaleDateString('en-CA', { timeZone: 'Europe/Lisbon' }) })()
   let _date = _today, _time = '20:00', _party = '2'
-  const _bbOverlay = document.getElementById('bb-overlay')
 
   // ── CALENDAR STATE ──────────────────────────────────
   const BB_MONTHS = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho',
@@ -683,14 +684,14 @@
     if (!wasOpen) {
       drop.classList.add('open')
       field.classList.add('open')
-      _bbOverlay.classList.add('open')
+      document.body.classList.add('bb-picker-open')
     }
   }
 
   function bbCloseAll() {
     document.querySelectorAll('.bb-drop.open').forEach(d => d.classList.remove('open'))
     document.querySelectorAll('.bb-field.open').forEach(f => f.classList.remove('open'))
-    _bbOverlay.classList.remove('open')
+    document.body.classList.remove('bb-picker-open')
   }
 
   function bbPick(name, val, label) {
@@ -706,7 +707,7 @@
   }
 
   document.addEventListener('click', e => {
-    if (!e.target.closest('#booking-bar') && e.target !== _bbOverlay) bbCloseAll()
+    if (!e.target.closest('#booking-bar')) bbCloseAll()
   })
   document.addEventListener('keydown', e => { if (e.key === 'Escape') bbCloseAll() })
 </script>
