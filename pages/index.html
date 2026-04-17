@@ -218,6 +218,11 @@
         background:rgba(0,0,0,0.5);
         pointer-events:none;
       }
+      /* Lift booking bar above the dim so it stays visible */
+      body.bb-picker-open .booking-bar {
+        z-index: 10000;
+        position: relative;
+      }
     }
     .bb-sheet-handle {
       display:none; width:36px; height:4px; background:var(--border);
