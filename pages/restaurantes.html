@@ -1058,7 +1058,12 @@
       const matchSearch   = !q || r.name.toLowerCase().includes(q) || (r.cuisine_type??'').toLowerCase().includes(q)
       const matchPrice    = !_selectedPrice || r.price_range===_selectedPrice
       const matchDietary  = !_selectedDietary || (r.dietary_tags??[]).includes(_selectedDietary)
-      return matchCuisine && matchCity && matchSearch && matchPrice && matchDietary
+      // Only show restaurants that offer the selected time slot
+      // If available_times is null/empty (not yet configured), show restaurant for all times
+      const matchTime = !_selectedTime
+        || !r.available_times || r.available_times.length === 0
+        || r.available_times.includes(_selectedTime)
+      return matchCuisine && matchCity && matchSearch && matchPrice && matchDietary && matchTime
     })
 
     document.getElementById('list-header').innerHTML =

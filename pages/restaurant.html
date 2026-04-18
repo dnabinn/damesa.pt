@@ -1245,7 +1245,7 @@
     if (!date) return
     const slotsEl = document.getElementById('time-slots')
     slotsEl.innerHTML = [1,2,3,4,5,6].map(() => `<div class="slot skeleton" style="height:40px;border:none;"></div>`).join('')
-    const slots = await getAvailableSlots(restaurant.id, date)
+    const slots = await getAvailableSlots(restaurant.id, date, restaurant.available_times)
     const capacity = restaurant.capacity ?? 50
 
     // If booking for today, hide slots whose time has already passed (Lisbon time)

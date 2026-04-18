@@ -168,6 +168,10 @@
     .slot-del:hover { color:var(--accent); }
     .add-slot-btn { background:none; border:1px dashed var(--border); border-radius:8px; padding:7px 14px; font-size:13px; color:var(--muted); cursor:pointer; margin-top:2px; transition:border-color 0.15s,color 0.15s; }
     .add-slot-btn:hover { border-color:var(--text); color:var(--text); }
+    .slot-chips { display:flex; flex-wrap:wrap; gap:8px; }
+    .slot-chip { padding:7px 14px; border-radius:100px; border:1.5px solid var(--border); font-size:13px; font-weight:500; cursor:pointer; transition:all 0.15s; background:#fff; color:var(--text); user-select:none; }
+    .slot-chip.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+    .slot-chip:hover:not(.active) { border-color:var(--text); }
     @media(max-width:600px) { .hours-day { grid-template-columns:1fr; } }
 
     footer { text-align:center; padding:40px 24px; color:var(--muted); font-size:13px; border-top:1px solid var(--border); }
@@ -369,6 +373,22 @@
 
   <!-- ── HORÁRIOS ────────────────────────────── -->
   <div class="tab-panel" id="tab-horarios">
+    <!-- Booking slots -->
+    <div class="section-card" style="margin-bottom:20px;">
+      <div class="section-title">Horários de reserva</div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">Seleciona os horários que o teu restaurante aceita reservas. Apenas estes aparecerão nos resultados de pesquisa.</p>
+      <div style="margin-bottom:14px;">
+        <div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:8px;">Almoço</div>
+        <div class="slot-chips" id="slot-chips-lunch"></div>
+      </div>
+      <div style="margin-bottom:20px;">
+        <div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:8px;">Jantar</div>
+        <div class="slot-chips" id="slot-chips-dinner"></div>
+      </div>
+      <button class="save-btn" onclick="saveSlots()">Guardar horários de reserva</button>
+      <div class="saved-msg" id="slots-saved">✓ Horários guardados</div>
+    </div>
+    <!-- Opening hours -->
     <div class="section-card">
       <div class="section-title">Horário de Funcionamento</div>
       <div class="hours-grid" id="hours-grid">
@@ -938,6 +958,34 @@
       .eq('restaurant_id', restaurant.id).order('day_of_week').order('open_time')
     renderHours(data ?? [])
   }
+  // ── BOOKING SLOTS (available_times) ──────────────────────────
+  const LUNCH_SLOTS  = ['12:00','12:30','13:00','13:30','14:00','14:30','15:00']
+  const DINNER_SLOTS = ['19:00','19:30','20:00','20:30','21:00','21:30','22:00','22:30','23:00']
+
+  function renderSlotChips(currentTimes) {
+    const active = new Set(currentTimes && currentTimes.length ? currentTimes : [...LUNCH_SLOTS, ...DINNER_SLOTS])
+    ;[['slot-chips-lunch', LUNCH_SLOTS], ['slot-chips-dinner', DINNER_SLOTS]].forEach(([id, slots]) => {
+      document.getElementById(id).innerHTML = slots.map(t =>
+        `<div class="slot-chip${active.has(t) ? ' active' : ''}" data-time="${t}" onclick="this.classList.toggle('active')">${t}</div>`
+      ).join('')
+    })
+  }
+
+  window.saveSlots = async function() {
+    const allChips = document.querySelectorAll('.slot-chip')
+    const times = [...allChips].filter(c => c.classList.contains('active')).map(c => c.dataset.time)
+    const btn = document.getElementById('slots-saved').previousElementSibling
+    btn.disabled = true; btn.textContent = 'A guardar...'
+    await supabase.from('restaurants').update({ available_times: times }).eq('id', restaurant.id)
+    restaurant.available_times = times
+    btn.disabled = false; btn.textContent = 'Guardar horários de reserva'
+    const msg = document.getElementById('slots-saved')
+    msg.style.display = 'block'
+    setTimeout(() => msg.style.display = 'none', 2500)
+  }
+
+  renderSlotChips(restaurant.available_times)
+
   await loadHours()
 
   function renderHours(data) {
@@ -1309,6 +1357,7 @@
       if (btn.dataset.tab === 'ementa') loadMenuFiles()
       if (btn.dataset.tab === 'perfil') loadPerfil()
       if (btn.dataset.tab === 'waitlist') loadWaitlist()
+      if (btn.dataset.tab === 'horarios') { renderSlotChips(restaurant.available_times); loadHours() }
     })
   })
 

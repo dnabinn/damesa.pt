@@ -31,7 +31,8 @@ export async function getRestaurantBySlug(slug) {
 }
 
 // Get available time slots for a date
-export async function getAvailableSlots(restaurantId, date) {
+// availableTimes: string[] from restaurant.available_times (null → use default full list)
+export async function getAvailableSlots(restaurantId, date, availableTimes) {
   const { data: bookings } = await supabase
     .from('bookings')
     .select('booking_time, party_size')
@@ -39,12 +40,13 @@ export async function getAvailableSlots(restaurantId, date) {
     .eq('booking_date', date)
     .in('status', ['pending', 'confirmed'])
 
-  const allSlots = [
+  const defaultSlots = [
     // Lunch
     '12:00','12:30','13:00','13:30','14:00','14:30','15:00',
     // Dinner
     '19:00','19:30','20:00','20:30','21:00','21:30','22:00','22:30','23:00'
   ]
+  const allSlots = (availableTimes && availableTimes.length > 0) ? availableTimes : defaultSlots
   return allSlots.map(slot => ({
     time: slot,
     booked: bookings?.filter(b => b.booking_time === slot + ':00').reduce((sum, b) => sum + b.party_size, 0) || 0
