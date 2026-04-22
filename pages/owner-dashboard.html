@@ -73,6 +73,7 @@
     .btn-confirm { background:#e8f5e9; color:var(--green); }
     .btn-cancel { background:#fce4ec; color:#c62828; }
     .btn-notify { background:#e3f2fd; color:#1565c0; }
+    .btn-noshow { background:#f3e5f5; color:#6a1b9a; }
     .empty { text-align:center; padding:48px; color:var(--muted); }
 
     /* SECTION CARDS */
@@ -268,6 +269,7 @@
 <div class="tabs-bar">
   <div class="tabs-inner">
     <button class="tab-btn active" data-tab="reservas">Reservas</button>
+    <button class="tab-btn" data-tab="faturas">Faturas</button>
     <button class="tab-btn" data-tab="waitlist">Lista de espera</button>
     <button class="tab-btn" data-tab="ementa">Ementa</button>
     <button class="tab-btn" data-tab="horarios">Horários</button>
@@ -312,6 +314,29 @@
         </tbody>
       </table>
     </div>
+  </div>
+
+  <!-- ── FATURAS ───────────────────────────────── -->
+  <div class="tab-panel" id="tab-faturas">
+    <div class="toolbar"><h2>Faturas</h2></div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Mês</th>
+            <th>Reservas faturadas</th>
+            <th>Plano base</th>
+            <th>Variável</th>
+            <th>Total</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody id="faturas-tbody">
+          <tr><td colspan="6" style="text-align:center;color:var(--muted);padding:32px;">A carregar...</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="font-size:12px;color:var(--muted);margin-top:8px;">Faturas emitidas no início de cada mês. Cobradas por débito direto SEPA.</p>
   </div>
 
   <!-- ── WAITLIST ─────────────────────────────── -->
@@ -794,7 +819,8 @@
         <td><span class="status status-${b.status}">${translateStatus(b.status)}</span></td>
         <td>
           ${b.status === 'pending' ? `<button class="action-btn btn-confirm" onclick="updateStatus('${b.id}','confirmed')">Confirmar</button>` : ''}
-          ${b.status !== 'cancelled' && b.status !== 'completed' ? `<button class="action-btn btn-cancel" onclick="updateStatus('${b.id}','cancelled')">Cancelar</button>` : ''}
+          ${b.status === 'confirmed' ? `<button class="action-btn btn-noshow" onclick="updateStatus('${b.id}','no_show')" title="O cliente não apareceu — não será faturado">Não apareceu</button>` : ''}
+          ${b.status !== 'cancelled' && b.status !== 'no_show' && b.status !== 'completed' ? `<button class="action-btn btn-cancel" onclick="updateStatus('${b.id}','cancelled')">Cancelar</button>` : ''}
         </td>
       </tr>
     `).join('')
@@ -1306,6 +1332,35 @@
     await loadMenuFiles()
   }
 
+  // ── FATURAS TAB ───────────────────────────────────────────
+  async function loadFaturas() {
+    const tbody = document.getElementById('faturas-tbody')
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:32px;">A carregar...</td></tr>'
+    const { data, error } = await supabase
+      .from('invoices')
+      .select('*')
+      .eq('restaurant_id', restaurant.id)
+      .order('month', { ascending: false })
+    if (error || !data || data.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:32px;">Ainda sem faturas emitidas.</td></tr>'
+      return
+    }
+    const statusLabel = { pending: 'Pendente', paid: 'Pago', overdue: 'Em atraso' }
+    const statusClass = { pending: 'status-pending', paid: 'status-confirmed', overdue: 'status-cancelled' }
+    tbody.innerHTML = data.map(inv => {
+      const [y, m] = inv.month.split('-')
+      const monthName = new Date(parseInt(y), parseInt(m) - 1, 1).toLocaleDateString('pt-PT', { month: 'long', year: 'numeric' })
+      return `<tr>
+        <td style="font-weight:600">${monthName}</td>
+        <td>${inv.bookings_count} reserva${inv.bookings_count !== 1 ? 's' : ''}</td>
+        <td>€${Number(inv.base_amount).toFixed(2)}</td>
+        <td>€${Number(inv.variable_amount).toFixed(2)}</td>
+        <td style="font-weight:700">€${Number(inv.total_amount).toFixed(2)}</td>
+        <td><span class="status ${statusClass[inv.status] ?? ''}">${statusLabel[inv.status] ?? inv.status}</span></td>
+      </tr>`
+    }).join('')
+  }
+
   // ── WAITLIST TAB ──────────────────────────────────────────
   async function loadWaitlist() {
     const tbody = document.getElementById('waitlist-tbody')
@@ -1358,6 +1413,7 @@
       if (btn.dataset.tab === 'perfil') loadPerfil()
       if (btn.dataset.tab === 'waitlist') loadWaitlist()
       if (btn.dataset.tab === 'horarios') { renderSlotChips(restaurant.available_times); loadHours() }
+      if (btn.dataset.tab === 'faturas') loadFaturas()
     })
   })
 

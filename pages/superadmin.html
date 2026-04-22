@@ -54,6 +54,10 @@
     .status-active { background:#e8f5e9; color:#2e7d32; }
     .status-pending { background:#fff8e1; color:#f57f17; }
     .status-suspended { background:#fce4ec; color:#c62828; }
+    .status-paid { background:#e8f5e9; color:#2e7d32; }
+    .status-overdue { background:#fce4ec; color:#c62828; }
+    .btn-mark-paid { background:#e8f5e9; color:#2e7d32; border:none; border-radius:6px; padding:5px 10px; font-size:12px; cursor:pointer; margin-right:4px; }
+    .btn-mark-overdue { background:#fff8e1; color:#f57f17; border:none; border-radius:6px; padding:5px 10px; font-size:12px; cursor:pointer; }
     .sub-pro { background:#e3f2fd; color:#1565c0; padding:3px 8px; border-radius:6px; font-size:11px; }
     .sub-enterprise { background:#f3e5f5; color:#6a1b9a; padding:3px 8px; border-radius:6px; font-size:11px; }
     .sub-free { background:var(--bg); border:1px solid var(--border); padding:3px 8px; border-radius:6px; font-size:11px; color:var(--muted); }
@@ -250,6 +254,7 @@
   <div class="tnav" onclick="switchTab('bookings')">Reservas</div>
   <div class="tnav" onclick="switchTab('users')">Utilizadores</div>
   <div class="tnav" onclick="switchTab('gallery')">Galeria</div>
+  <div class="tnav" onclick="switchTab('billing')">💶 Faturação</div>
 </div>
 
 <!-- OVERVIEW -->
@@ -408,6 +413,50 @@
     </div>
     <div id="gallery-container">
       <div class="gallery-empty">Seleciona um restaurante para ver as fotos.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── FATURAÇÃO TAB ───────────────────────────────────── -->
+<div class="tab-pane" id="tab-billing">
+  <div class="page-wrap">
+    <div class="section-header" style="margin-bottom:24px">
+      <div class="section-title">Faturação</div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+        <select id="billing-month-select" style="padding:9px 14px;border:1px solid var(--border);border-radius:8px;font-size:14px;background:#fff;">
+        </select>
+        <button class="btn-primary" onclick="generateInvoices()">Gerar faturas do mês</button>
+        <button class="btn-primary" style="background:#2e7d32;" onclick="exportBillingCSV()">Exportar CSV</button>
+      </div>
+    </div>
+
+    <!-- MRR Stats -->
+    <div class="stats" id="billing-stats" style="margin-bottom:28px;">
+      <div class="stat-card"><div class="stat-label">Total faturado</div><div class="stat-value" id="bs-total">—</div></div>
+      <div class="stat-card"><div class="stat-label">Cobrado</div><div class="stat-value" id="bs-paid" style="color:#2e7d32">—</div></div>
+      <div class="stat-card"><div class="stat-label">Pendente</div><div class="stat-value" id="bs-pending" style="color:#f57f17">—</div></div>
+      <div class="stat-card"><div class="stat-label">Em atraso</div><div class="stat-value" id="bs-overdue" style="color:#c62828">—</div></div>
+      <div class="stat-card"><div class="stat-label">Reservas faturadas</div><div class="stat-value" id="bs-bookings">—</div></div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Restaurante</th>
+            <th>IBAN</th>
+            <th>Reservas</th>
+            <th>Base</th>
+            <th>Variável</th>
+            <th>Total</th>
+            <th>Estado</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="billing-tbody">
+          <tr><td colspan="8" style="text-align:center;color:var(--muted);padding:40px;">Seleciona um mês e gera as faturas.</td></tr>
+        </tbody>
+      </table>
     </div>
   </div>
 </div>
@@ -711,7 +760,7 @@
   }
 
   window.switchTab = function(tab) {
-    const tabs = ['overview','restaurants','bookings','users','gallery']
+    const tabs = ['overview','restaurants','bookings','users','gallery','billing']
     document.querySelectorAll('.tnav').forEach((t, i) => {
       t.classList.toggle('active', tabs[i] === tab)
     })
@@ -722,6 +771,7 @@
     if (tab === 'bookings') loadAllBookings()
     if (tab === 'users') loadUsers()
     if (tab === 'gallery') initGalleryTab()
+    if (tab === 'billing') initBillingTab()
   }
 
   // Load restaurants immediately (default tab is overview but preload data)
@@ -815,6 +865,168 @@
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLb() })
 
   window.handleSignOut = signOut
+
+  // ── FATURAÇÃO TAB ─────────────────────────────────────────
+  function initBillingTab() {
+    // Populate month selector: current month + last 11 months
+    const sel = document.getElementById('billing-month-select')
+    if (sel.options.length === 0) {
+      const now = new Date()
+      for (let i = 0; i < 12; i++) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+        const val = d.toLocaleDateString('en-CA').slice(0, 7) // YYYY-MM
+        const label = d.toLocaleDateString('pt-PT', { month: 'long', year: 'numeric' })
+        const opt = new Option(label.charAt(0).toUpperCase() + label.slice(1), val)
+        sel.appendChild(opt)
+      }
+    }
+    loadBilling()
+  }
+
+  async function loadBilling() {
+    const month = document.getElementById('billing-month-select').value
+    if (!month) return
+    const tbody = document.getElementById('billing-tbody')
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:32px;">A carregar...</td></tr>'
+
+    const { data: invoices } = await supabase
+      .from('invoices')
+      .select('*, restaurants(name, owner_iban)')
+      .eq('month', month)
+      .order('created_at', { ascending: false })
+
+    if (!invoices || invoices.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:32px;">Sem faturas para este mês. Clica em "Gerar faturas do mês".</td></tr>'
+      updateBillingStats([])
+      return
+    }
+
+    const statusLabel = { pending: 'Pendente', paid: 'Pago', overdue: 'Em atraso' }
+    const statusCls   = { pending: 'status-pending', paid: 'status-paid', overdue: 'status-overdue' }
+    tbody.innerHTML = invoices.map(inv => `
+      <tr>
+        <td style="font-weight:600">${inv.restaurants?.name ?? '—'}</td>
+        <td style="font-family:monospace;font-size:12px;color:var(--muted)">${inv.iban ?? '—'}</td>
+        <td>${inv.bookings_count}</td>
+        <td>€${Number(inv.base_amount).toFixed(2)}</td>
+        <td>€${Number(inv.variable_amount).toFixed(2)}</td>
+        <td style="font-weight:700">€${Number(inv.total_amount).toFixed(2)}</td>
+        <td><span class="status ${statusCls[inv.status] ?? ''}">${statusLabel[inv.status] ?? inv.status}</span></td>
+        <td>
+          ${inv.status !== 'paid' ? `<button class="btn-mark-paid" onclick="markInvoice('${inv.id}','paid')">✓ Pago</button>` : ''}
+          ${inv.status === 'pending' ? `<button class="btn-mark-overdue" onclick="markInvoice('${inv.id}','overdue')">! Atraso</button>` : ''}
+        </td>
+      </tr>`).join('')
+    updateBillingStats(invoices)
+  }
+
+  function updateBillingStats(invoices) {
+    const total   = invoices.reduce((s, i) => s + Number(i.total_amount), 0)
+    const paid    = invoices.filter(i => i.status === 'paid').reduce((s, i) => s + Number(i.total_amount), 0)
+    const pending = invoices.filter(i => i.status === 'pending').reduce((s, i) => s + Number(i.total_amount), 0)
+    const overdue = invoices.filter(i => i.status === 'overdue').reduce((s, i) => s + Number(i.total_amount), 0)
+    const bookings = invoices.reduce((s, i) => s + (i.bookings_count ?? 0), 0)
+    document.getElementById('bs-total').textContent    = `€${total.toFixed(2)}`
+    document.getElementById('bs-paid').textContent     = `€${paid.toFixed(2)}`
+    document.getElementById('bs-pending').textContent  = `€${pending.toFixed(2)}`
+    document.getElementById('bs-overdue').textContent  = `€${overdue.toFixed(2)}`
+    document.getElementById('bs-bookings').textContent = bookings
+  }
+
+  window.markInvoice = async function(id, status) {
+    await supabase.from('invoices').update({
+      status,
+      paid_at: status === 'paid' ? new Date().toISOString() : null
+    }).eq('id', id)
+    loadBilling()
+  }
+
+  window.generateInvoices = async function() {
+    const month = document.getElementById('billing-month-select').value
+    if (!month) return alert('Seleciona um mês.')
+    if (!confirm(`Gerar faturas para ${month}?\n\nIsto criará uma fatura por cada restaurante Pro com reservas no período. Faturas já existentes serão ignoradas.`)) return
+
+    const btn = document.querySelector('#tab-billing .btn-primary')
+    btn.disabled = true; btn.textContent = 'A gerar...'
+
+    // Get all pro restaurants
+    const { data: rests } = await supabase
+      .from('restaurants').select('id, name, owner_iban, plan').eq('plan', 'pro')
+
+    if (!rests || rests.length === 0) {
+      alert('Sem restaurantes Pro para faturar.')
+      btn.disabled = false; btn.textContent = 'Gerar faturas do mês'
+      return
+    }
+
+    // Date range for the month
+    const [y, m] = month.split('-').map(Number)
+    const dateFrom = `${month}-01`
+    const dateTo   = new Date(y, m, 0).toLocaleDateString('en-CA') // last day of month
+
+    // Count billable bookings per restaurant (not no_show, not cancelled)
+    const { data: bookings } = await supabase
+      .from('bookings')
+      .select('restaurant_id')
+      .gte('booking_date', dateFrom)
+      .lte('booking_date', dateTo)
+      .not('status', 'in', '("no_show","cancelled")')
+
+    const countMap = {}
+    if (bookings) bookings.forEach(b => {
+      countMap[b.restaurant_id] = (countMap[b.restaurant_id] ?? 0) + 1
+    })
+
+    // Upsert invoices (ignore if already exists)
+    const inserts = rests.map(r => {
+      const count = countMap[r.id] ?? 0
+      const variable = count * 1
+      return {
+        restaurant_id: r.id,
+        month,
+        base_amount: 26,
+        bookings_count: count,
+        variable_amount: variable,
+        total_amount: 26 + variable,
+        iban: r.owner_iban,
+        status: 'pending'
+      }
+    })
+
+    const { error } = await supabase.from('invoices')
+      .upsert(inserts, { onConflict: 'restaurant_id,month', ignoreDuplicates: true })
+
+    btn.disabled = false; btn.textContent = 'Gerar faturas do mês'
+    if (error) { alert('Erro: ' + error.message); return }
+    loadBilling()
+  }
+
+  window.exportBillingCSV = async function() {
+    const month = document.getElementById('billing-month-select').value
+    const { data: invoices } = await supabase
+      .from('invoices').select('*, restaurants(name, email, owner_iban)').eq('month', month)
+    if (!invoices?.length) return alert('Sem dados para exportar.')
+    const rows = [['Restaurante','Email','IBAN','Reservas','Base','Variável','Total','Estado']]
+    invoices.forEach(i => rows.push([
+      i.restaurants?.name ?? '',
+      i.restaurants?.email ?? '',
+      i.iban ?? '',
+      i.bookings_count,
+      i.base_amount,
+      i.variable_amount,
+      i.total_amount,
+      i.status
+    ]))
+    const csv = rows.map(r => r.map(v => `"${v}"`).join(',')).join('\n')
+    const a = Object.assign(document.createElement('a'), {
+      href: 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv),
+      download: `damesa-faturas-${month}.csv`
+    })
+    a.click()
+  }
+
+  // Re-load when month changes
+  document.getElementById('billing-month-select')?.addEventListener('change', loadBilling)
 
   // ── BILLING MODAL ─────────────────────────────────────────
   const SUPABASE_URL = 'https://jdkbywroucgwrfpirloa.supabase.co'
