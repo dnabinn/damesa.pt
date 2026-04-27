@@ -232,6 +232,21 @@
       .btn-enter { padding:6px 10px; }
     }
 
+    /* CONTRACTS TAB */
+    .contract-stats { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:12px; margin-bottom:28px; }
+    .cs-card { background:#fff; border:1px solid var(--border); border-radius:var(--radius); padding:18px 20px; }
+    .cs-label { font-size:11px; text-transform:uppercase; letter-spacing:1px; color:var(--muted); margin-bottom:6px; }
+    .cs-value { font-family:Georgia,serif; font-size:30px; font-weight:normal; }
+    .contract-link-box { display:flex; align-items:center; gap:6px; background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:4px 8px; font-size:11px; font-family:monospace; color:var(--muted); max-width:200px; overflow:hidden; }
+    .contract-link-box span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1; }
+    .btn-copy { background:#1c1612; color:#fff; border:none; border-radius:5px; padding:3px 8px; font-size:11px; cursor:pointer; white-space:nowrap; flex-shrink:0; }
+    .btn-copy:hover { opacity:0.8; }
+    .btn-view-contract { background:#e3f2fd; color:#1565c0; border:none; border-radius:6px; padding:5px 10px; font-size:12px; cursor:pointer; }
+    .btn-send-contract { background:#1c1612; color:#fff; border:none; border-radius:6px; padding:5px 10px; font-size:12px; cursor:pointer; }
+    .btn-send-contract:hover, .btn-view-contract:hover { opacity:0.85; }
+    .btn-send-contract:disabled { opacity:0.4; cursor:not-allowed; }
+    .contract-filter { display:flex; gap:10px; align-items:center; margin-bottom:20px; flex-wrap:wrap; }
+
     /* Loading */
     @keyframes spin { to { transform: rotate(360deg); } }
     .loading-text { display:inline-flex; align-items:center; gap:8px; opacity:0.7; }
@@ -255,6 +270,7 @@
   <div class="tnav" onclick="switchTab('users')">Utilizadores</div>
   <div class="tnav" onclick="switchTab('gallery')">Galeria</div>
   <div class="tnav" onclick="switchTab('billing')">💶 Faturação</div>
+  <div class="tnav" onclick="switchTab('contracts')">📄 Contratos</div>
 </div>
 
 <!-- OVERVIEW -->
@@ -455,6 +471,54 @@
         </thead>
         <tbody id="billing-tbody">
           <tr><td colspan="8" style="text-align:center;color:var(--muted);padding:40px;">Seleciona um mês e gera as faturas.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ── CONTRATOS TAB ───────────────────────────────────────── -->
+<div class="tab-pane" id="tab-contracts">
+  <div class="page-wrap">
+    <div class="section-header" style="margin-bottom:24px">
+      <div class="section-title">Contratos</div>
+      <button class="btn-primary" onclick="loadContracts()">↺ Atualizar</button>
+    </div>
+
+    <!-- Stats -->
+    <div class="contract-stats">
+      <div class="cs-card"><div class="cs-label">Total</div><div class="cs-value" id="ct-total">—</div></div>
+      <div class="cs-card"><div class="cs-label" style="color:#2e7d32">✅ Assinados</div><div class="cs-value" id="ct-signed" style="color:#2e7d32">—</div></div>
+      <div class="cs-card"><div class="cs-label" style="color:#f57f17">📨 Enviados</div><div class="cs-value" id="ct-sent" style="color:#f57f17">—</div></div>
+      <div class="cs-card"><div class="cs-label" style="color:var(--muted)">⏳ Sem contrato</div><div class="cs-value" id="ct-none" style="color:var(--muted)">—</div></div>
+    </div>
+
+    <!-- Filter -->
+    <div class="contract-filter">
+      <input class="search-input" id="contract-search" placeholder="Pesquisar restaurante..." oninput="filterContracts()" />
+      <select id="contract-status-filter" onchange="filterContracts()" style="padding:9px 14px;border:1px solid var(--border);border-radius:8px;font-size:14px;background:#fff;outline:none;">
+        <option value="">Todos os estados</option>
+        <option value="signed">Assinados</option>
+        <option value="sent">Enviados</option>
+        <option value="none">Sem contrato</option>
+      </select>
+    </div>
+
+    <!-- Table -->
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Restaurante</th>
+            <th>Estado</th>
+            <th>Assinado por</th>
+            <th>Data</th>
+            <th>Link do Contrato</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="contracts-tbody">
+          <tr><td colspan="6" style="padding:32px;text-align:center;color:var(--muted)"><span class="loading-text">A carregar</span></td></tr>
         </tbody>
       </table>
     </div>
@@ -760,7 +824,7 @@
   }
 
   window.switchTab = function(tab) {
-    const tabs = ['overview','restaurants','bookings','users','gallery','billing']
+    const tabs = ['overview','restaurants','bookings','users','gallery','billing','contracts']
     document.querySelectorAll('.tnav').forEach((t, i) => {
       t.classList.toggle('active', tabs[i] === tab)
     })
@@ -772,6 +836,7 @@
     if (tab === 'users') loadUsers()
     if (tab === 'gallery') initGalleryTab()
     if (tab === 'billing') initBillingTab()
+    if (tab === 'contracts') loadContracts()
   }
 
   // Load restaurants immediately (default tab is overview but preload data)
@@ -1244,6 +1309,174 @@
       btn.textContent = 'Gerar email Da Mesa'
     } finally {
       btn.disabled = false
+    }
+  }
+
+  // ── CONTRATOS TAB ────────────────────────────────────────
+  let _allContractsData = [] // { restaurant, contract }
+
+  window.loadContracts = async function() {
+    const tbody = document.getElementById('contracts-tbody')
+    tbody.innerHTML = '<tr><td colspan="6" style="padding:32px;text-align:center;color:var(--muted)"><span class="loading-text">A carregar</span></td></tr>'
+
+    // Load restaurants (reuse allRestaurants if already loaded)
+    if (!allRestaurants.length) await loadRestaurants()
+
+    // Load all contracts
+    const { data: contracts } = await supabase
+      .from('contracts')
+      .select('id, restaurant_id, token, status, signer_name, signed_at, created_at')
+      .order('created_at', { ascending: false })
+
+    const contractByRestaurant = {}
+    for (const c of (contracts ?? [])) {
+      // Keep the most recent contract per restaurant
+      if (!contractByRestaurant[c.restaurant_id]) contractByRestaurant[c.restaurant_id] = c
+    }
+
+    _allContractsData = allRestaurants.map(r => ({
+      restaurant: r,
+      contract: contractByRestaurant[r.id] ?? null
+    }))
+
+    // Update stats
+    const signed = _allContractsData.filter(d => d.contract?.status === 'signed').length
+    const sent   = _allContractsData.filter(d => d.contract && d.contract.status !== 'signed').length
+    const none   = _allContractsData.filter(d => !d.contract).length
+    document.getElementById('ct-total').textContent  = allRestaurants.length
+    document.getElementById('ct-signed').textContent = signed
+    document.getElementById('ct-sent').textContent   = sent
+    document.getElementById('ct-none').textContent   = none
+
+    renderContracts(_allContractsData)
+  }
+
+  function renderContracts(list) {
+    const tbody = document.getElementById('contracts-tbody')
+    if (!list.length) {
+      tbody.innerHTML = '<tr><td colspan="6" style="padding:32px;text-align:center;color:var(--muted)">Nenhum resultado.</td></tr>'
+      return
+    }
+    tbody.innerHTML = list.map(({ restaurant: r, contract: c }) => {
+      const status = c?.status === 'signed' ? 'signed' : c ? 'sent' : 'none'
+      const badge  = status === 'signed'
+        ? `<span class="contract-signed">✅ Assinado</span>`
+        : status === 'sent'
+        ? `<span class="contract-sent">📨 Enviado</span>`
+        : `<span class="contract-none">—</span>`
+
+      const signerName = c?.signer_name ? `<strong>${c.signer_name}</strong>` : '—'
+
+      const dateStr = c?.signed_at
+        ? new Date(c.signed_at).toLocaleDateString('pt-PT')
+        : c?.created_at
+        ? `Enviado ${new Date(c.created_at).toLocaleDateString('pt-PT')}`
+        : '—'
+
+      const linkBox = c?.token
+        ? `<div class="contract-link-box">
+            <span title="https://damesa.pt/contrato/${c.token}">…/${c.token.slice(0,12)}…</span>
+            <button class="btn-copy" onclick="copyContractLink('${c.token}', this)">Copiar</button>
+           </div>`
+        : '<span style="color:var(--muted);font-size:12px">—</span>'
+
+      const viewBtn = c?.token
+        ? `<button class="btn-view-contract" onclick="viewContract('${c.token}')">👁 Ver</button>`
+        : ''
+      const sendLabel = status === 'none' ? 'Enviar contrato' : 'Reenviar'
+      const canSend = !!(r.owner_legal_name && r.email)
+      const sendBtn = `<button class="btn-send-contract" onclick="sendContractFor('${r.id}')"
+          ${canSend ? '' : `title="Precisa de email e nome legal do proprietário" style="opacity:0.4;cursor:not-allowed;" disabled`}>
+          📨 ${sendLabel}
+        </button>`
+
+      return `<tr>
+        <td>
+          <strong>${r.name}</strong>
+          <br><span style="font-size:11px;color:var(--muted)">${r.email ?? '—'}</span>
+          ${r.owner_legal_name ? `<br><span style="font-size:11px;color:var(--muted)">${r.owner_legal_name}</span>` : ''}
+        </td>
+        <td>${badge}</td>
+        <td style="font-size:13px">${signerName}</td>
+        <td style="font-size:12px;color:var(--muted);white-space:nowrap">${dateStr}</td>
+        <td>${linkBox}</td>
+        <td style="white-space:nowrap;display:flex;gap:6px;flex-wrap:wrap;padding:10px 16px;">
+          ${sendBtn}
+          ${viewBtn}
+          <button class="btn-billing" onclick="openBillingModal('${r.id}')" title="Gerir faturação e IBAN">💳</button>
+        </td>
+      </tr>`
+    }).join('')
+  }
+
+  window.filterContracts = function() {
+    const q = document.getElementById('contract-search').value.toLowerCase()
+    const statusFilter = document.getElementById('contract-status-filter').value
+    const filtered = _allContractsData.filter(({ restaurant: r, contract: c }) => {
+      const matchSearch = r.name.toLowerCase().includes(q) || (r.email ?? '').toLowerCase().includes(q) || (r.slug ?? '').includes(q)
+      const status = c?.status === 'signed' ? 'signed' : c ? 'sent' : 'none'
+      const matchStatus = !statusFilter || status === statusFilter
+      return matchSearch && matchStatus
+    })
+    renderContracts(filtered)
+  }
+
+  window.copyContractLink = function(token, btn) {
+    const url = `https://damesa.pt/contrato/${token}`
+    navigator.clipboard.writeText(url).then(() => {
+      const orig = btn.textContent
+      btn.textContent = '✓ Copiado'
+      btn.style.background = '#2e7d32'
+      setTimeout(() => { btn.textContent = orig; btn.style.background = '' }, 2500)
+    })
+  }
+
+  window.viewContract = function(token) {
+    window.open(`https://damesa.pt/contrato/${token}`, '_blank')
+  }
+
+  window.sendContractFor = async function(restaurantId) {
+    const item = _allContractsData.find(d => d.restaurant.id === restaurantId)
+    if (!item) return
+    const r = item.restaurant
+    if (!r.owner_legal_name || !r.email) {
+      alert('Este restaurante não tem email ou nome legal do proprietário preenchido.\n\nAbre a modal de Faturação (💳) para preencher antes de enviar o contrato.')
+      return
+    }
+    if (item.contract?.status === 'signed') {
+      if (!confirm(`Este contrato já foi assinado por "${item.contract.signer_name}".\nDe certeza que queres reenviar um novo contrato?`)) return
+    }
+    if (!confirm(`Enviar contrato para ${r.name}?\nEmail: ${r.email}`)) return
+
+    // Find the button and disable it
+    const rows = document.querySelectorAll('#contracts-tbody tr')
+    let btn = null
+    rows.forEach(row => {
+      if (row.innerHTML.includes(restaurantId)) {
+        btn = row.querySelector('.btn-send-contract')
+      }
+    })
+    if (btn) { btn.disabled = true; btn.textContent = 'A enviar…' }
+
+    try {
+      const { data: { session: _s } } = await supabase.auth.getSession()
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/send-contract`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${_s.access_token}`,
+        },
+        body: JSON.stringify({ restaurantId }),
+      })
+      const result = await res.json()
+      if (!res.ok || !result.success) throw new Error(result.error ?? 'Erro desconhecido.')
+
+      // Refresh contracts
+      await loadContracts()
+      alert(`✅ Contrato enviado para ${r.email}!`)
+    } catch(e) {
+      alert(`Erro ao enviar contrato: ${e.message}`)
+      if (btn) { btn.disabled = false; btn.textContent = '📨 Enviar contrato' }
     }
   }
 
