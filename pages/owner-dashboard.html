@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dashboard — Da Mesa</title>
-  <link rel="manifest" href="/assets/manifest.json" />
+  <link rel="manifest" href="/assets/owner-manifest.json" />
   <link rel="icon" type="image/png" href="/assets/icons/icon-192.png" />
   <link rel="apple-touch-icon" href="/assets/icons/icon-192.png" />
   <style>
@@ -16,6 +16,29 @@
     }
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); }
     a { color: inherit; text-decoration: none; }
+
+    /* NOTIFICATION BELL */
+    .notif-btn { background:none; border:none; cursor:pointer; font-size:20px; padding:6px; border-radius:8px; position:relative; transition:background 0.15s; }
+    .notif-btn:hover { background:var(--bg); }
+    .notif-btn.active { color:#2e7d32; }
+    .notif-btn.denied { color:var(--muted); opacity:0.5; }
+
+    /* IN-APP BOOKING ALERT BANNER */
+    .booking-alert {
+      position:fixed; top:70px; left:50%; transform:translateX(-50%) translateY(-120px);
+      background:#1c1612; color:#fff; border-radius:14px;
+      padding:16px 20px; min-width:300px; max-width:420px; width:90%;
+      box-shadow:0 8px 40px rgba(0,0,0,0.3);
+      display:flex; align-items:center; gap:14px;
+      z-index:9999; transition:transform 0.35s cubic-bezier(0.32,0.72,0,1);
+    }
+    .booking-alert.show { transform:translateX(-50%) translateY(0); }
+    .ba-icon { font-size:28px; flex-shrink:0; }
+    .ba-body { flex:1; min-width:0; }
+    .ba-title { font-size:13px; font-weight:700; margin-bottom:2px; }
+    .ba-sub { font-size:12px; color:rgba(255,255,255,0.65); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .ba-close { background:none; border:none; color:rgba(255,255,255,0.5); font-size:18px; cursor:pointer; flex-shrink:0; padding:4px; line-height:1; }
+    .ba-close:hover { color:#fff; }
 
     /* NAV */
     nav { display:flex; align-items:center; justify-content:space-between; padding:14px 24px; background:#fff; border-bottom:1px solid var(--border); position:sticky; top:0; z-index:100; }
@@ -261,10 +284,21 @@
   <a href="/pages/index.html" class="logo">Da <span>Mesa</span></a>
   <div class="nav-right">
     <span class="rest-badge" id="nav-rest-name"><span class="loading-text">A carregar</span></span>
+    <button class="notif-btn" id="notif-btn" onclick="togglePushNotifications()" title="Notificações">🔔</button>
     <a href="#" id="view-site-link" class="btn-sm view-site-btn" target="_blank">Ver página pública ↗</a>
     <button class="btn-sm" onclick="handleSignOut()">Sair</button>
   </div>
 </nav>
+
+<!-- In-app booking alert -->
+<div class="booking-alert" id="booking-alert">
+  <div class="ba-icon">🍽️</div>
+  <div class="ba-body">
+    <div class="ba-title" id="ba-title">Nova reserva!</div>
+    <div class="ba-sub" id="ba-sub"></div>
+  </div>
+  <button class="ba-close" onclick="dismissAlert()">✕</button>
+</div>
 
 <div class="tabs-bar">
   <div class="tabs-inner">
@@ -1165,6 +1199,136 @@
   }
 
   window.handleSignOut = signOut
+
+  // ── PUSH NOTIFICATIONS + REALTIME ─────────────────────────
+  const VAPID_PUBLIC = 'BG43TGVD5A8C6ctDa1zAo30rcMaVpTEK03Sy3O6K3UrrkowKoS1HAXNQ0l_rYoVkJa2131tutxam76pxbw_Ly8U'
+
+  // Convert VAPID public key to Uint8Array
+  function urlBase64ToUint8Array(base64String) {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4)
+    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/')
+    const raw = atob(base64)
+    return new Uint8Array([...raw].map(c => c.charCodeAt(0)))
+  }
+
+  // Play a notification sound via Web Audio API
+  function playNotifSound() {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)()
+      const times = [[0, 660, 0.3], [0.15, 880, 0.3], [0.3, 1100, 0.4]]
+      times.forEach(([when, freq, dur]) => {
+        const osc = ctx.createOscillator()
+        const gain = ctx.createGain()
+        osc.connect(gain); gain.connect(ctx.destination)
+        osc.frequency.value = freq
+        osc.type = 'sine'
+        gain.gain.setValueAtTime(0.25, ctx.currentTime + when)
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + when + dur)
+        osc.start(ctx.currentTime + when)
+        osc.stop(ctx.currentTime + when + dur + 0.05)
+      })
+    } catch(e) {}
+  }
+
+  // Show in-app banner
+  let _alertTimer = null
+  function showBookingAlert(booking) {
+    const timeStr = (booking.booking_time ?? '').slice(0,5)
+    const dateStr = booking.booking_date ?? ''
+    document.getElementById('ba-title').textContent = `Nova reserva — ${booking.party_size} pessoa${booking.party_size !== 1 ? 's'  : ''}`
+    document.getElementById('ba-sub').textContent = `${booking.diner_name} · ${dateStr} ${timeStr}`
+    const el = document.getElementById('booking-alert')
+    el.classList.add('show')
+    clearTimeout(_alertTimer)
+    _alertTimer = setTimeout(() => el.classList.remove('show'), 8000)
+    playNotifSound()
+  }
+  window.dismissAlert = function() {
+    document.getElementById('booking-alert').classList.remove('show')
+    clearTimeout(_alertTimer)
+  }
+
+  // Supabase Realtime — listen for new bookings
+  function setupRealtime() {
+    supabase.channel(`bookings-owner-${restaurant.id}`)
+      .on('postgres_changes', {
+        event: 'INSERT', schema: 'public', table: 'bookings',
+        filter: `restaurant_id=eq.${restaurant.id}`
+      }, payload => {
+        showBookingAlert(payload.new)
+        // Refresh booking list if Reservas tab is active
+        const reservasPanel = document.getElementById('tab-reservas')
+        if (reservasPanel?.classList.contains('active')) {
+          const dateInput = document.getElementById('booking-date')
+          loadBookings(dateInput?.value || null)
+        }
+      })
+      .subscribe()
+  }
+
+  // Push subscription management
+  async function updateNotifButton() {
+    const btn = document.getElementById('notif-btn')
+    if (!('Notification' in window) || !('serviceWorker' in navigator)) {
+      btn.classList.add('denied'); btn.title = 'Notificações não suportadas neste browser'
+      return
+    }
+    const perm = Notification.permission
+    if (perm === 'granted') { btn.classList.add('active'); btn.title = 'Notificações ativas ✓' }
+    else if (perm === 'denied') { btn.classList.add('denied'); btn.title = 'Notificações bloqueadas' }
+    else { btn.title = 'Ativar notificações push' }
+  }
+
+  window.togglePushNotifications = async function() {
+    if (!('Notification' in window) || !('serviceWorker' in navigator)) {
+      alert('O teu browser não suporta notificações push.')
+      return
+    }
+    if (Notification.permission === 'denied') {
+      alert('Notificações bloqueadas. Vai às definições do browser e permite notificações para damesa.pt.')
+      return
+    }
+    if (Notification.permission === 'granted') {
+      // Already subscribed — offer to unsubscribe
+      if (!confirm('Desativar notificações push?')) return
+      const reg = await navigator.serviceWorker.ready
+      const sub = await reg.pushManager.getSubscription()
+      if (sub) {
+        await sub.unsubscribe()
+        await supabase.from('push_subscriptions')
+          .delete().eq('user_id', session.user.id).eq('restaurant_id', restaurant.id)
+      }
+      document.getElementById('notif-btn').classList.remove('active')
+      document.getElementById('notif-btn').title = 'Ativar notificações push'
+      return
+    }
+    // Request permission + subscribe
+    const perm = await Notification.requestPermission()
+    if (perm !== 'granted') return
+    try {
+      const reg = await navigator.serviceWorker.ready
+      const sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC)
+      })
+      await supabase.from('push_subscriptions').upsert({
+        user_id: session.user.id,
+        restaurant_id: restaurant.id,
+        subscription: sub.toJSON()
+      }, { onConflict: 'user_id,restaurant_id' })
+      document.getElementById('notif-btn').classList.add('active')
+      document.getElementById('notif-btn').title = 'Notificações ativas ✓'
+      // Test notification
+      new Notification('Da Mesa ✓', { body: 'Notificações ativadas! Vais ser avisado de cada nova reserva.', icon: '/assets/icons/icon-192.png' })
+    } catch(e) {
+      console.error('Push subscribe failed:', e)
+      alert('Não foi possível ativar as notificações: ' + e.message)
+    }
+  }
+
+  // Init: setup realtime + check current push state
+  setupRealtime()
+  updateNotifButton()
 
   // ── FOTOS TAB ─────────────────────────────────────────────
   let _allPhotos = []
