@@ -630,6 +630,16 @@
           <span id="bm-contract-badge">—</span>
           <span id="bm-contract-signer" style="font-size:13px;color:var(--muted)"></span>
         </div>
+
+        <!-- Owner legal name — required to generate contract -->
+        <div style="margin-bottom:16px;">
+          <label class="modal-label">Nome legal do proprietário <span style="color:#c0392b;">*</span></label>
+          <div style="display:flex;gap:8px;">
+            <input class="modal-input" id="bm-contract-owner-name" placeholder="Ex: João Silva / Restaurante Lda" style="flex:1;" oninput="updateContractBtnState()" />
+          </div>
+          <div style="font-size:12px;color:var(--muted);margin-top:4px;">Aparece no contrato como representante do restaurante. Obrigatório para enviar.</div>
+        </div>
+
         <!-- Contract link (shown when sent/signed) -->
         <div id="bm-contract-link-wrap" style="display:none;margin-bottom:16px;">
           <label class="modal-label">Link do contrato</label>
@@ -1271,7 +1281,10 @@
     else contractBadge = `<span class="contract-none">Nenhum</span>`
     document.getElementById('bm-contract-badge').innerHTML = contractBadge
 
-    const canSend = !!(restaurant.owner_legal_name && restaurant.email)
+    // Populate the inline owner name field in Contrato tab
+    document.getElementById('bm-contract-owner-name').value = restaurant.owner_legal_name ?? ''
+    // Button enabled if name is already stored OR if restaurant has email (user can type name)
+    const canSend = !!restaurant.owner_legal_name && !!restaurant.email
     document.getElementById('bm-contract-btn').disabled = !canSend
     document.getElementById('bm-contract-btn').style.display = contractStatus === 'none' ? 'block' : 'none'
     document.getElementById('bm-contract-resend-btn').style.display = contractStatus !== 'none' ? 'block' : 'none'
@@ -1505,15 +1518,24 @@
     const sucEl = document.getElementById('bm-contract-success')
     errEl.style.display = 'none'; sucEl.style.display = 'none'
 
-    // Save owner name first if changed
-    const ownerName = document.getElementById('bm-owner-name').value.trim()
-    if (ownerName) {
-      await supabase.from('restaurants').update({ owner_legal_name: ownerName }).eq('id', _billingRestaurantId)
+    // Save owner name from the Contrato tab field (and sync to Faturação field too)
+    const ownerName = document.getElementById('bm-contract-owner-name').value.trim()
+    if (!ownerName) {
+      errEl.textContent = 'Preenche o nome legal do proprietário antes de enviar.'
+      errEl.style.display = 'block'
+      document.getElementById('bm-contract-owner-name').focus()
+      return
     }
+    await supabase.from('restaurants').update({ owner_legal_name: ownerName }).eq('id', _billingRestaurantId)
+    // Keep Faturação tab in sync
+    const fatEl = document.getElementById('bm-owner-name')
+    if (fatEl) fatEl.value = ownerName
 
     const btn = document.getElementById('bm-contract-btn')
+    const resendBtn = document.getElementById('bm-contract-resend-btn')
     btn.disabled = true
     btn.textContent = 'A enviar...'
+    resendBtn.disabled = true
 
     try {
       const { data: { session } } = await supabase.auth.getSession()
@@ -1532,9 +1554,18 @@
         throw new Error(result.error ?? 'Erro desconhecido.')
       }
 
-      sucEl.textContent = `Contrato enviado via DocuSeal! ID: ${result.submissionId}`
+      sucEl.textContent = `✅ Contrato enviado para o email do restaurante!`
       sucEl.style.display = 'block'
-      document.getElementById('bm-contract-badge').innerHTML = `<span class="contract-sent">enviado</span>`
+      document.getElementById('bm-contract-badge').innerHTML = `<span class="contract-sent">📨 Enviado</span>`
+      btn.style.display = 'none'
+      resendBtn.style.display = 'block'
+
+      // Show the signing link
+      if (result.token) {
+        const link = `https://damesa.pt/contrato/${result.token}`
+        document.getElementById('bm-contract-link').value = link
+        document.getElementById('bm-contract-link-wrap').style.display = 'block'
+      }
 
       // Refresh restaurant list in background
       await loadRestaurants()
@@ -1544,8 +1575,16 @@
       errEl.style.display = 'block'
     } finally {
       btn.disabled = false
-      btn.textContent = 'Enviar Contrato DocuSeal'
+      resendBtn.disabled = false
+      btn.textContent = '📨 Enviar Contrato'
     }
+  }
+
+  // Enable/disable contract send button as user types the owner name
+  window.updateContractBtnState = function() {
+    const name = (document.getElementById('bm-contract-owner-name')?.value ?? '').trim()
+    const btn = document.getElementById('bm-contract-btn')
+    if (btn) btn.disabled = !name
   }
 
   // ── DAMESA EMAIL ──────────────────────────────────────────
