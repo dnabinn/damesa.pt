@@ -53,6 +53,27 @@ def twaManifest = [
 android {
     compileSdkVersion 36
     namespace "pt.damesa.pwa"
+    flavorDimensions "target"
+    productFlavors {
+        // Public customer app (existing)
+        customer {
+            dimension "target"
+            applicationId "pt.damesa.pwa"
+            resValue "string", "appName", twaManifest.name
+            resValue "string", "launcherName", twaManifest.launcherName
+        }
+        // Restaurant owner app
+        owner {
+            dimension "target"
+            applicationId "pt.damesa.painel"
+            resValue "string", "appName", "Da Mesa Painel"
+            resValue "string", "launcherName", "Da Mesa Painel"
+            resValue "string", "launchUrl", "https://damesa.pt/pages/owner-app.html"
+            resValue "string", "webManifestUrl", "https://damesa.pt/assets/owner-manifest.json"
+            resValue "string", "fullScopeUrl", "https://damesa.pt/pages/"
+            resValue "string", "providerAuthority", "pt.damesa.painel.fileprovider"
+        }
+    }
     defaultConfig {
         applicationId "pt.damesa.pwa"
         minSdkVersion 21

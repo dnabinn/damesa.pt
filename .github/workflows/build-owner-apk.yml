@@ -1,0 +1,71 @@
+name: Build Owner APK
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch: # allow manual trigger
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android build tools
+        run: sdkmanager "build-tools;34.0.0" "platforms;android-35"
+
+      - name: Decode keystore
+        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android.keystore
+
+      - name: Fix Gradle heap size
+        run: echo "org.gradle.jvmargs=-Xmx512m" > gradle.properties
+
+      - name: Make gradlew executable
+        run: chmod +x gradlew
+
+      - name: Build owner release APK
+        run: ./gradlew assembleOwnerRelease
+
+      - name: Zipalign APK
+        run: |
+          $ANDROID_HOME/build-tools/34.0.0/zipalign -v -p 4 \
+            app/build/outputs/apk/owner/release/app-owner-release-unsigned.apk \
+            app-owner-aligned.apk
+
+      - name: Sign APK
+        run: |
+          $ANDROID_HOME/build-tools/34.0.0/apksigner sign \
+            --ks android.keystore \
+            --ks-key-alias ${{ secrets.KEY_ALIAS }} \
+            --ks-pass pass:${{ secrets.KEY_STORE_PASSWORD }} \
+            --key-pass pass:${{ secrets.KEY_STORE_PASSWORD }} \
+            --out damesa-painel.apk \
+            app-owner-aligned.apk
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: damesa-painel-apk
+          path: damesa-painel.apk
+          retention-days: 30
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: apk-${{ github.run_number }}
+          name: "Da Mesa Painel v${{ github.run_number }}"
+          body: "Auto-built from commit ${{ github.sha }}"
+          files: damesa-painel.apk
+          make_latest: true
