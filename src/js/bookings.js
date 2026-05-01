@@ -7,6 +7,19 @@ export async function createBooking(bookingData) {
     bookingDate, bookingTime, partySize, specialRequests, occasion, dinerId
   } = bookingData
 
+  // Server-side past-date guard (Lisbon timezone)
+  const todayLisbon = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Lisbon' })
+  if (bookingDate < todayLisbon) {
+    return { error: { message: 'Não é possível reservar para datas passadas.' } }
+  }
+  // Past-time guard for today
+  if (bookingDate === todayLisbon) {
+    const nowLisbon = new Date().toLocaleTimeString('en-GB', { timeZone: 'Europe/Lisbon', hour: '2-digit', minute: '2-digit' })
+    if (bookingTime <= nowLisbon) {
+      return { error: { message: 'Este horário já passou. Escolhe um horário futuro.' } }
+    }
+  }
+
   const row = {
     restaurant_id: restaurantId,
     diner_id: dinerId || null,
@@ -32,6 +45,7 @@ export async function createBooking(bookingData) {
   if (error) return { error }
 
   await sendBookingConfirmation(data)
+  notifyOwner(data)  // fire-and-forget push notification to restaurant owner
   return { booking: data }
 }
 
@@ -51,6 +65,23 @@ async function sendBookingConfirmation(booking) {
     if (!res.ok) console.error('Email notification failed:', data)
   } catch (e) {
     console.error('Email notification failed:', e)
+  }
+}
+
+// Send push notification to restaurant owner
+async function notifyOwner(booking) {
+  try {
+    await fetch('https://jdkbywroucgwrfpirloa.supabase.co/functions/v1/notify-owner', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': 'sb_publishable_rU5h79iwvA6wDozm72uvMg_zSFZAkkY',
+        'Authorization': 'Bearer sb_publishable_rU5h79iwvA6wDozm72uvMg_zSFZAkkY'
+      },
+      body: JSON.stringify({ bookingId: booking.id })
+    })
+  } catch (e) {
+    console.warn('Owner push notification failed:', e)
   }
 }
 

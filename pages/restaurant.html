@@ -1235,26 +1235,44 @@
   })()
 
   // ── BOOKING ───────────────────────────────────────────────
-  // Use Lisbon timezone (UTC+1 winter / UTC+2 summer) so the date is never off by a day
-  const todayLisbon = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Lisbon' }) // → YYYY-MM-DD
-  document.getElementById('bdate').value = todayLisbon
-  document.getElementById('bdate').min = todayLisbon
+  // Always compute "today in Lisbon" fresh — never cache it, page may stay open past midnight
+  function getLisbonToday() {
+    return new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Lisbon' }) // YYYY-MM-DD
+  }
+  function getLisbonNow() {
+    return new Date().toLocaleTimeString('en-GB', { timeZone: 'Europe/Lisbon', hour: '2-digit', minute: '2-digit' }) // HH:MM
+  }
+
+  const dateInput = document.getElementById('bdate')
+  dateInput.value = getLisbonToday()
+  dateInput.min   = getLisbonToday()
 
   async function loadSlots() {
-    const date = document.getElementById('bdate').value
+    const date = dateInput.value
     if (!date) return
     const slotsEl = document.getElementById('time-slots')
+
+    // Always refresh min in case page was open past midnight
+    const today = getLisbonToday()
+    dateInput.min = today
+
+    // Block past dates — user may have typed one or page was open past midnight
+    if (date < today) {
+      slotsEl.innerHTML = '<p style="color:var(--muted);font-size:14px;grid-column:1/-1;">Não é possível reservar para datas passadas. Escolhe uma data a partir de hoje.</p>'
+      return
+    }
+
     slotsEl.innerHTML = [1,2,3,4,5,6].map(() => `<div class="slot skeleton" style="height:40px;border:none;"></div>`).join('')
     const slots = await getAvailableSlots(restaurant.id, date, restaurant.available_times, restaurant.opening_hours)
     const capacity = restaurant.capacity ?? 50
 
-    // If booking for today, hide slots whose time has already passed (Lisbon time)
-    const nowLisbon = new Date().toLocaleTimeString('en-GB', { timeZone: 'Europe/Lisbon', hour: '2-digit', minute: '2-digit' }) // HH:MM
-    const isToday = date === todayLisbon
+    const isToday = date === today
+    const nowLisbon = getLisbonNow()
 
+    // For today: hide slots whose time has already passed
     const visible = slots.filter(s => !isToday || s.time > nowLisbon)
+
     if (!visible.length) {
-      // Distinguish between "closed today" and "all slots passed/fully booked"
       const dayOfWeek = new Date(date + 'T12:00:00').getDay()
       const dayHours = (restaurant.opening_hours ?? []).filter(h => h.day_of_week === dayOfWeek)
       const isClosed = dayHours.length > 0 && dayHours.some(h => h.is_closed)
@@ -1270,7 +1288,7 @@
     }).join('')
   }
 
-  document.getElementById('bdate').addEventListener('change', loadSlots)
+  dateInput.addEventListener('change', loadSlots)
   await loadSlots()
 
   window.selectSlot = function(el) {
