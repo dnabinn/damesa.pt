@@ -7,6 +7,15 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// base64 → base64url (JWT requires base64url, btoa() gives standard base64)
+function toBase64url(b64: string): string {
+  return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '')
+}
+
+function jsonToBase64url(obj: object): string {
+  return toBase64url(btoa(JSON.stringify(obj)))
+}
+
 // Send a push via Firebase Cloud Messaging v1 HTTP API
 async function sendFcmNotification(fcmToken: string, title: string, body: string) {
   const serviceAccountJson = Deno.env.get('FIREBASE_SERVICE_ACCOUNT')
@@ -14,16 +23,16 @@ async function sendFcmNotification(fcmToken: string, title: string, body: string
 
   const sa = JSON.parse(serviceAccountJson)
 
-  // Build a JWT for Google OAuth2 access token
+  // Build a JWT for Google OAuth2 access token (all parts must be base64url, not base64)
   const now = Math.floor(Date.now() / 1000)
-  const header = btoa(JSON.stringify({ alg: 'RS256', typ: 'JWT' }))
-  const claim = btoa(JSON.stringify({
+  const header = jsonToBase64url({ alg: 'RS256', typ: 'JWT' })
+  const claim  = jsonToBase64url({
     iss: sa.client_email,
     scope: 'https://www.googleapis.com/auth/firebase.messaging',
     aud: 'https://oauth2.googleapis.com/token',
     exp: now + 3600,
     iat: now,
-  }))
+  })
 
   // Sign with RSA-SHA256 using the service account private key
   const pemKey = sa.private_key
@@ -38,12 +47,13 @@ async function sendFcmNotification(fcmToken: string, title: string, body: string
     false, ['sign']
   )
   const signingInput = `${header}.${claim}`
-  const signature = await crypto.subtle.sign(
-    'RSASSA-PKCS1-v1_5',
-    cryptoKey,
-    new TextEncoder().encode(signingInput)
-  )
-  const jwt = `${signingInput}.${btoa(String.fromCharCode(...new Uint8Array(signature))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'')}`
+  const sigBytes = new Uint8Array(await crypto.subtle.sign(
+    'RSASSA-PKCS1-v1_5', cryptoKey, new TextEncoder().encode(signingInput)
+  ))
+  // Convert signature bytes to base64url without spread (avoids stack overflow on large arrays)
+  let sigBin = ''
+  for (let i = 0; i < sigBytes.length; i++) sigBin += String.fromCharCode(sigBytes[i])
+  const jwt = `${signingInput}.${toBase64url(btoa(sigBin))}`
 
   // Exchange JWT for access token
   const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
@@ -51,7 +61,11 @@ async function sendFcmNotification(fcmToken: string, title: string, body: string
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: `grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion=${jwt}`,
   })
-  const { access_token } = await tokenRes.json()
+  const tokenJson = await tokenRes.json()
+  if (!tokenJson.access_token) {
+    throw new Error(`FCM auth failed: ${JSON.stringify(tokenJson)}`)
+  }
+  const { access_token } = tokenJson
 
   // Send FCM message
   const projectId = sa.project_id
