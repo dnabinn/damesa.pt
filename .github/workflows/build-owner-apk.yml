@@ -29,8 +29,11 @@ jobs:
       - name: Decode keystore
         run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android.keystore
 
-      - name: Fix Gradle heap size
-        run: echo "org.gradle.jvmargs=-Xmx512m" > gradle.properties
+      - name: Fix Gradle properties
+        run: |
+          echo "org.gradle.jvmargs=-Xmx512m" > gradle.properties
+          echo "android.useAndroidX=true" >> gradle.properties
+          echo "android.enableJetifier=true" >> gradle.properties
 
       - name: Make gradlew executable
         run: chmod +x gradlew
