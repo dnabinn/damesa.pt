@@ -624,20 +624,37 @@
 
       <!-- CONTRATO -->
       <div class="bm-pane" id="bmp-contrato">
-        <div class="modal-section-title">📄 Contrato</div>
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
-          <span>Estado:</span>
-          <span id="bm-contract-badge">—</span>
-          <span id="bm-contract-signer" style="font-size:13px;color:var(--muted)"></span>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
+          <div class="modal-section-title" style="margin:0;">📄 Contrato</div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-size:13px;color:var(--muted);">Estado:</span>
+            <span id="bm-contract-badge">—</span>
+            <span id="bm-contract-signer" style="font-size:12px;color:var(--muted)"></span>
+          </div>
         </div>
 
-        <!-- Owner legal name — required to generate contract -->
-        <div style="margin-bottom:16px;">
-          <label class="modal-label">Nome legal do proprietário <span style="color:#c0392b;">*</span></label>
-          <div style="display:flex;gap:8px;">
-            <input class="modal-input" id="bm-contract-owner-name" placeholder="Ex: João Silva / Restaurante Lda" style="flex:1;" oninput="updateContractBtnState()" />
+        <!-- Info box: required fields -->
+        <div style="background:#fffbf0;border:1px solid #f5c842;border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:12px;color:#7a5a00;">
+          ⚠️ Preenche todos os campos assinalados com <strong>*</strong> — aparecem no contrato legal enviado ao restaurante.
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+          <div>
+            <label class="modal-label">Nome do representante legal <span style="color:#c0392b;">*</span></label>
+            <input class="modal-input" id="bm-contract-owner-name" placeholder="Ex: João Silva" oninput="updateContractBtnState()" />
           </div>
-          <div style="font-size:12px;color:var(--muted);margin-top:4px;">Aparece no contrato como representante do restaurante. Obrigatório para enviar.</div>
+          <div>
+            <label class="modal-label">Razão Social <span style="color:#c0392b;">*</span></label>
+            <input class="modal-input" id="bm-contract-razao-social" placeholder="Ex: Restaurante XYZ, Lda" oninput="updateContractBtnState()" />
+          </div>
+          <div>
+            <label class="modal-label">NIF <span style="color:#c0392b;">*</span></label>
+            <input class="modal-input" id="bm-contract-nif" placeholder="Ex: PT518743918" oninput="updateContractBtnState()" />
+          </div>
+          <div>
+            <label class="modal-label">Endereço de faturação</label>
+            <input class="modal-input" id="bm-contract-billing-address" placeholder="(usa endereço do restaurante se vazio)" />
+          </div>
         </div>
 
         <!-- Contract link (shown when sent/signed) -->
@@ -800,7 +817,7 @@
     try {
       const { data, error } = await supabase
         .from('restaurants')
-        .select('id, name, slug, cuisine_type, status, plan, subscription, owner_id, city, created_at, email, owner_legal_name, owner_iban, billing_status, contract_status, stripe_customer_id, damesa_email, description, cuisines')
+        .select('id, name, slug, cuisine_type, status, plan, subscription, owner_id, city, address, created_at, email, owner_legal_name, owner_iban, billing_status, contract_status, stripe_customer_id, damesa_email, description, cuisines, razao_social, restaurant_nif, billing_address')
         .order('created_at', { ascending: false })
       if (error) throw error
       allRestaurants = data ?? []
@@ -1281,10 +1298,12 @@
     else contractBadge = `<span class="contract-none">Nenhum</span>`
     document.getElementById('bm-contract-badge').innerHTML = contractBadge
 
-    // Populate the inline owner name field in Contrato tab
+    // Populate Contrato tab fields
     document.getElementById('bm-contract-owner-name').value = restaurant.owner_legal_name ?? ''
-    // Button enabled if name is already stored OR if restaurant has email (user can type name)
-    const canSend = !!restaurant.owner_legal_name && !!restaurant.email
+    document.getElementById('bm-contract-razao-social').value = restaurant.razao_social ?? ''
+    document.getElementById('bm-contract-nif').value = restaurant.restaurant_nif ?? ''
+    document.getElementById('bm-contract-billing-address').value = restaurant.billing_address ?? ''
+    const canSend = !!restaurant.owner_legal_name && !!restaurant.razao_social && !!restaurant.restaurant_nif && !!restaurant.email
     document.getElementById('bm-contract-btn').disabled = !canSend
     document.getElementById('bm-contract-btn').style.display = contractStatus === 'none' ? 'block' : 'none'
     document.getElementById('bm-contract-resend-btn').style.display = contractStatus !== 'none' ? 'block' : 'none'
@@ -1518,15 +1537,26 @@
     const sucEl = document.getElementById('bm-contract-success')
     errEl.style.display = 'none'; sucEl.style.display = 'none'
 
-    // Save owner name from the Contrato tab field (and sync to Faturação field too)
-    const ownerName = document.getElementById('bm-contract-owner-name').value.trim()
-    if (!ownerName) {
-      errEl.textContent = 'Preenche o nome legal do proprietário antes de enviar.'
+    // Validate required fields
+    const ownerName     = document.getElementById('bm-contract-owner-name').value.trim()
+    const razaoSocial   = document.getElementById('bm-contract-razao-social').value.trim()
+    const nif           = document.getElementById('bm-contract-nif').value.trim()
+    const billingAddr   = document.getElementById('bm-contract-billing-address').value.trim()
+
+    if (!ownerName || !razaoSocial || !nif) {
+      errEl.textContent = 'Preenche o nome do representante, Razão Social e NIF antes de enviar.'
       errEl.style.display = 'block'
-      document.getElementById('bm-contract-owner-name').focus()
       return
     }
-    await supabase.from('restaurants').update({ owner_legal_name: ownerName }).eq('id', _billingRestaurantId)
+
+    // Save all fields to DB before generating contract
+    await supabase.from('restaurants').update({
+      owner_legal_name: ownerName,
+      razao_social: razaoSocial,
+      restaurant_nif: nif,
+      ...(billingAddr ? { billing_address: billingAddr } : {}),
+    }).eq('id', _billingRestaurantId)
+
     // Keep Faturação tab in sync
     const fatEl = document.getElementById('bm-owner-name')
     if (fatEl) fatEl.value = ownerName
@@ -1580,11 +1610,13 @@
     }
   }
 
-  // Enable/disable contract send button as user types the owner name
+  // Enable/disable contract send button as user types the required fields
   window.updateContractBtnState = function() {
-    const name = (document.getElementById('bm-contract-owner-name')?.value ?? '').trim()
+    const name    = (document.getElementById('bm-contract-owner-name')?.value ?? '').trim()
+    const razao   = (document.getElementById('bm-contract-razao-social')?.value ?? '').trim()
+    const nif     = (document.getElementById('bm-contract-nif')?.value ?? '').trim()
     const btn = document.getElementById('bm-contract-btn')
-    if (btn) btn.disabled = !name
+    if (btn) btn.disabled = !(name && razao && nif)
   }
 
   // ── DAMESA EMAIL ──────────────────────────────────────────
