@@ -432,30 +432,18 @@
 
   <!-- ── HORÁRIOS ────────────────────────────── -->
   <div class="tab-panel" id="tab-horarios">
-    <!-- Booking slots -->
-    <div class="section-card" style="margin-bottom:20px;">
-      <div class="section-title">Horários de reserva</div>
-      <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">Seleciona os horários que o teu restaurante aceita reservas. Apenas estes aparecerão nos resultados de pesquisa.</p>
-      <div style="margin-bottom:14px;">
-        <div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:8px;">Almoço</div>
-        <div class="slot-chips" id="slot-chips-lunch"></div>
-      </div>
-      <div style="margin-bottom:20px;">
-        <div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:8px;">Jantar</div>
-        <div class="slot-chips" id="slot-chips-dinner"></div>
-      </div>
-      <button class="save-btn" onclick="saveSlots()">Guardar horários de reserva</button>
-      <div class="saved-msg" id="slots-saved">✓ Horários guardados</div>
-    </div>
-    <!-- Opening hours -->
     <div class="section-card">
       <div class="section-title">Horário de Funcionamento</div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">
+        Define os períodos de funcionamento de cada dia. Os horários de reserva disponíveis para os clientes são calculados automaticamente com intervalos de 30 minutos (última reserva 30 min antes do fecho).
+      </p>
       <div class="hours-grid" id="hours-grid">
         <p style="color:var(--muted)"><span class="loading-text">A carregar horários</span></p>
       </div>
       <br/>
       <button class="save-btn" onclick="saveHours()">Guardar horário</button>
       <div class="saved-msg" id="hours-saved">✓ Horário guardado</div>
+      <div class="saved-msg" id="hours-error" style="color:#c0392b;display:none;">⚠ Erro ao guardar. Tenta novamente.</div>
     </div>
   </div>
 
@@ -1012,39 +1000,14 @@
 
   // ── HORÁRIOS ──────────────────────────────────────────────
   const DAYS = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado']
+
   async function loadHours() {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('opening_hours').select('*')
       .eq('restaurant_id', restaurant.id).order('day_of_week').order('open_time')
+    if (error) console.error('loadHours error:', error)
     renderHours(data ?? [])
   }
-  // ── BOOKING SLOTS (available_times) ──────────────────────────
-  const LUNCH_SLOTS  = ['12:00','12:30','13:00','13:30','14:00','14:30','15:00']
-  const DINNER_SLOTS = ['19:00','19:30','20:00','20:30','21:00','21:30','22:00','22:30','23:00']
-
-  function renderSlotChips(currentTimes) {
-    const active = new Set(currentTimes && currentTimes.length ? currentTimes : [...LUNCH_SLOTS, ...DINNER_SLOTS])
-    ;[['slot-chips-lunch', LUNCH_SLOTS], ['slot-chips-dinner', DINNER_SLOTS]].forEach(([id, slots]) => {
-      document.getElementById(id).innerHTML = slots.map(t =>
-        `<div class="slot-chip${active.has(t) ? ' active' : ''}" data-time="${t}" onclick="this.classList.toggle('active')">${t}</div>`
-      ).join('')
-    })
-  }
-
-  window.saveSlots = async function() {
-    const allChips = document.querySelectorAll('.slot-chip')
-    const times = [...allChips].filter(c => c.classList.contains('active')).map(c => c.dataset.time)
-    const btn = document.getElementById('slots-saved').previousElementSibling
-    btn.disabled = true; btn.textContent = 'A guardar...'
-    await supabase.from('restaurants').update({ available_times: times }).eq('id', restaurant.id)
-    restaurant.available_times = times
-    btn.disabled = false; btn.textContent = 'Guardar horários de reserva'
-    const msg = document.getElementById('slots-saved')
-    msg.style.display = 'block'
-    setTimeout(() => msg.style.display = 'none', 2500)
-  }
-
-  renderSlotChips(restaurant.available_times)
 
   await loadHours()
 
@@ -1104,22 +1067,23 @@
   }
 
   window.saveHours = async function() {
-    const btn = document.getElementById('hours-saved').previousElementSibling
+    const btn = document.querySelector('#tab-horarios .save-btn')
+    const msgOk  = document.getElementById('hours-saved')
+    const msgErr = document.getElementById('hours-error')
     btn.disabled = true; btn.textContent = 'A guardar...'
+    msgOk.style.display = 'none'; msgErr.style.display = 'none'
 
-    // Delete all existing rows for this restaurant and re-insert
-    await supabase.from('opening_hours').delete().eq('restaurant_id', restaurant.id)
-
+    // Build insert rows from the current UI state
     const inserts = []
     for (let i = 0; i < 7; i++) {
-      const is_closed = document.getElementById(`closed-${i}`).checked
+      const is_closed = document.getElementById(`closed-${i}`)?.checked ?? false
       if (is_closed) {
         inserts.push({ restaurant_id: restaurant.id, day_of_week: i, is_closed: true, open_time: null, close_time: null })
       } else {
-        const slotRows = document.getElementById(`slots-${i}`).querySelectorAll('.slot-row')
+        const slotRows = document.getElementById(`slots-${i}`)?.querySelectorAll('.slot-row') ?? []
         slotRows.forEach(row => {
-          const open_time = row.querySelector('[data-type="open"]').value || null
-          const close_time = row.querySelector('[data-type="close"]').value || null
+          const open_time  = row.querySelector('[data-type="open"]')?.value  || null
+          const close_time = row.querySelector('[data-type="close"]')?.value || null
           if (open_time && close_time) {
             inserts.push({ restaurant_id: restaurant.id, day_of_week: i, is_closed: false, open_time, close_time })
           }
@@ -1127,12 +1091,29 @@
       }
     }
 
-    if (inserts.length) await supabase.from('opening_hours').insert(inserts)
+    // Delete existing rows then re-insert
+    const { error: delErr } = await supabase.from('opening_hours').delete().eq('restaurant_id', restaurant.id)
+    if (delErr) {
+      console.error('saveHours delete error:', delErr)
+      btn.disabled = false; btn.textContent = 'Guardar horário'
+      msgErr.style.display = 'block'
+      return
+    }
+
+    if (inserts.length) {
+      const { error: insErr } = await supabase.from('opening_hours').insert(inserts)
+      if (insErr) {
+        console.error('saveHours insert error:', insErr)
+        btn.disabled = false; btn.textContent = 'Guardar horário'
+        msgErr.textContent = '⚠ Erro ao guardar: ' + insErr.message
+        msgErr.style.display = 'block'
+        return
+      }
+    }
 
     btn.disabled = false; btn.textContent = 'Guardar horário'
-    const msg = document.getElementById('hours-saved')
-    msg.style.display = 'block'
-    setTimeout(() => { msg.style.display = 'none' }, 3000)
+    msgOk.style.display = 'block'
+    setTimeout(() => { msgOk.style.display = 'none' }, 3000)
     await loadHours()
   }
 
@@ -1576,7 +1557,7 @@
       if (btn.dataset.tab === 'ementa') loadMenuFiles()
       if (btn.dataset.tab === 'perfil') loadPerfil()
       if (btn.dataset.tab === 'waitlist') loadWaitlist()
-      if (btn.dataset.tab === 'horarios') { renderSlotChips(restaurant.available_times); loadHours() }
+      if (btn.dataset.tab === 'horarios') loadHours()
       if (btn.dataset.tab === 'faturas') loadFaturas()
     })
   })
