@@ -33,7 +33,7 @@ jobs:
 
       - name: Decode keystore
         run: |
-          echo "${{ secrets.PARTNER_KEYSTORE_BASE64 }}" | base64 -d > partner/partner.keystore
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > partner/partner.keystore
 
       - name: Fix Gradle properties
         run: |
@@ -58,8 +58,8 @@ jobs:
         run: ./gradlew assembleRelease
         env:
           KEYSTORE_PATH: partner.keystore
-          KEY_STORE_PASSWORD: ${{ secrets.PARTNER_KEY_STORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.PARTNER_KEY_ALIAS }}
+          KEY_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
 
       - name: Zipalign APK
         run: |
@@ -71,9 +71,9 @@ jobs:
         run: |
           $ANDROID_HOME/build-tools/34.0.0/apksigner sign \
             --ks partner/partner.keystore \
-            --ks-key-alias ${{ secrets.PARTNER_KEY_ALIAS }} \
-            --ks-pass pass:${{ secrets.PARTNER_KEY_STORE_PASSWORD }} \
-            --key-pass pass:${{ secrets.PARTNER_KEY_STORE_PASSWORD }} \
+            --ks-key-alias ${{ secrets.KEY_ALIAS }} \
+            --ks-pass pass:${{ secrets.KEY_STORE_PASSWORD }} \
+            --key-pass pass:${{ secrets.KEY_STORE_PASSWORD }} \
             --out damesa-partner.apk \
             damesa-partner-aligned.apk
 
