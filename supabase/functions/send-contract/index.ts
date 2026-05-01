@@ -25,7 +25,7 @@ function generateContractHtml(restaurant: {
   <h2 style="font-size:13pt;font-weight:bold;text-align:center;text-transform:uppercase;letter-spacing:2px;margin:32px 0 28px;color:#1c1612;">Contrato de Prestação de Serviços</h2>
 
   <div style="background:#faf7f2;border:1px solid #e8dfd4;border-radius:8px;padding:20px 24px;margin-bottom:28px;font-size:11pt;">
-    <p style="margin-bottom:10px;"><strong>PRESTADOR:</strong> Nabin Kumar Dahal, NIF n.º 302 941 282, domiciliado na Rua de Xabregas 12, Lote A, 1900-440 Lisboa (doravante "Da Mesa")</p>
+    <p style="margin-bottom:10px;"><strong>PRESTADOR:</strong> Da Mesa, <span style="font-size:9.5pt;color:#9a8a7e;">(Nabin Kumar Dahal, NIF n.º 302 941 282)</span>, domiciliada na Rua de Xabregas 12, Lote A, 1900-440 Lisboa (doravante "Da Mesa")</p>
     <p style="margin-bottom:0;"><strong>CLIENTE:</strong> ${restaurant.owner_legal_name}, representante do restaurante <strong>${restaurant.name}</strong>, com endereço de e-mail ${restaurant.email} (doravante "Restaurante")</p>
   </div>
 
@@ -99,13 +99,32 @@ function generateContractHtml(restaurant: {
     <div style="display:flex;gap:48px;margin-top:32px;flex-wrap:wrap;">
       <div style="flex:1;min-width:200px;">
         <div style="font-size:10pt;color:#7a6a5e;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">Pela Da Mesa</div>
-        <div style="border-bottom:1px solid #1c1612;height:40px;margin-bottom:6px;"></div>
+        <!-- Nabin's signature -->
+        <div style="height:56px;display:flex;align-items:flex-end;padding-bottom:4px;margin-bottom:0;">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 54" width="220" height="54" style="display:block;">
+            <!-- N -->
+            <path d="M8,44 L8,10 L26,38 L26,10" stroke="#1c1612" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            <!-- a -->
+            <path d="M32,28 Q32,20 40,20 Q48,20 48,28 Q48,36 40,36 Q32,36 32,36 L32,44" stroke="#1c1612" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            <!-- b -->
+            <path d="M54,10 L54,36 Q54,44 64,36 Q72,28 64,28 Q54,20 54,28" stroke="#1c1612" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            <!-- i + dot -->
+            <path d="M77,22 L77,36" stroke="#1c1612" stroke-width="2" fill="none" stroke-linecap="round"/>
+            <circle cx="77" cy="17" r="2" fill="#1c1612"/>
+            <!-- n -->
+            <path d="M83,36 L83,22 Q83,18 90,18 Q97,18 97,24 L97,36" stroke="#1c1612" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            <!-- flourish underline -->
+            <path d="M6,48 Q60,52 100,48 Q130,44 160,50" stroke="#1c1612" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.5"/>
+          </svg>
+        </div>
+        <div style="border-bottom:1px solid #1c1612;margin-bottom:6px;"></div>
         <div style="font-size:11pt;">Nabin Kumar Dahal</div>
+        <div style="font-size:9pt;color:#7a6a5e;">NIF 302 941 282</div>
       </div>
       <div style="flex:1;min-width:200px;">
         <div style="font-size:10pt;color:#7a6a5e;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">Pelo Restaurante</div>
-        <div style="border-bottom:1px solid #1c1612;height:40px;margin-bottom:6px;"></div>
-        <div style="font-size:11pt;">Nome: ${restaurant.owner_legal_name}</div>
+        <div style="border-bottom:1px solid #1c1612;height:56px;margin-bottom:6px;"></div>
+        <div style="font-size:11pt;">${restaurant.owner_legal_name}</div>
       </div>
     </div>
   </div>
