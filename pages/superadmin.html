@@ -232,6 +232,52 @@
       .btn-enter { padding:6px 10px; }
     }
 
+    /* MODAL INTERNAL TABS */
+    .bm-tab {
+      padding:12px 18px; background:none; border:none; border-bottom:2px solid transparent;
+      cursor:pointer; font-size:13px; color:var(--muted); white-space:nowrap;
+      font-family:inherit; transition:all 0.15s; margin-bottom:-1px;
+    }
+    .bm-tab:hover { color:var(--text); }
+    .bm-tab.active { color:var(--text); border-bottom-color:var(--text); font-weight:500; }
+    .bm-pane { display:none; }
+    .bm-pane.active { display:block; }
+
+    /* PHOTO GRID IN MODAL */
+    .bm-photo-thumb {
+      aspect-ratio:1; border-radius:8px; overflow:hidden; position:relative;
+      background:var(--border); cursor:pointer;
+    }
+    .bm-photo-thumb img { width:100%; height:100%; object-fit:cover; display:block; }
+    .bm-photo-overlay {
+      position:absolute; inset:0; background:rgba(0,0,0,0);
+      display:flex; flex-direction:column; justify-content:space-between;
+      padding:6px; transition:background 0.2s;
+    }
+    .bm-photo-thumb:hover .bm-photo-overlay { background:rgba(0,0,0,0.45); }
+    .bm-photo-del {
+      display:none; background:rgba(198,40,40,0.9); color:#fff; border:none;
+      border-radius:5px; padding:4px 8px; font-size:11px; cursor:pointer; width:100%;
+    }
+    .bm-photo-thumb:hover .bm-photo-del { display:block; }
+    .bm-photo-badge { font-size:10px; border-radius:4px; padding:2px 6px; align-self:flex-start; font-weight:500; }
+    .bm-photo-badge.pending { background:rgba(245,127,23,0.85); color:#fff; }
+    .bm-photo-badge.approved { background:rgba(46,125,50,0.85); color:#fff; }
+
+    /* REVIEW CARDS IN MODAL */
+    .bm-review-card {
+      background:var(--bg); border:1px solid var(--border); border-radius:10px;
+      padding:12px 14px; margin-bottom:10px;
+    }
+    .bm-review-top { display:flex; justify-content:space-between; align-items:flex-start; gap:8px; margin-bottom:6px; }
+    .bm-review-stars { color:#f57f17; font-size:14px; }
+    .bm-review-name { font-size:13px; font-weight:600; }
+    .bm-review-date { font-size:11px; color:var(--muted); }
+    .bm-review-text { font-size:13px; color:var(--muted); font-style:italic; margin-bottom:10px; }
+    .btn-del-review { background:#fce4ec; color:#c62828; border:none; border-radius:6px; padding:5px 12px; font-size:12px; cursor:pointer; font-weight:500; }
+    .btn-del-review:hover { background:#c62828; color:#fff; }
+    .bm-approve-photo { background:#e8f5e9; color:#2e7d32; border:none; border-radius:5px; padding:4px 8px; font-size:11px; cursor:pointer; margin-right:4px; }
+
     /* CONTRACTS TAB */
     .contract-stats { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:12px; margin-bottom:28px; }
     .cs-card { background:#fff; border:1px solid var(--border); border-radius:var(--radius); padding:18px 20px; }
@@ -525,52 +571,116 @@
   </div>
 </div>
 
-<!-- BILLING MODAL -->
+<!-- RESTAURANT PANEL MODAL -->
 <div class="modal-overlay" id="billing-modal">
-  <div class="modal-card">
-    <button class="modal-close" onclick="closeBillingModal()">✕</button>
-    <div class="modal-title" id="bm-restaurant-name">Restaurante</div>
-    <div class="modal-subtitle" id="bm-restaurant-email"></div>
+  <div class="modal-card" style="max-width:680px;padding:0;overflow:hidden;">
 
-    <!-- SEPA Section -->
-    <div class="modal-section">
-      <div class="modal-section-title">💳 Faturação SEPA</div>
-      <div class="modal-status">
-        Estado: <span id="bm-billing-badge">—</span>
+    <!-- Modal Header -->
+    <div style="background:#1c1612;color:#fff;padding:20px 24px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
+      <div>
+        <div style="font-family:Georgia,serif;font-size:20px;font-weight:normal;" id="bm-restaurant-name">Restaurante</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-top:3px;" id="bm-restaurant-email"></div>
       </div>
-      <div class="modal-field">
-        <label class="modal-label" for="bm-owner-name">Nome legal do proprietário</label>
-        <input class="modal-input" id="bm-owner-name" type="text" placeholder="Ex: João Silva" />
+      <div style="display:flex;gap:8px;align-items:center;flex-shrink:0;">
+        <span id="bm-status-badge" style="font-size:11px;"></span>
+        <span id="bm-plan-badge" style="font-size:11px;"></span>
+        <button class="modal-close" onclick="closeBillingModal()" style="color:#fff;position:static;float:none;">✕</button>
       </div>
-      <div class="modal-field">
-        <label class="modal-label" for="bm-iban">IBAN</label>
-        <input class="modal-input" id="bm-iban" type="text" placeholder="PT50 0000 0000 0000 0000 0000 0" />
-      </div>
-      <button class="modal-btn modal-btn-primary" id="bm-billing-btn" onclick="setupBilling()">Ativar Faturação SEPA</button>
-      <div class="modal-error" id="bm-billing-error"></div>
-      <div class="modal-success" id="bm-billing-success"></div>
     </div>
 
-    <!-- Contract Section -->
-    <div class="modal-section">
-      <div class="modal-section-title">📄 Contrato</div>
-      <div class="modal-status">
-        Estado: <span id="bm-contract-badge">—</span>
-      </div>
-      <button class="modal-btn modal-btn-blue" id="bm-contract-btn" onclick="sendContract()" disabled>Enviar Contrato DocuSeal</button>
-      <div class="modal-error" id="bm-contract-error"></div>
-      <div class="modal-success" id="bm-contract-success"></div>
+    <!-- Quick actions bar -->
+    <div style="background:#2a2018;padding:10px 24px;display:flex;gap:8px;flex-wrap:wrap;" id="bm-quick-actions"></div>
+
+    <!-- Internal tabs -->
+    <div style="display:flex;border-bottom:1px solid var(--border);background:#fff;overflow-x:auto;">
+      <button class="bm-tab active" onclick="bmTab('faturacao')" data-tab="faturacao">💳 Faturação</button>
+      <button class="bm-tab" onclick="bmTab('contrato')" data-tab="contrato">📄 Contrato</button>
+      <button class="bm-tab" onclick="bmTab('fotos')" data-tab="fotos">🖼️ Fotos</button>
+      <button class="bm-tab" onclick="bmTab('avaliacoes')" data-tab="avaliacoes">⭐ Avaliações</button>
+      <button class="bm-tab" onclick="bmTab('email')" data-tab="email">📧 Email</button>
     </div>
 
-    <!-- Da Mesa Email Section -->
-    <div class="modal-section">
-      <div class="modal-section-title">📧 Email Da Mesa</div>
-      <div class="modal-status">
-        Email: <span id="bm-damesa-email-display">—</span>
+    <!-- Tab content -->
+    <div style="padding:24px;max-height:60vh;overflow-y:auto;">
+
+      <!-- FATURAÇÃO -->
+      <div class="bm-pane active" id="bmp-faturacao">
+        <div class="modal-section" style="margin-bottom:0">
+          <div class="modal-section-title">💳 Faturação SEPA</div>
+          <div class="modal-status">Estado: <span id="bm-billing-badge">—</span></div>
+          <div class="modal-field">
+            <label class="modal-label">Nome legal do proprietário</label>
+            <input class="modal-input" id="bm-owner-name" type="text" placeholder="Ex: João Silva" />
+          </div>
+          <div class="modal-field">
+            <label class="modal-label">IBAN</label>
+            <input class="modal-input" id="bm-iban" type="text" placeholder="PT50 0000 0000 0000 0000 0000 0" />
+          </div>
+          <button class="modal-btn modal-btn-primary" id="bm-billing-btn" onclick="setupBilling()">Ativar Faturação SEPA</button>
+          <div class="modal-error" id="bm-billing-error"></div>
+          <div class="modal-success" id="bm-billing-success"></div>
+        </div>
       </div>
-      <button class="modal-btn modal-btn-primary" id="bm-damesa-email-btn" onclick="generateDamesaEmail()">Gerar email Da Mesa</button>
-      <div class="modal-error" id="bm-damesa-email-error"></div>
-      <div class="modal-success" id="bm-damesa-email-success"></div>
+
+      <!-- CONTRATO -->
+      <div class="bm-pane" id="bmp-contrato">
+        <div class="modal-section-title">📄 Contrato</div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
+          <span>Estado:</span>
+          <span id="bm-contract-badge">—</span>
+          <span id="bm-contract-signer" style="font-size:13px;color:var(--muted)"></span>
+        </div>
+        <!-- Contract link (shown when sent/signed) -->
+        <div id="bm-contract-link-wrap" style="display:none;margin-bottom:16px;">
+          <label class="modal-label">Link do contrato</label>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <input class="modal-input" id="bm-contract-link" readonly style="font-size:12px;font-family:monospace;flex:1;" />
+            <button onclick="copyBmContractLink()" style="background:#1c1612;color:#fff;border:none;border-radius:8px;padding:10px 14px;cursor:pointer;white-space:nowrap;font-size:13px;">Copiar</button>
+            <button onclick="viewBmContract()" style="background:#e3f2fd;color:#1565c0;border:none;border-radius:8px;padding:10px 14px;cursor:pointer;white-space:nowrap;font-size:13px;">Ver →</button>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="modal-btn modal-btn-blue" id="bm-contract-btn" onclick="sendContract()" disabled style="flex:1;">📨 Enviar Contrato</button>
+          <button class="modal-btn" id="bm-contract-resend-btn" onclick="sendContract()" style="display:none;flex:1;background:#fff8e1;color:#f57f17;border:1px solid #ffb74d;">🔄 Reenviar Contrato</button>
+        </div>
+        <div class="modal-error" id="bm-contract-error"></div>
+        <div class="modal-success" id="bm-contract-success"></div>
+      </div>
+
+      <!-- FOTOS -->
+      <div class="bm-pane" id="bmp-fotos">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+          <div class="modal-section-title" style="margin:0">🖼️ Fotos do Restaurante</div>
+          <div style="display:flex;gap:8px;">
+            <button onclick="bmLoadPhotos()" style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:12px;cursor:pointer;">↺ Atualizar</button>
+            <button onclick="bmApproveAll()" style="background:#e8f5e9;color:#2e7d32;border:none;border-radius:6px;padding:5px 10px;font-size:12px;cursor:pointer;">✓ Aprovar todas</button>
+          </div>
+        </div>
+        <div id="bm-photos-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;">
+          <div style="color:var(--muted);font-size:13px;padding:20px 0;grid-column:1/-1;text-align:center;">A carregar fotos...</div>
+        </div>
+      </div>
+
+      <!-- AVALIAÇÕES -->
+      <div class="bm-pane" id="bmp-avaliacoes">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+          <div class="modal-section-title" style="margin:0">⭐ Avaliações</div>
+          <button onclick="bmLoadReviews()" style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:12px;cursor:pointer;">↺ Atualizar</button>
+        </div>
+        <div id="bm-reviews-list">
+          <div style="color:var(--muted);font-size:13px;padding:20px 0;text-align:center;">A carregar avaliações...</div>
+        </div>
+      </div>
+
+      <!-- EMAIL -->
+      <div class="bm-pane" id="bmp-email">
+        <div class="modal-section-title">📧 Email Da Mesa</div>
+        <div class="modal-status" style="margin-bottom:16px;">Email: <strong><span id="bm-damesa-email-display">—</span></strong></div>
+        <button class="modal-btn modal-btn-primary" id="bm-damesa-email-btn" onclick="generateDamesaEmail()">Gerar email Da Mesa</button>
+        <div class="modal-error" id="bm-damesa-email-error"></div>
+        <div class="modal-success" id="bm-damesa-email-success"></div>
+      </div>
+
     </div>
   </div>
 </div>
@@ -1093,56 +1203,109 @@
   // Re-load when month changes
   document.getElementById('billing-month-select')?.addEventListener('change', loadBilling)
 
-  // ── BILLING MODAL ─────────────────────────────────────────
+  // ── RESTAURANT PANEL MODAL ────────────────────────────────
   const SUPABASE_URL = 'https://jdkbywroucgwrfpirloa.supabase.co'
   let _billingRestaurantId = null
+  let _bmContractToken = null
+
+  // Internal tab switching
+  window.bmTab = function(tab) {
+    document.querySelectorAll('.bm-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab))
+    document.querySelectorAll('.bm-pane').forEach(p => p.classList.remove('active'))
+    document.getElementById(`bmp-${tab}`).classList.add('active')
+    if (tab === 'fotos') bmLoadPhotos()
+    if (tab === 'avaliacoes') bmLoadReviews()
+  }
 
   window.openBillingModal = function(restaurantId) {
     const restaurant = allRestaurants.find(r => r.id === restaurantId)
     if (!restaurant) return
-
     _billingRestaurantId = restaurantId
+    _bmContractToken = null
 
+    // Header
     document.getElementById('bm-restaurant-name').textContent = restaurant.name
-    document.getElementById('bm-restaurant-email').textContent = restaurant.email ?? '(sem email)'
+    document.getElementById('bm-restaurant-email').textContent = `${restaurant.email ?? '(sem email)'} · ${restaurant.city ?? ''} · ${restaurant.slug}`
+
+    // Status + plan badges in header
+    const statusColor = restaurant.status === 'active' ? '#2e7d32' : '#c62828'
+    document.getElementById('bm-status-badge').innerHTML =
+      `<span style="background:${statusColor};color:#fff;border-radius:6px;padding:3px 9px;font-size:11px;font-weight:600;">${restaurant.status ?? 'pending'}</span>`
+    const plan = restaurant.plan ?? 'lite'
+    document.getElementById('bm-plan-badge').innerHTML = plan === 'pro'
+      ? `<span style="background:linear-gradient(135deg,#b8860b,#daa520);color:#fff;border-radius:6px;padding:3px 9px;font-size:11px;font-weight:700;">⭐ Pro</span>`
+      : `<span style="background:rgba(255,255,255,0.15);color:#fff;border-radius:6px;padding:3px 9px;font-size:11px;">Lite</span>`
+
+    // Quick action buttons
+    const qa = document.getElementById('bm-quick-actions')
+    qa.innerHTML = `
+      ${restaurant.status !== 'active'
+        ? `<button onclick="bmQuickStatus('active')" style="background:#2e7d32;color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:12px;cursor:pointer;">✓ Ativar</button>`
+        : `<button onclick="bmQuickStatus('suspended')" style="background:#c62828;color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:12px;cursor:pointer;">✕ Suspender</button>`}
+      ${plan === 'pro'
+        ? `<button onclick="bmQuickPlan('lite')" style="background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:6px 12px;font-size:12px;cursor:pointer;">→ Lite</button>`
+        : `<button onclick="bmQuickPlan('pro')" style="background:linear-gradient(135deg,#b8860b,#daa520);color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:12px;cursor:pointer;font-weight:700;">⭐ → Pro</button>`}
+      <button onclick="window.open('/pages/owner-dashboard.html','_blank');localStorage.setItem('damesa_impersonate',JSON.stringify({id:'${restaurant.id}',name:'${(restaurant.name||'').replace(/'/g,"\\'")}'}));"
+        style="background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:6px 12px;font-size:12px;cursor:pointer;">
+        👁 Entrar como →
+      </button>
+      <a href="https://damesa.pt/restaurante/lisboa/${restaurant.slug}" target="_blank"
+        style="background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:6px 12px;font-size:12px;text-decoration:none;display:inline-flex;align-items:center;">
+        🌐 Ver página
+      </a>
+    `
+
+    // FATURAÇÃO tab
     document.getElementById('bm-owner-name').value = restaurant.owner_legal_name ?? ''
     document.getElementById('bm-iban').value = restaurant.owner_iban ?? ''
-
-    // Billing status badge
     const billingStatus = restaurant.billing_status ?? 'inactive'
-    const billingBadge = billingStatus === 'active'
+    document.getElementById('bm-billing-badge').innerHTML = billingStatus === 'active'
       ? `<span class="billing-active">ativo</span>`
       : `<span class="billing-inactive">${billingStatus}</span>`
-    document.getElementById('bm-billing-badge').innerHTML = billingBadge
 
-    // Contract status badge
+    // CONTRATO tab
     const contractStatus = restaurant.contract_status ?? 'none'
     let contractBadge
-    if (contractStatus === 'signed') contractBadge = `<span class="contract-signed">assinado</span>`
-    else if (contractStatus === 'sent') contractBadge = `<span class="contract-sent">enviado</span>`
-    else contractBadge = `<span class="contract-none">nenhum</span>`
+    if (contractStatus === 'signed') contractBadge = `<span class="contract-signed">✅ Assinado</span>`
+    else if (contractStatus === 'sent') contractBadge = `<span class="contract-sent">📨 Enviado</span>`
+    else contractBadge = `<span class="contract-none">Nenhum</span>`
     document.getElementById('bm-contract-badge').innerHTML = contractBadge
 
-    // Enable contract button only if owner_legal_name and email are set
-    const canSendContract = !!(restaurant.owner_legal_name && restaurant.email)
-    document.getElementById('bm-contract-btn').disabled = !canSendContract
+    const canSend = !!(restaurant.owner_legal_name && restaurant.email)
+    document.getElementById('bm-contract-btn').disabled = !canSend
+    document.getElementById('bm-contract-btn').style.display = contractStatus === 'none' ? 'block' : 'none'
+    document.getElementById('bm-contract-resend-btn').style.display = contractStatus !== 'none' ? 'block' : 'none'
+    document.getElementById('bm-contract-signer').textContent = ''
+    document.getElementById('bm-contract-link-wrap').style.display = 'none'
 
-    // Da Mesa email
+    // Load contract token from DB
+    supabase.from('contracts').select('token, signer_name, signed_at, status')
+      .eq('restaurant_id', restaurantId).order('created_at', { ascending: false }).limit(1).maybeSingle()
+      .then(({ data: c }) => {
+        if (c?.token) {
+          _bmContractToken = c.token
+          const link = `https://damesa.pt/contrato/${c.token}`
+          document.getElementById('bm-contract-link').value = link
+          document.getElementById('bm-contract-link-wrap').style.display = 'block'
+          if (c.signer_name) {
+            document.getElementById('bm-contract-signer').textContent =
+              `· Assinado por ${c.signer_name} em ${new Date(c.signed_at).toLocaleDateString('pt-PT')}`
+          }
+        }
+      })
+
+    // EMAIL tab
     const damesaEmail = restaurant.damesa_email
-    document.getElementById('bm-damesa-email-display').textContent = damesaEmail
-      ? damesaEmail
-      : 'Não configurado'
-    document.getElementById('bm-damesa-email-btn').textContent = damesaEmail
-      ? 'Regenerar email Da Mesa'
-      : 'Gerar email Da Mesa'
+    document.getElementById('bm-damesa-email-display').textContent = damesaEmail ?? 'Não configurado'
+    document.getElementById('bm-damesa-email-btn').textContent = damesaEmail ? 'Regenerar email Da Mesa' : 'Gerar email Da Mesa'
 
     // Reset messages
     ;['bm-billing-error','bm-billing-success','bm-contract-error','bm-contract-success','bm-damesa-email-error','bm-damesa-email-success'].forEach(id => {
-      const el = document.getElementById(id)
-      el.style.display = 'none'
-      el.textContent = ''
+      const el = document.getElementById(id); el.style.display = 'none'; el.textContent = ''
     })
 
+    // Reset to first tab
+    bmTab('faturacao')
     document.getElementById('billing-modal').classList.add('open')
     document.body.style.overflow = 'hidden'
   }
@@ -1151,12 +1314,128 @@
     document.getElementById('billing-modal').classList.remove('open')
     document.body.style.overflow = ''
     _billingRestaurantId = null
+    _bmContractToken = null
   }
-
-  // Close modal on overlay click
   document.getElementById('billing-modal').addEventListener('click', function(e) {
     if (e.target === this) closeBillingModal()
   })
+
+  // Quick actions
+  window.bmQuickStatus = async function(status) {
+    if (!_billingRestaurantId) return
+    await setRestStatus(_billingRestaurantId, status)
+    const idx = allRestaurants.findIndex(r => r.id === _billingRestaurantId)
+    if (idx !== -1) allRestaurants[idx].status = status
+    openBillingModal(_billingRestaurantId)
+  }
+  window.bmQuickPlan = async function(plan) {
+    if (!_billingRestaurantId) return
+    await setPlan(_billingRestaurantId, plan)
+    const idx = allRestaurants.findIndex(r => r.id === _billingRestaurantId)
+    if (idx !== -1) allRestaurants[idx].plan = plan
+    openBillingModal(_billingRestaurantId)
+  }
+
+  // Contract link helpers
+  window.copyBmContractLink = function() {
+    const link = document.getElementById('bm-contract-link').value
+    navigator.clipboard.writeText(link).then(() => {
+      const el = document.getElementById('bm-contract-success')
+      el.textContent = '✓ Link copiado!'; el.style.display = 'block'
+      setTimeout(() => { el.style.display = 'none' }, 2500)
+    })
+  }
+  window.viewBmContract = function() {
+    if (_bmContractToken) window.open(`https://damesa.pt/contrato/${_bmContractToken}`, '_blank')
+  }
+
+  // ── PHOTOS TAB ────────────────────────────────────────────
+  window.bmLoadPhotos = async function() {
+    const grid = document.getElementById('bm-photos-grid')
+    if (!_billingRestaurantId) return
+    grid.innerHTML = '<div style="color:var(--muted);font-size:13px;grid-column:1/-1;text-align:center;padding:20px 0">A carregar...</div>'
+    const { data: photos } = await supabase
+      .from('restaurant_photos').select('id, url, approved')
+      .eq('restaurant_id', _billingRestaurantId)
+      .order('created_at', { ascending: false })
+
+    if (!photos?.length) {
+      grid.innerHTML = '<div style="color:var(--muted);font-size:13px;grid-column:1/-1;text-align:center;padding:20px 0">Sem fotos.</div>'
+      return
+    }
+    grid.innerHTML = photos.map(p => `
+      <div class="bm-photo-thumb">
+        <img src="${p.url}" alt="" loading="lazy" onclick="openLb('${p.url}')" />
+        <div class="bm-photo-overlay">
+          <span class="bm-photo-badge ${p.approved ? 'approved' : 'pending'}">${p.approved ? '✓' : '⏳'}</span>
+          <div style="display:flex;flex-direction:column;gap:4px;">
+            ${!p.approved ? `<button class="bm-approve-photo" onclick="bmApprovePhoto('${p.id}',this)">Aprovar</button>` : ''}
+            <button class="bm-photo-del" onclick="bmDeletePhoto('${p.id}',this)">🗑️ Eliminar</button>
+          </div>
+        </div>
+      </div>`).join('')
+  }
+
+  window.bmApprovePhoto = async function(photoId, btn) {
+    btn.disabled = true; btn.textContent = '...'
+    const { error } = await supabase.from('restaurant_photos').update({ approved: true }).eq('id', photoId)
+    if (error) { btn.disabled = false; btn.textContent = 'Aprovar'; return }
+    bmLoadPhotos()
+  }
+
+  window.bmApproveAll = async function() {
+    if (!_billingRestaurantId) return
+    if (!confirm('Aprovar todas as fotos pendentes?')) return
+    await supabase.from('restaurant_photos').update({ approved: true })
+      .eq('restaurant_id', _billingRestaurantId).eq('approved', false)
+    bmLoadPhotos()
+  }
+
+  window.bmDeletePhoto = async function(photoId, btn) {
+    if (!confirm('Eliminar esta foto permanentemente?')) return
+    btn.disabled = true; btn.textContent = '...'
+    const { error } = await supabase.from('restaurant_photos').delete().eq('id', photoId)
+    if (error) { alert('Erro: ' + error.message); btn.disabled = false; return }
+    btn.closest('.bm-photo-thumb').remove()
+  }
+
+  // ── REVIEWS TAB ───────────────────────────────────────────
+  window.bmLoadReviews = async function() {
+    const list = document.getElementById('bm-reviews-list')
+    if (!_billingRestaurantId) return
+    list.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px 0">A carregar...</div>'
+    const { data: reviews } = await supabase
+      .from('reviews').select('id, rating, comment, created_at, profiles(full_name)')
+      .eq('restaurant_id', _billingRestaurantId)
+      .order('created_at', { ascending: false })
+
+    if (!reviews?.length) {
+      list.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px 0">Sem avaliações.</div>'
+      return
+    }
+    list.innerHTML = reviews.map(r => `
+      <div class="bm-review-card" id="rev-${r.id}">
+        <div class="bm-review-top">
+          <div>
+            <div class="bm-review-name">${r.profiles?.full_name ?? 'Anónimo'}</div>
+            <div class="bm-review-stars">${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)} <span style="font-size:12px;color:var(--muted)">${r.rating}/5</span></div>
+          </div>
+          <div class="bm-review-date">${new Date(r.created_at).toLocaleDateString('pt-PT')}</div>
+        </div>
+        ${r.comment ? `<div class="bm-review-text">"${r.comment}"</div>` : ''}
+        <button class="btn-del-review" onclick="bmDeleteReview('${r.id}')">🗑️ Remover avaliação</button>
+      </div>`).join('')
+  }
+
+  window.bmDeleteReview = async function(reviewId) {
+    if (!confirm('Remover esta avaliação permanentemente?')) return
+    const { error } = await supabase.from('reviews').delete().eq('id', reviewId)
+    if (error) { alert('Erro: ' + error.message); return }
+    document.getElementById(`rev-${reviewId}`)?.remove()
+  }
+
+  // Close modal on overlay click
+
 
   window.setupBilling = async function() {
     if (!_billingRestaurantId) return
