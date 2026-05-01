@@ -29,6 +29,14 @@ jobs:
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
 
+      - name: Deploy sign-contract
+        run: |
+          supabase functions deploy sign-contract \
+            --project-ref jdkbywroucgwrfpirloa \
+            --no-verify-jwt
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
       - name: Deploy send-booking-emails
         run: |
           supabase functions deploy send-booking-emails \
