@@ -21,6 +21,14 @@ jobs:
         with:
           version: latest
 
+      - name: Deploy notify-owner
+        run: |
+          supabase functions deploy notify-owner \
+            --project-ref jdkbywroucgwrfpirloa \
+            --no-verify-jwt
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
       - name: Deploy send-contract
         run: |
           supabase functions deploy send-contract \
