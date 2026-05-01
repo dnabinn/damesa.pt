@@ -2,7 +2,7 @@
   "name": "Da Mesa — Painel",
   "short_name": "Da Mesa",
   "description": "Gere as tuas reservas em tempo real.",
-  "start_url": "/pages/owner-dashboard.html",
+  "start_url": "/pages/owner-app.html",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",

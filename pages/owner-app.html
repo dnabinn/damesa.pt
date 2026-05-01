@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Da Mesa — Restaurante</title>
+  <link rel="manifest" href="/assets/owner-manifest.json" />
+  <link rel="icon" type="image/png" href="/assets/icons/icon-192.png" />
+  <link rel="apple-touch-icon" href="/assets/icons/icon-192.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#1c1612" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #faf7f2; --card: #fff; --text: #1c1612; --muted: #7a6a5e;
+      --accent: #c0392b; --border: #e8dfd4; --radius: 14px;
+      --green: #2e7d32; --amber: #f57f17; --blue: #1565c0;
+      --header: #1c1612; --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    html, body { height: 100%; overflow: hidden; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+           background: var(--bg); color: var(--text); }
+
+    /* ── LOGIN SCREEN ─────────────────────────────────────── */
+    #screen-login {
+      min-height: 100vh; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      background: var(--header); padding: 24px;
+      overflow-y: auto;
+    }
+    .login-card {
+      background: #fff; border-radius: 20px; padding: 40px 36px;
+      width: 100%; max-width: 400px;
+      box-shadow: 0 32px 80px rgba(0,0,0,0.5);
+    }
+    .login-logo { font-family: Georgia, serif; font-size: 30px; font-weight: normal;
+                  text-align: center; margin-bottom: 4px; }
+    .login-logo span { color: var(--accent); }
+    .login-sub { text-align: center; font-size: 11px; letter-spacing: 2px;
+                 text-transform: uppercase; color: var(--muted); margin-bottom: 32px; }
+    .login-section { display: none; }
+    .login-section.active { display: block; }
+    .lf-group { margin-bottom: 16px; }
+    .lf-group label { display: block; font-size: 11px; text-transform: uppercase;
+                      letter-spacing: 0.8px; color: var(--muted); margin-bottom: 6px; font-weight: 500; }
+    .lf-group input { width: 100%; padding: 13px 16px; border: 1.5px solid var(--border);
+                      border-radius: 10px; font-size: 15px; outline: none; font-family: inherit;
+                      background: var(--bg); transition: border-color 0.15s; }
+    .lf-group input:focus { border-color: var(--text); background: #fff; }
+    .btn-login { width: 100%; background: var(--accent); color: #fff; border: none;
+                 padding: 14px; border-radius: 10px; font-size: 15px; font-weight: 600;
+                 cursor: pointer; font-family: inherit; margin-top: 8px; transition: opacity 0.15s; }
+    .btn-login:hover { opacity: 0.88; }
+    .btn-login:disabled { opacity: 0.45; cursor: not-allowed; }
+    .login-err { color: var(--accent); font-size: 13px; margin-top: 12px; text-align: center; display: none; }
+    .login-ok { color: var(--green); font-size: 13px; margin-top: 12px; text-align: center; display: none; }
+    .login-link { display: block; text-align: center; margin-top: 14px; font-size: 13px;
+                  color: var(--muted); cursor: pointer; background: none; border: none;
+                  font-family: inherit; text-decoration: underline; width: 100%; }
+    .login-link:hover { color: var(--text); }
+
+    /* ── APP SHELL ────────────────────────────────────────── */
+    #screen-app {
+      display: flex; flex-direction: column; height: 100vh; height: 100dvh;
+    }
+    #screen-app[hidden] { display: none; }
+
+    /* In-app booking alert */
+    #booking-alert {
+      position: fixed; top: 72px; left: 50%; transform: translateX(-50%) translateY(-200%);
+      background: var(--green); color: #fff; border-radius: 12px; padding: 14px 20px;
+      display: flex; align-items: center; gap: 12px; font-size: 14px; font-weight: 500;
+      z-index: 9999; transition: transform 0.35s cubic-bezier(.34,1.56,.64,1);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3); max-width: calc(100vw - 32px); width: max-content;
+    }
+    #booking-alert.show { transform: translateX(-50%) translateY(0); }
+    #booking-alert .ba-dismiss { background: rgba(255,255,255,0.25); border: none; color: #fff;
+                                  border-radius: 6px; padding: 4px 10px; cursor: pointer;
+                                  font-size: 12px; white-space: nowrap; }
+
+    /* Header */
+    header {
+      background: var(--header); color: #fff;
+      padding: 16px 20px; padding-top: calc(16px + env(safe-area-inset-top, 0px));
+      display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+    }
+    .header-left { display: flex; flex-direction: column; gap: 2px; }
+    .header-rest { font-family: Georgia, serif; font-size: 18px; font-weight: normal; }
+    .header-sub { font-size: 11px; color: rgba(255,255,255,0.45); letter-spacing: 0.5px; }
+    .header-actions { display: flex; gap: 8px; align-items: center; }
+    .icon-btn-hdr { background: rgba(255,255,255,0.1); border: none; color: #fff;
+                    border-radius: 10px; width: 38px; height: 38px; display: flex;
+                    align-items: center; justify-content: center; font-size: 18px; cursor: pointer; }
+    .icon-btn-hdr:hover { background: rgba(255,255,255,0.18); }
+    .icon-btn-hdr.active { background: rgba(46,125,50,0.5); }
+    .icon-btn-hdr.denied { opacity: 0.35; }
+
+    /* Pending badge on header */
+    .pending-badge {
+      background: var(--accent); color: #fff; border-radius: 100px;
+      font-size: 10px; font-weight: 700; padding: 2px 6px; margin-left: 4px;
+      display: none; vertical-align: middle;
+    }
+
+    /* Main scroll area */
+    main { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+    .tab-screen { display: none; padding: 20px 16px; }
+    .tab-screen.active { display: block; }
+
+    /* Bottom nav */
+    nav.bottom-nav {
+      background: #fff; border-top: 1px solid var(--border);
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      padding-bottom: var(--safe-bottom); flex-shrink: 0;
+    }
+    .bnav-btn {
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
+      padding: 10px 4px; background: none; border: none; cursor: pointer;
+      color: var(--muted); font-size: 10px; font-family: inherit; position: relative;
+      transition: color 0.15s;
+    }
+    .bnav-btn .icon { font-size: 22px; line-height: 1; }
+    .bnav-btn.active { color: var(--accent); }
+    .bnav-btn .notif-dot {
+      position: absolute; top: 6px; right: calc(50% - 18px);
+      width: 8px; height: 8px; background: var(--accent); border-radius: 50%;
+      border: 2px solid #fff; display: none;
+    }
+    .bnav-btn .notif-dot.show { display: block; }
+
+    /* ── SHARED COMPONENTS ─────────────────────────────────── */
+    .section-hdr { display: flex; align-items: center; justify-content: space-between;
+                   margin-bottom: 16px; }
+    .section-title { font-family: Georgia, serif; font-size: 20px; font-weight: normal; }
+    .btn-sm { background: var(--text); color: #fff; border: none; padding: 8px 16px;
+               border-radius: 8px; font-size: 13px; cursor: pointer; font-family: inherit; }
+    .btn-sm:hover { opacity: 0.85; }
+
+    /* Date picker row */
+    .date-row { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+    .date-row input[type=date] { flex: 1; padding: 11px 14px; border: 1.5px solid var(--border);
+                                   border-radius: 10px; font-size: 15px; background: #fff; outline: none;
+                                   font-family: inherit; }
+    .date-row input[type=date]:focus { border-color: var(--text); }
+    .date-row button { padding: 11px 16px; border: 1.5px solid var(--border);
+                        border-radius: 10px; background: #fff; font-size: 13px;
+                        cursor: pointer; white-space: nowrap; font-family: inherit; }
+    .date-row button:hover { border-color: var(--text); }
+
+    /* Stats row */
+    .stats-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 20px; }
+    .stat-pill { background: #fff; border: 1px solid var(--border); border-radius: 12px;
+                  padding: 16px; text-align: center; }
+    .stat-pill .sv { font-family: Georgia, serif; font-size: 28px; color: var(--text); }
+    .stat-pill .sl { font-size: 11px; text-transform: uppercase; letter-spacing: 1px;
+                      color: var(--muted); margin-top: 2px; }
+
+    /* Pending alert box */
+    .pending-box {
+      background: #fff3e0; border: 1.5px solid #ffb74d; border-radius: 12px;
+      padding: 14px 16px; margin-bottom: 16px; display: flex; align-items: center;
+      gap: 10px; font-size: 14px; font-weight: 500; cursor: pointer;
+    }
+    .pending-box:hover { background: #ffe0b2; }
+    .pending-box .pb-count { font-family: Georgia, serif; font-size: 22px; color: var(--amber); }
+    .pending-box .pb-label { color: var(--amber); flex: 1; }
+    .pending-box .pb-arrow { color: var(--amber); font-size: 18px; }
+
+    /* Booking card */
+    .booking-card {
+      background: #fff; border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 16px; margin-bottom: 12px; transition: box-shadow 0.15s;
+    }
+    .booking-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
+    .booking-card.status-pending { border-left: 4px solid var(--amber); }
+    .booking-card.status-confirmed { border-left: 4px solid var(--green); }
+    .booking-card.status-cancelled { border-left: 4px solid #ccc; opacity: 0.7; }
+    .booking-card.status-no_show { border-left: 4px solid #999; opacity: 0.65; }
+    .bc-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+    .bc-time { font-family: Georgia, serif; font-size: 22px; color: var(--text); flex-shrink: 0; }
+    .bc-name { font-size: 16px; font-weight: 600; flex: 1; }
+    .bc-covers { font-size: 15px; color: var(--muted); flex-shrink: 0; }
+    .bc-meta { display: flex; flex-direction: column; gap: 4px; font-size: 13px;
+                color: var(--muted); margin-bottom: 12px; }
+    .bc-meta a { color: inherit; text-decoration: none; }
+    .bc-meta a:hover { color: var(--text); }
+    .bc-occasion { display: inline-block; background: #fce4ec; color: #c62828;
+                    border-radius: 6px; padding: 2px 8px; font-size: 12px; font-weight: 600; margin-bottom: 6px; }
+    .bc-note { background: var(--bg); border-radius: 8px; padding: 8px 10px;
+                font-size: 13px; color: var(--muted); font-style: italic; margin-bottom: 10px; }
+    .bc-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .bc-btn { flex: 1; min-width: 80px; padding: 10px; border: none; border-radius: 8px;
+               font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit;
+               transition: opacity 0.15s; }
+    .bc-btn:hover { opacity: 0.85; }
+    .bc-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .bc-confirm { background: #e8f5e9; color: var(--green); }
+    .bc-cancel  { background: #fce4ec; color: var(--accent); }
+    .bc-noshow  { background: #f5f5f5; color: #666; }
+    .status-badge { display: inline-flex; align-items: center; padding: 3px 10px;
+                     border-radius: 100px; font-size: 12px; font-weight: 500; }
+    .sb-pending   { background: #fff8e1; color: var(--amber); }
+    .sb-confirmed { background: #e8f5e9; color: var(--green); }
+    .sb-cancelled { background: #f5f5f5; color: #999; }
+    .sb-no_show   { background: #f5f5f5; color: #999; }
+
+    /* Empty state */
+    .empty-state { text-align: center; padding: 48px 24px; color: var(--muted); }
+    .empty-state .es-icon { font-size: 48px; margin-bottom: 12px; }
+    .empty-state .es-text { font-size: 15px; }
+
+    /* Waitlist card */
+    .wl-card { background: #fff; border: 1px solid var(--border); border-radius: var(--radius);
+                padding: 14px 16px; margin-bottom: 10px; }
+    .wl-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+    .wl-name { font-weight: 600; font-size: 15px; }
+    .wl-status { font-size: 11px; padding: 3px 8px; border-radius: 100px; font-weight: 500; }
+    .wl-waiting  { background: #e3f2fd; color: var(--blue); }
+    .wl-notified { background: #e8f5e9; color: var(--green); }
+    .wl-expired  { background: #f5f5f5; color: #999; }
+    .wl-meta { font-size: 13px; color: var(--muted); margin: 6px 0; }
+    .btn-notify-wl { background: var(--blue); color: #fff; border: none; border-radius: 8px;
+                      padding: 8px 16px; font-size: 13px; cursor: pointer; font-family: inherit; }
+
+    /* Profile tab */
+    .profile-card { background: #fff; border: 1px solid var(--border); border-radius: var(--radius);
+                     padding: 20px; margin-bottom: 14px; }
+    .pc-title { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted);
+                  margin-bottom: 14px; font-weight: 500; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+    .pc-row { display: flex; justify-content: space-between; align-items: center;
+               padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+    .pc-row:last-child { border-bottom: none; }
+    .pc-label { color: var(--muted); font-size: 13px; }
+    .pc-value { font-weight: 500; text-align: right; max-width: 60%; word-break: break-word; }
+    .toggle-row { display: flex; justify-content: space-between; align-items: center;
+                   padding: 14px 0; border-bottom: 1px solid var(--border); }
+    .toggle-row:last-child { border-bottom: none; }
+    .toggle-label { font-size: 14px; }
+    .toggle-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    /* iOS-style toggle */
+    .toggle { position: relative; width: 50px; height: 28px; flex-shrink: 0; }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle-track {
+      position: absolute; inset: 0; background: #ccc; border-radius: 100px;
+      cursor: pointer; transition: background 0.2s;
+    }
+    .toggle input:checked + .toggle-track { background: var(--green); }
+    .toggle-track::after {
+      content: ''; position: absolute; width: 22px; height: 22px; background: #fff;
+      border-radius: 50%; top: 3px; left: 3px; transition: transform 0.2s;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+    }
+    .toggle input:checked + .toggle-track::after { transform: translateX(22px); }
+    .btn-signout { width: 100%; background: none; border: 1.5px solid var(--border);
+                    padding: 14px; border-radius: 12px; font-size: 15px; cursor: pointer;
+                    color: var(--accent); font-family: inherit; font-weight: 500;
+                    margin-top: 4px; transition: background 0.15s; }
+    .btn-signout:hover { background: #fce4ec; }
+    .btn-full-dash { width: 100%; background: var(--text); color: #fff; border: none;
+                      padding: 14px; border-radius: 12px; font-size: 15px; cursor: pointer;
+                      font-family: inherit; font-weight: 500; margin-top: 4px; }
+    .btn-full-dash:hover { opacity: 0.85; }
+
+    /* Loading spinner */
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner { width: 28px; height: 28px; border: 2px solid var(--border);
+                border-top-color: var(--accent); border-radius: 50%;
+                animation: spin 0.7s linear infinite; margin: 32px auto; display: block; }
+
+    /* Pull-to-refresh indicator */
+    .ptr-label { text-align: center; font-size: 12px; color: var(--muted);
+                  padding: 8px; display: none; }
+  </style>
+</head>
+<body>
+
+<!-- ── LOGIN SCREEN ─────────────────────────────────────────── -->
+<div id="screen-login">
+  <div class="login-card">
+    <div class="login-logo">Da <span>Mesa</span></div>
+    <div class="login-sub">Portal do Restaurante</div>
+
+    <!-- Main login -->
+    <div class="login-section active" id="ls-main">
+      <div class="lf-group">
+        <label>Email</label>
+        <input type="email" id="li-email" placeholder="restaurante@damesa.pt"
+               autocomplete="email" inputmode="email" />
+      </div>
+      <div class="lf-group">
+        <label>Palavra-passe</label>
+        <input type="password" id="li-pw" placeholder="••••••••" autocomplete="current-password" />
+      </div>
+      <button class="btn-login" id="li-btn" onclick="doLogin()">Entrar</button>
+      <div class="login-err" id="li-err"></div>
+      <button class="login-link" onclick="showLoginSection('forgot')">Esqueceu a palavra-passe?</button>
+    </div>
+
+    <!-- Forgot password -->
+    <div class="login-section" id="ls-forgot">
+      <div class="lf-group">
+        <label>Email Da Mesa</label>
+        <input type="email" id="fp-email" placeholder="restaurante@damesa.pt" />
+      </div>
+      <button class="btn-login" id="fp-btn" onclick="doForgot()">Enviar link de recuperação</button>
+      <div class="login-err" id="fp-err"></div>
+      <div class="login-ok" id="fp-ok">Link enviado! Verifique o seu email.</div>
+      <button class="login-link" onclick="showLoginSection('main')">← Voltar ao login</button>
+    </div>
+
+    <!-- Reset password (from recovery link) -->
+    <div class="login-section" id="ls-reset">
+      <div class="lf-group">
+        <label>Nova palavra-passe</label>
+        <input type="password" id="rp-pw1" placeholder="Mínimo 8 caracteres" autocomplete="new-password" />
+      </div>
+      <div class="lf-group">
+        <label>Confirmar palavra-passe</label>
+        <input type="password" id="rp-pw2" placeholder="Repita a palavra-passe" autocomplete="new-password" />
+      </div>
+      <button class="btn-login" id="rp-btn" onclick="doReset()">Guardar nova palavra-passe</button>
+      <div class="login-err" id="rp-err"></div>
+      <div class="login-ok" id="rp-ok">Palavra-passe guardada! A entrar...</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── APP SCREEN ────────────────────────────────────────────── -->
+<div id="screen-app" hidden>
+
+  <!-- In-app new booking alert -->
+  <div id="booking-alert">
+    <span>🍽️</span>
+    <div>
+      <div id="ba-title" style="font-weight:700"></div>
+      <div id="ba-sub" style="font-size:12px;opacity:0.85"></div>
+    </div>
+    <button class="ba-dismiss" onclick="dismissAlert()">✕</button>
+  </div>
+
+  <!-- Header -->
+  <header>
+    <div class="header-left">
+      <div class="header-rest" id="h-restname">Da Mesa</div>
+      <div class="header-sub">Portal do Restaurante</div>
+    </div>
+    <div class="header-actions">
+      <button class="icon-btn-hdr" id="notif-btn" onclick="togglePush()" title="Ativar notificações">🔔</button>
+    </div>
+  </header>
+
+  <!-- Tab content -->
+  <main id="app-main">
+    <!-- HOJE -->
+    <section class="tab-screen active" id="tab-hoje">
+      <div class="stats-row">
+        <div class="stat-pill"><div class="sv" id="th-count">—</div><div class="sl">Reservas hoje</div></div>
+        <div class="stat-pill"><div class="sv" id="th-covers">—</div><div class="sl">Pessoas hoje</div></div>
+      </div>
+      <div id="pending-box-wrap"></div>
+      <div class="section-hdr">
+        <div class="section-title">Hoje</div>
+        <button class="btn-sm" onclick="loadToday()">↺</button>
+      </div>
+      <div id="hoje-list"><div class="spinner"></div></div>
+    </section>
+
+    <!-- RESERVAS -->
+    <section class="tab-screen" id="tab-reservas">
+      <div class="date-row">
+        <input type="date" id="res-date" onchange="loadReservas()" />
+        <button onclick="setResDate(0)">Hoje</button>
+        <button onclick="setResDate(1)">Amanhã</button>
+      </div>
+      <div class="section-hdr">
+        <div class="section-title">Reservas</div>
+        <button class="btn-sm" onclick="loadReservas()">↺</button>
+      </div>
+      <div id="reservas-list"><div class="spinner"></div></div>
+    </section>
+
+    <!-- ESPERA -->
+    <section class="tab-screen" id="tab-espera">
+      <div class="section-hdr">
+        <div class="section-title">Lista de Espera</div>
+        <button class="btn-sm" onclick="loadWaitlist()">↺</button>
+      </div>
+      <div id="espera-list"><div class="spinner"></div></div>
+    </section>
+
+    <!-- PERFIL -->
+    <section class="tab-screen" id="tab-perfil">
+      <div class="profile-card">
+        <div class="pc-title">Restaurante</div>
+        <div class="pc-row"><span class="pc-label">Nome</span><span class="pc-value" id="pf-name">—</span></div>
+        <div class="pc-row"><span class="pc-label">Cidade</span><span class="pc-value" id="pf-city">—</span></div>
+        <div class="pc-row"><span class="pc-label">Cozinha</span><span class="pc-value" id="pf-cuisine">—</span></div>
+        <div class="pc-row"><span class="pc-label">Email</span><span class="pc-value" id="pf-email" style="font-size:12px">—</span></div>
+        <div class="pc-row"><span class="pc-label">Telefone</span><span class="pc-value" id="pf-phone">—</span></div>
+      </div>
+
+      <div class="profile-card">
+        <div class="pc-title">Notificações</div>
+        <div class="toggle-row">
+          <div>
+            <div class="toggle-label">Notificações push</div>
+            <div class="toggle-sub" id="notif-sub">Toca para ativar</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="notif-toggle" onchange="togglePush()" />
+            <div class="toggle-track"></div>
+          </label>
+        </div>
+      </div>
+
+      <div class="profile-card">
+        <div class="pc-title">Conta</div>
+        <div class="pc-row"><span class="pc-label">Email</span><span class="pc-value" id="pf-account-email" style="font-size:12px">—</span></div>
+      </div>
+
+      <button class="btn-full-dash" onclick="window.open('/pages/owner-dashboard.html','_blank')">
+        Abrir painel completo ↗
+      </button>
+      <div style="height:10px"></div>
+      <button class="btn-signout" onclick="doSignOut()">Terminar sessão</button>
+      <div style="height:32px"></div>
+    </section>
+  </main>
+
+  <!-- Bottom navigation -->
+  <nav class="bottom-nav">
+    <button class="bnav-btn active" id="bnav-hoje" onclick="showTab('hoje')">
+      <span class="icon">🏠</span>Hoje
+      <span class="notif-dot" id="dot-hoje"></span>
+    </button>
+    <button class="bnav-btn" id="bnav-reservas" onclick="showTab('reservas')">
+      <span class="icon">📅</span>Reservas
+    </button>
+    <button class="bnav-btn" id="bnav-espera" onclick="showTab('espera')">
+      <span class="icon">⏳</span>Espera
+    </button>
+    <button class="bnav-btn" id="bnav-perfil" onclick="showTab('perfil')">
+      <span class="icon">⚙️</span>Perfil
+    </button>
+  </nav>
+</div>
+
+<script type="module">
+import { supabase } from '/src/js/supabase.js'
+import { signOut } from '/src/js/auth.js'
+
+const SUPABASE_URL = 'https://jdkbywroucgwrfpirloa.supabase.co'
+const ANON_KEY = 'sb_publishable_rU5h79iwvA6wDozm72uvMg_zSFZAkkY'
+const VAPID_PUBLIC = 'BG43TGVD5A8C6ctDa1zAo30rcMaVpTEK03Sy3O6K3UrrkowKoS1HAXNQ0l_rYoVkJa2131tutxam76pxbw_Ly8U'
+
+let _session = null
+let _restaurant = null
+
+// ── BOOT ─────────────────────────────────────────────────
+;(async () => {
+  // Check for recovery hash
+  const hash = window.location.hash
+  if (hash && hash.includes('type=recovery')) {
+    const params = new URLSearchParams(hash.slice(1))
+    if (params.get('type') === 'recovery') {
+      const at = params.get('access_token'), rt = params.get('refresh_token')
+      await supabase.auth.setSession({ access_token: at, refresh_token: rt ?? '' })
+      showLoginSection('reset')
+      showScreen('login')
+      return
+    }
+  }
+
+  const { data: { session } } = await supabase.auth.getSession()
+  if (session) {
+    const { data: profile } = await supabase
+      .from('profiles').select('role').eq('id', session.user.id).single()
+    if (profile?.role === 'restaurant_owner' || profile?.role === 'super_admin') {
+      _session = session
+      await bootApp()
+      return
+    }
+  }
+  showScreen('login')
+})()
+
+function showScreen(name) {
+  document.getElementById('screen-login').style.display = name === 'login' ? 'flex' : 'none'
+  const app = document.getElementById('screen-app')
+  if (name === 'app') app.removeAttribute('hidden')
+  else app.setAttribute('hidden', '')
+}
+
+// ── LOGIN ─────────────────────────────────────────────────
+window.showLoginSection = function(name) {
+  document.querySelectorAll('.login-section').forEach(s => s.classList.remove('active'))
+  document.getElementById(`ls-${name}`).classList.add('active')
+}
+
+window.doLogin = async function() {
+  const email = document.getElementById('li-email').value.trim()
+  const pw    = document.getElementById('li-pw').value
+  const btn   = document.getElementById('li-btn')
+  const err   = document.getElementById('li-err')
+  err.style.display = 'none'
+
+  if (!email || !pw) { showErr(err, 'Preencha o email e a palavra-passe.'); return }
+  btn.disabled = true; btn.textContent = 'A entrar...'
+
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password: pw })
+  if (error) { showErr(err, 'Email ou palavra-passe incorretos.'); btn.disabled = false; btn.textContent = 'Entrar'; return }
+
+  const { data: profile } = await supabase.from('profiles').select('role').eq('id', data.user.id).single()
+  if (!profile || (profile.role !== 'restaurant_owner' && profile.role !== 'super_admin')) {
+    await supabase.auth.signOut()
+    showErr(err, 'Acesso não autorizado. Este portal é apenas para proprietários de restaurantes.')
+    btn.disabled = false; btn.textContent = 'Entrar'; return
+  }
+
+  _session = data.session
+  btn.textContent = 'A carregar...'
+  await bootApp()
+}
+
+window.doForgot = async function() {
+  const email = document.getElementById('fp-email').value.trim()
+  const btn = document.getElementById('fp-btn')
+  const err = document.getElementById('fp-err')
+  const ok  = document.getElementById('fp-ok')
+  err.style.display = 'none'; ok.style.display = 'none'
+  if (!email.endsWith('@damesa.pt')) { showErr(err, 'O email deve terminar em @damesa.pt'); return }
+  btn.disabled = true; btn.textContent = 'A enviar...'
+  await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/pages/owner-app.html` })
+  ok.style.display = 'block'; btn.textContent = 'Enviado!'
+}
+
+window.doReset = async function() {
+  const pw1 = document.getElementById('rp-pw1').value
+  const pw2 = document.getElementById('rp-pw2').value
+  const btn = document.getElementById('rp-btn')
+  const err = document.getElementById('rp-err')
+  const ok  = document.getElementById('rp-ok')
+  err.style.display = 'none'; ok.style.display = 'none'
+  if (!pw1 || pw1.length < 8) { showErr(err, 'Mínimo 8 caracteres.'); return }
+  if (pw1 !== pw2) { showErr(err, 'As palavras-passe não coincidem.'); return }
+  btn.disabled = true; btn.textContent = 'A guardar...'
+  const { error } = await supabase.auth.updateUser({ password: pw1 })
+  if (error) { showErr(err, error.message); btn.disabled = false; btn.textContent = 'Guardar'; return }
+  ok.style.display = 'block'
+  setTimeout(async () => { _session = (await supabase.auth.getSession()).data.session; await bootApp() }, 1500)
+}
+
+document.getElementById('li-pw').addEventListener('keydown', e => { if (e.key === 'Enter') window.doLogin() })
+document.getElementById('li-email').addEventListener('keydown', e => { if (e.key === 'Enter') window.doLogin() })
+
+function showErr(el, msg) { el.textContent = msg; el.style.display = 'block' }
+
+// ── APP BOOT ──────────────────────────────────────────────
+async function bootApp() {
+  // Load restaurant
+  const { data: rest } = await supabase
+    .from('restaurants')
+    .select('*')
+    .eq('owner_id', _session.user.id)
+    .single()
+
+  if (!rest) {
+    document.getElementById('li-err').textContent = 'Nenhum restaurante associado à sua conta.'
+    document.getElementById('li-err').style.display = 'block'
+    document.getElementById('li-btn').disabled = false
+    document.getElementById('li-btn').textContent = 'Entrar'
+    return
+  }
+  _restaurant = rest
+
+  // Fill header + profile
+  document.getElementById('h-restname').textContent = rest.name
+  document.getElementById('pf-name').textContent    = rest.name
+  document.getElementById('pf-city').textContent    = rest.city ?? '—'
+  document.getElementById('pf-cuisine').textContent = rest.cuisine_type ?? '—'
+  document.getElementById('pf-email').textContent   = rest.email ?? '—'
+  document.getElementById('pf-phone').textContent   = rest.phone ?? '—'
+  document.getElementById('pf-account-email').textContent = _session.user.email ?? '—'
+
+  showScreen('app')
+
+  // Set today date on reservas tab
+  const today = new Date().toISOString().split('T')[0]
+  document.getElementById('res-date').value = today
+
+  await loadToday()
+  setupRealtime()
+  updateNotifUI()
+}
+
+// ── SIGN OUT ─────────────────────────────────────────────
+window.doSignOut = async function() {
+  await signOut()
+  _session = null; _restaurant = null
+  window.location.reload()
+}
+
+// ── TAB SWITCHING ─────────────────────────────────────────
+let _activeTab = 'hoje'
+window.showTab = function(tab) {
+  document.querySelectorAll('.tab-screen').forEach(s => s.classList.remove('active'))
+  document.querySelectorAll('.bnav-btn').forEach(b => b.classList.remove('active'))
+  document.getElementById(`tab-${tab}`).classList.add('active')
+  document.getElementById(`bnav-${tab}`).classList.add('active')
+  _activeTab = tab
+  if (tab === 'reservas') loadReservas()
+  if (tab === 'espera')   loadWaitlist()
+}
+
+// ── HELPERS ───────────────────────────────────────────────
+const today = () => new Date().toISOString().split('T')[0]
+const fmtDate = d => d ? new Date(d + 'T00:00').toLocaleDateString('pt-PT', { weekday:'short', day:'numeric', month:'short' }) : '—'
+const translateStatus = s => ({ pending:'Pendente', confirmed:'Confirmada', cancelled:'Cancelada', completed:'Concluída', no_show:'Não apareceu' }[s] ?? s)
+const occasionLabel = o => ({ birthday:'🎂 Aniversário', anniversary:'💑 Aniversário de casal', date:'💕 Encontro romântico', business:'💼 Negócios', celebration:'🥂 Celebração', farewell:'👋 Despedida', other:'✨ Ocasião especial' }[o] ?? o)
+
+function bookingCard(b, showDate = false) {
+  const statusClass = `status-${b.status}`
+  const badgeClass  = `sb-${b.status}`
+  const actions = []
+  if (b.status === 'pending') {
+    actions.push(`<button class="bc-btn bc-confirm" onclick="updateStatus('${b.id}','confirmed','${showDate}')">✓ Confirmar</button>`)
+    actions.push(`<button class="bc-btn bc-cancel"  onclick="updateStatus('${b.id}','cancelled','${showDate}')">✕ Cancelar</button>`)
+  }
+  if (b.status === 'confirmed') {
+    actions.push(`<button class="bc-btn bc-noshow" onclick="updateStatus('${b.id}','no_show','${showDate}')">Não apareceu</button>`)
+    actions.push(`<button class="bc-btn bc-cancel" onclick="updateStatus('${b.id}','cancelled','${showDate}')">Cancelar</button>`)
+  }
+  return `
+    <div class="booking-card ${statusClass}" id="bc-${b.id}">
+      <div class="bc-top">
+        <div class="bc-time">${(b.booking_time ?? '').slice(0,5)}</div>
+        <div style="flex:1;padding:0 8px">
+          <div class="bc-name">${b.diner_name}</div>
+          ${showDate ? `<div style="font-size:12px;color:var(--muted)">${fmtDate(b.booking_date)}</div>` : ''}
+        </div>
+        <div class="bc-covers">${b.party_size} 👤</div>
+      </div>
+      ${b.occasion ? `<div class="bc-occasion">${occasionLabel(b.occasion)}</div>` : ''}
+      <div class="bc-meta">
+        <span>📱 <a href="tel:${b.diner_phone}">${b.diner_phone ?? '—'}</a></span>
+        <span>✉️ <a href="mailto:${b.diner_email}">${b.diner_email ?? '—'}</a></span>
+        <span><span class="status-badge ${badgeClass}">${translateStatus(b.status)}</span></span>
+      </div>
+      ${b.special_requests ? `<div class="bc-note">${b.special_requests}</div>` : ''}
+      ${actions.length ? `<div class="bc-actions">${actions.join('')}</div>` : ''}
+    </div>`
+}
+
+// ── HOJE TAB ──────────────────────────────────────────────
+window.loadToday = async function() {
+  const el = document.getElementById('hoje-list')
+  el.innerHTML = '<div class="spinner"></div>'
+  const t = today()
+  const { data: bookings } = await supabase
+    .from('bookings').select('*')
+    .eq('restaurant_id', _restaurant.id)
+    .eq('booking_date', t)
+    .order('booking_time')
+
+  const bk = bookings ?? []
+  document.getElementById('th-count').textContent  = bk.length
+  document.getElementById('th-covers').textContent = bk.reduce((s, b) => s + b.party_size, 0)
+
+  // Pending alert box
+  const pending = bk.filter(b => b.status === 'pending')
+  const pbWrap = document.getElementById('pending-box-wrap')
+  if (pending.length > 0) {
+    pbWrap.innerHTML = `
+      <div class="pending-box" onclick="document.getElementById('tab-hoje').querySelector('[data-status=pending]')?.scrollIntoView({behavior:'smooth'})">
+        <div class="pb-count">${pending.length}</div>
+        <div class="pb-label">reserva${pending.length !== 1 ? 's' : ''} pendente${pending.length !== 1 ? 's' : ''} — aguardam confirmação</div>
+        <div class="pb-arrow">›</div>
+      </div>`
+    document.getElementById('dot-hoje').classList.add('show')
+  } else {
+    pbWrap.innerHTML = ''
+    document.getElementById('dot-hoje').classList.remove('show')
+  }
+
+  if (!bk.length) {
+    el.innerHTML = `<div class="empty-state"><div class="es-icon">🍽️</div><div class="es-text">Sem reservas para hoje.</div></div>`
+    return
+  }
+  el.innerHTML = bk.map(b => bookingCard(b, false)).join('')
+}
+
+// ── RESERVAS TAB ──────────────────────────────────────────
+window.loadReservas = async function() {
+  const date = document.getElementById('res-date').value || today()
+  const el = document.getElementById('reservas-list')
+  el.innerHTML = '<div class="spinner"></div>'
+  const { data: bookings } = await supabase
+    .from('bookings').select('*')
+    .eq('restaurant_id', _restaurant.id)
+    .eq('booking_date', date)
+    .order('booking_time')
+
+  const bk = bookings ?? []
+  if (!bk.length) {
+    el.innerHTML = `<div class="empty-state"><div class="es-icon">📅</div><div class="es-text">Sem reservas para ${fmtDate(date)}.</div></div>`
+    return
+  }
+  el.innerHTML = bk.map(b => bookingCard(b, false)).join('')
+}
+
+window.setResDate = function(offset) {
+  const d = new Date(); d.setDate(d.getDate() + offset)
+  document.getElementById('res-date').value = d.toISOString().split('T')[0]
+  loadReservas()
+}
+
+// ── UPDATE STATUS ─────────────────────────────────────────
+window.updateStatus = async function(id, status, fromReservas) {
+  const { data, error } = await supabase
+    .from('bookings')
+    .update({ status, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .select().single()
+
+  if (error) { alert('Erro ao atualizar: ' + error.message); return }
+
+  // Notify diner by email on confirm/cancel
+  if (status === 'confirmed' || status === 'cancelled') {
+    fetch(`${SUPABASE_URL}/functions/v1/send-booking-emails`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': ANON_KEY, 'Authorization': `Bearer ${ANON_KEY}` },
+      body: JSON.stringify({ statusChange: { bookingId: id, newStatus: status } })
+    }).catch(() => {})
+  }
+
+  // Refresh whichever tab is active
+  if (_activeTab === 'hoje') await loadToday()
+  else await loadReservas()
+}
+
+// ── WAITLIST TAB ──────────────────────────────────────────
+window.loadWaitlist = async function() {
+  const el = document.getElementById('espera-list')
+  el.innerHTML = '<div class="spinner"></div>'
+  const { data: entries } = await supabase
+    .from('waitlist').select('*')
+    .eq('restaurant_id', _restaurant.id)
+    .order('created_at', { ascending: false })
+
+  const wl = entries ?? []
+  if (!wl.length) {
+    el.innerHTML = `<div class="empty-state"><div class="es-icon">⏳</div><div class="es-text">Sem entradas na lista de espera.</div></div>`
+    return
+  }
+  el.innerHTML = wl.map(w => {
+    const statusClass = `wl-${w.status ?? 'waiting'}`
+    const statusLabel = { waiting:'À espera', notified:'Notificado', expired:'Expirado' }[w.status] ?? w.status
+    return `
+      <div class="wl-card">
+        <div class="wl-top">
+          <div class="wl-name">${w.diner_name}</div>
+          <span class="wl-status ${statusClass}">${statusLabel}</span>
+        </div>
+        <div class="wl-meta">
+          📅 ${fmtDate(w.desired_date)} · ${w.party_size} pessoas<br>
+          ✉️ ${w.diner_email}
+        </div>
+        ${w.status === 'waiting' ? `<button class="btn-notify-wl" onclick="notifyWl('${w.id}')">📨 Notificar disponibilidade</button>` : ''}
+      </div>`
+  }).join('')
+}
+
+window.notifyWl = async function(id) {
+  await supabase.from('waitlist').update({ status: 'notified' }).eq('id', id)
+  loadWaitlist()
+}
+
+// ── REALTIME ──────────────────────────────────────────────
+function setupRealtime() {
+  supabase.channel(`owner-app-${_restaurant.id}`)
+    .on('postgres_changes', {
+      event: 'INSERT', schema: 'public', table: 'bookings',
+      filter: `restaurant_id=eq.${_restaurant.id}`
+    }, payload => {
+      showBookingAlert(payload.new)
+      if (_activeTab === 'hoje') loadToday()
+      else if (_activeTab === 'reservas') loadReservas()
+    })
+    .subscribe()
+}
+
+// ── IN-APP ALERT + SOUND ──────────────────────────────────
+let _alertTimer = null
+function showBookingAlert(b) {
+  const time = (b.booking_time ?? '').slice(0,5)
+  document.getElementById('ba-title').textContent = `Nova reserva — ${b.party_size} pessoa${b.party_size !== 1 ? 's' : ''}`
+  document.getElementById('ba-sub').textContent   = `${b.diner_name} · ${fmtDate(b.booking_date)} ${time}`
+  const el = document.getElementById('booking-alert')
+  el.classList.add('show')
+  clearTimeout(_alertTimer)
+  _alertTimer = setTimeout(() => el.classList.remove('show'), 8000)
+  playSound()
+}
+window.dismissAlert = function() {
+  document.getElementById('booking-alert').classList.remove('show')
+  clearTimeout(_alertTimer)
+}
+
+function playSound() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)()
+    [[0, 660, 0.3], [0.15, 880, 0.3], [0.3, 1100, 0.4]].forEach(([when, freq, dur]) => {
+      const osc = ctx.createOscillator(), gain = ctx.createGain()
+      osc.connect(gain); gain.connect(ctx.destination)
+      osc.frequency.value = freq; osc.type = 'sine'
+      gain.gain.setValueAtTime(0.25, ctx.currentTime + when)
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + when + dur)
+      osc.start(ctx.currentTime + when); osc.stop(ctx.currentTime + when + dur + 0.05)
+    })
+  } catch(e) {}
+}
+
+// ── PUSH NOTIFICATIONS ────────────────────────────────────
+function urlBase64ToUint8Array(b64) {
+  const padding = '='.repeat((4 - b64.length % 4) % 4)
+  const base64 = (b64 + padding).replace(/-/g, '+').replace(/_/g, '/')
+  const raw = atob(base64)
+  return new Uint8Array([...raw].map(c => c.charCodeAt(0)))
+}
+
+async function updateNotifUI() {
+  const btn = document.getElementById('notif-btn')
+  const toggle = document.getElementById('notif-toggle')
+  const sub = document.getElementById('notif-sub')
+  if (!('Notification' in window)) {
+    btn.classList.add('denied'); sub.textContent = 'Não suportado neste browser'
+    return
+  }
+  const perm = Notification.permission
+  const isActive = perm === 'granted'
+  btn.classList.toggle('active', isActive)
+  toggle.checked = isActive
+  sub.textContent = perm === 'granted' ? 'Ativas — recebes alertas de novas reservas'
+                  : perm === 'denied'  ? 'Bloqueadas nas definições do browser'
+                  : 'Toca para ativar alertas de novas reservas'
+}
+
+window.togglePush = async function() {
+  if (!('Notification' in window) || !('serviceWorker' in navigator)) {
+    alert('O teu browser não suporta notificações push.')
+    return
+  }
+  if (Notification.permission === 'denied') {
+    alert('Notificações bloqueadas. Vai às definições do browser e permite notificações para damesa.pt.')
+    await updateNotifUI(); return
+  }
+  if (Notification.permission === 'granted') {
+    if (!confirm('Desativar notificações push?')) { await updateNotifUI(); return }
+    const reg = await navigator.serviceWorker.ready
+    const sub = await reg.pushManager.getSubscription()
+    if (sub) {
+      await sub.unsubscribe()
+      await supabase.from('push_subscriptions').delete()
+        .eq('user_id', _session.user.id).eq('restaurant_id', _restaurant.id)
+    }
+    await updateNotifUI(); return
+  }
+  const perm = await Notification.requestPermission()
+  if (perm !== 'granted') { await updateNotifUI(); return }
+  try {
+    const reg = await navigator.serviceWorker.ready
+    const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC) })
+    await supabase.from('push_subscriptions').upsert({
+      user_id: _session.user.id,
+      restaurant_id: _restaurant.id,
+      subscription: sub.toJSON()
+    }, { onConflict: 'user_id,restaurant_id' })
+    new Notification('Da Mesa ✓', { body: 'Notificações ativadas! Vais ser avisado de cada nova reserva.', icon: '/assets/icons/icon-192.png' })
+  } catch(e) {
+    alert('Erro ao ativar notificações: ' + e.message)
+  }
+  await updateNotifUI()
+}
+</script>
+
+<!-- Service Worker -->
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').catch(() => {})
+  }
+</script>
+
+</body>
+</html>
