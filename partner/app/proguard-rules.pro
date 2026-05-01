@@ -1,0 +1,1 @@
+-keep class pt.damesa.partner.** { *; }

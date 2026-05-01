@@ -1,0 +1,2 @@
+rootProject.name = "DaMesa Partner"
+include ':app'

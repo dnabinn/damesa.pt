@@ -837,6 +837,21 @@ async function updateNotifUI() {
     btn.classList.add('denied'); sub.textContent = 'Não suportado neste browser'
     return
   }
+  const isNative = !!(window.AndroidInterface && window.AndroidInterface.isNativeApp())
+
+  if (isNative) {
+    // Native app: check if FCM token is registered in DB
+    const { data: dbSub } = await supabase.from('push_subscriptions')
+      .select('id, fcm_token').eq('user_id', _session.user.id).eq('restaurant_id', _restaurant.id).maybeSingle()
+    const isActive = !!(dbSub && dbSub.fcm_token)
+    btn.classList.toggle('active', isActive)
+    toggle.checked = isActive
+    sub.textContent = isActive
+      ? 'Ativas — recebes alertas de novas reservas'
+      : 'Toca para ativar notificações nativas'
+    return
+  }
+
   const perm = Notification.permission
   const isActive = perm === 'granted'
   btn.classList.toggle('active', isActive)
@@ -846,7 +861,54 @@ async function updateNotifUI() {
                   : 'Toca para ativar alertas de novas reservas'
 }
 
+// Called by the native app when FCM token is available
+window.onFcmTokenReady = async function(token) {
+  if (!_session || !_restaurant) return
+  await supabase.from('push_subscriptions').upsert({
+    user_id: _session.user.id,
+    restaurant_id: _restaurant.id,
+    fcm_token: token,
+    subscription: null
+  }, { onConflict: 'user_id,restaurant_id' })
+  await updateNotifUI()
+}
+
 window.togglePush = async function() {
+  const isNative = !!(window.AndroidInterface && window.AndroidInterface.isNativeApp())
+
+  // ── Native app: register / unregister FCM token ──
+  if (isNative) {
+    const { data: dbSub } = await supabase.from('push_subscriptions')
+      .select('id, fcm_token').eq('user_id', _session.user.id).eq('restaurant_id', _restaurant.id).maybeSingle()
+
+    if (dbSub && dbSub.fcm_token) {
+      // Already registered → offer to unsubscribe
+      if (!confirm('Desativar notificações?')) { await updateNotifUI(); return }
+      await supabase.from('push_subscriptions').delete()
+        .eq('user_id', _session.user.id).eq('restaurant_id', _restaurant.id)
+      await updateNotifUI()
+      return
+    }
+
+    // Register FCM token
+    const token = window._fcmToken
+    if (!token) {
+      alert('Token FCM ainda não disponível. Aguarda um momento e tenta novamente.')
+      return
+    }
+    const { error } = await supabase.from('push_subscriptions').upsert({
+      user_id: _session.user.id,
+      restaurant_id: _restaurant.id,
+      fcm_token: token,
+      subscription: null
+    }, { onConflict: 'user_id,restaurant_id' })
+    if (error) { alert('Erro ao registar notificações: ' + error.message); return }
+    if (window.AndroidInterface.showToast) window.AndroidInterface.showToast('Notificações ativadas!')
+    await updateNotifUI()
+    return
+  }
+
+  // ── Web push (browser) ──
   if (!('Notification' in window) || !('serviceWorker' in navigator)) {
     alert('O teu browser não suporta notificações push.')
     return

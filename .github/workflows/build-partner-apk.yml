@@ -1,0 +1,94 @@
+name: Build Partner APK
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'partner/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android build tools
+        run: sdkmanager "build-tools;34.0.0" "platforms;android-35"
+
+      - name: Decode keystore
+        run: |
+          echo "${{ secrets.PARTNER_KEYSTORE_BASE64 }}" | base64 -d > partner/partner.keystore
+
+      - name: Fix Gradle properties
+        run: |
+          echo "org.gradle.jvmargs=-Xmx512m" > partner/gradle.properties
+          echo "android.useAndroidX=true" >> partner/gradle.properties
+          echo "android.enableJetifier=true" >> partner/gradle.properties
+          echo "kotlin.code.style=official" >> partner/gradle.properties
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '8.2'
+
+      - name: Generate Gradle wrapper
+        working-directory: partner
+        run: |
+          gradle wrapper --gradle-version 8.2 --distribution-type bin
+          chmod +x gradlew
+
+      - name: Build release APK
+        working-directory: partner
+        run: ./gradlew assembleRelease
+        env:
+          KEYSTORE_PATH: partner.keystore
+          KEY_STORE_PASSWORD: ${{ secrets.PARTNER_KEY_STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.PARTNER_KEY_ALIAS }}
+
+      - name: Zipalign APK
+        run: |
+          $ANDROID_HOME/build-tools/34.0.0/zipalign -v -p 4 \
+            partner/app/build/outputs/apk/release/app-release-unsigned.apk \
+            damesa-partner-aligned.apk
+
+      - name: Sign APK
+        run: |
+          $ANDROID_HOME/build-tools/34.0.0/apksigner sign \
+            --ks partner/partner.keystore \
+            --ks-key-alias ${{ secrets.PARTNER_KEY_ALIAS }} \
+            --ks-pass pass:${{ secrets.PARTNER_KEY_STORE_PASSWORD }} \
+            --key-pass pass:${{ secrets.PARTNER_KEY_STORE_PASSWORD }} \
+            --out damesa-partner.apk \
+            damesa-partner-aligned.apk
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: damesa-partner-apk
+          path: damesa-partner.apk
+          retention-days: 30
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: partner-apk-${{ github.run_number }}
+          name: "DaMesa Partner v${{ github.run_number }}"
+          body: "Auto-built from commit ${{ github.sha }}"
+          files: damesa-partner.apk
+          make_latest: false

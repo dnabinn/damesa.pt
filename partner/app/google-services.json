@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "509839811344",
+    "project_id": "damesa-partner",
+    "storage_bucket": "damesa-partner.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:509839811344:android:c4492fb043f0fe49ec7b95",
+        "android_client_info": {
+          "package_name": "pt.damesa.partner"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCfsc1lJKFpnWvkcvRXOltqjYOXZqJKWRk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
