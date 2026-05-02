@@ -4,6 +4,8 @@ import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.pm.PackageManager
+import android.media.AudioAttributes
+import android.media.RingtoneManager
 import android.os.Build
 import android.os.Bundle
 import android.webkit.*
@@ -99,6 +101,12 @@ class MainActivity : AppCompatActivity() {
 
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+            val audioAttributes = AudioAttributes.Builder()
+                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                .setUsage(AudioAttributes.USAGE_NOTIFICATION)
+                .build()
+
             val channel = NotificationChannel(
                 "damesa_bookings",
                 "Reservas Da Mesa",
@@ -106,7 +114,9 @@ class MainActivity : AppCompatActivity() {
             ).apply {
                 description = "Notificações de novas reservas"
                 enableVibration(true)
+                vibrationPattern = longArrayOf(0, 300, 100, 300)
                 enableLights(true)
+                setSound(soundUri, audioAttributes)
             }
             val manager = getSystemService(NotificationManager::class.java)
             manager.createNotificationChannel(channel)
@@ -139,6 +149,18 @@ class MainActivity : AppCompatActivity() {
             } else {
                 Toast.makeText(this, "Ative as notificações para receber novas reservas", Toast.LENGTH_LONG).show()
             }
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // When the user returns to the app (e.g. after tapping a notification),
+        // tell the WebView to reload the bookings list so it's always fresh.
+        webView.post {
+            webView.evaluateJavascript(
+                "if(typeof window.onAppResume === 'function') window.onAppResume();",
+                null
+            )
         }
     }
 

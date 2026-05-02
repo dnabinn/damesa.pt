@@ -3,6 +3,7 @@ package pt.damesa.partner
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Intent
+import android.media.RingtoneManager
 import androidx.core.app.NotificationCompat
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
@@ -47,6 +48,8 @@ class DaMesaFirebaseService : FirebaseMessagingService() {
             PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE
         )
 
+        val soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+
         val notification = NotificationCompat.Builder(this, "damesa_bookings")
             .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle(title)
@@ -55,6 +58,7 @@ class DaMesaFirebaseService : FirebaseMessagingService() {
             .setAutoCancel(true)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setContentIntent(pendingIntent)
+            .setSound(soundUri)
             .setVibrate(longArrayOf(0, 300, 100, 300))
             .build()
 

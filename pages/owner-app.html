@@ -778,8 +778,16 @@ window.notifyWl = async function(id) {
 }
 
 // ── REALTIME ──────────────────────────────────────────────
+let _realtimeChannel = null
+
 function setupRealtime() {
-  supabase.channel(`owner-app-${_restaurant.id}`)
+  // Remove any existing channel before creating a new one
+  if (_realtimeChannel) {
+    supabase.removeChannel(_realtimeChannel)
+    _realtimeChannel = null
+  }
+
+  _realtimeChannel = supabase.channel(`owner-app-${_restaurant.id}`)
     .on('postgres_changes', {
       event: 'INSERT', schema: 'public', table: 'bookings',
       filter: `restaurant_id=eq.${_restaurant.id}`
@@ -788,7 +796,19 @@ function setupRealtime() {
       if (_activeTab === 'hoje') loadToday()
       else if (_activeTab === 'reservas') loadReservas()
     })
-    .subscribe()
+    .subscribe(status => {
+      console.log('[Realtime] status:', status)
+    })
+}
+
+// Called by Android MainActivity.onResume() via evaluateJavascript
+// Reloads the current bookings list and reconnects realtime after returning from background
+window.onAppResume = async function() {
+  if (!_restaurant) return
+  console.log('[onAppResume] refreshing bookings and reconnecting realtime')
+  if (_activeTab === 'hoje') await loadToday()
+  else if (_activeTab === 'reservas') await loadReservas()
+  setupRealtime()  // reconnect WebSocket (may have dropped while app was in background)
 }
 
 // ── IN-APP ALERT + SOUND ──────────────────────────────────
