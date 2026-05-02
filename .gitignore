@@ -23,6 +23,14 @@ Thumbs.db
 dist/
 build/
 
+# Android build outputs (partner app)
+partner/app/build/
+partner/.gradle/
+*.apk
+*.aab
+*.keystore
+!android.keystore
+
 # Logs
 *.log
 npm-debug.log*

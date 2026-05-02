@@ -10,21 +10,21 @@ Read this before doing anything. All context, credentials, architecture, and dec
 
 **Da Mesa** (damesa.pt) — Portuguese restaurant reservation platform
 - Public diners browse restaurants and book tables (no fees)
-- Restaurant owners manage bookings via owner dashboard
+- Restaurant owners manage bookings via the owner app
 - Super admin (Nabin) manages everything via superadmin panel
 
 ### User roles
 - `super_admin` → Nabin — access via `/pages/superadmin.html` (PIN: `DaMesa@2026`)
-- `restaurant_owner` → restaurant clients — access via `/pages/owner-dashboard.html`
-- Public / `diner` → customers browsing and booking
+- `restaurant_owner` → restaurant clients — access via `/pages/owner-dashboard.html` or DaMesa Partner APK
+- Public / `diner` → customers browsing and booking (web only)
 
 ### Tech stack
 - **Frontend**: Static HTML/CSS/JS (no build step, pure ES modules)
 - **Backend/DB**: Supabase (PostgreSQL + Auth + Realtime + Storage + Edge Functions)
 - **Email**: Resend (`reservas@damesa.pt`)
-- **SMS**: Twilio (not yet configured)
+- **Push notifications**: Firebase FCM v1 (restaurant owner native app only)
 - **Deployment**: GitHub (`main` branch) → GitHub Actions FTP → Hostinger (`public_html/`)
-- **Android APK**: TWA via Bubblewrap (package: `pt.damesa.pwa`)
+- **Partner APK**: Native Kotlin + WebView + FCM (package: `pt.damesa.partner`) — restaurant owners only
 
 ---
 
@@ -35,7 +35,7 @@ Supabase Project:    jdkbywroucgwrfpirloa
 Supabase URL:        https://jdkbywroucgwrfpirloa.supabase.co
 Supabase Anon Key:   sb_publishable_rU5h79iwvA6wDozm72uvMg_zSFZAkkY   ← safe to use in frontend
 Supabase Service Key: in .env only — NEVER in frontend
-Supabase Mgmt API:   Bearer sbp_2f9ef9884322d9e199cca9c2c4c4ea7f5ba5facb
+Supabase Mgmt API:   Bearer sbp_****  (generate at supabase.com/dashboard/account/tokens)
 
 Resend API Key:      re_QLGjSm8i_PaRmWRTKih8of59vc55JVQDf
 Resend From:         Da Mesa <reservas@damesa.pt>
@@ -44,7 +44,11 @@ Google OAuth:
   Client ID:   97445891733-fu5qeulpuqpk379t707f1pvlh7a6pb2k.apps.googleusercontent.com
   Redirect URI: https://jdkbywroucgwrfpirloa.supabase.co/auth/v1/callback
 
-Android Keystore:
+Firebase (FCM push for partner app):
+  Project:     damesa-partner
+  Service account secret: FIREBASE_SERVICE_ACCOUNT (stored in Supabase edge function secrets)
+
+Android Keystore (partner APK signing):
   Path:     C:\Users\DNABINN\Desktop\Websites\Da Mesa\android.keystore
   Alias:    android
   Password: M3lh0R123!!!
@@ -61,14 +65,9 @@ Da Mesa/
 ├── .env                             ← never commit
 ├── .gitignore
 ├── .htaccess                        ← Apache rewrites (clean URLs, MIME types, SW cache)
-├── .well-known/
-│   └── assetlinks.json              ← TWA Android verification
+├── android.keystore                 ← APK signing key (back this up!)
 ├── sw.js                            ← PWA service worker (cache-first)
 ├── offline.html                     ← PWA offline fallback
-├── twa-manifest.json                ← Bubblewrap TWA config
-├── gradle.properties                ← Gradle JVM heap: -Xmx512m (must stay 512m)
-├── local.properties                 ← sdk.dir=C:\\Android
-├── android.keystore                 ← APK signing key (back this up!)
 ├── pages/
 │   ├── index.html                   ← homepage
 │   ├── restaurantes.html            ← restaurant listing
@@ -76,7 +75,8 @@ Da Mesa/
 │   ├── cozinhas.html                ← browse by cuisine
 │   ├── login.html                   ← auth (email + Google OAuth)
 │   ├── dashboard.html               ← customer account + bookings
-│   ├── owner-dashboard.html         ← restaurant owner panel
+│   ├── owner-dashboard.html         ← restaurant owner panel (browser)
+│   ├── owner-app.html               ← restaurant owner mobile app (loaded in partner APK)
 │   ├── superadmin.html              ← super admin panel (PIN protected)
 │   ├── privacy.html
 │   └── terms.html
@@ -85,18 +85,34 @@ Da Mesa/
 │       ├── supabase.js              ← Supabase client
 │       ├── auth.js                  ← login/logout/guardRoute
 │       ├── bookings.js              ← create/read/update bookings
-│       ├── restaurants.js           ← fetch restaurant data
+│       ├── restaurants.js           ← fetch restaurant data + slot generation from opening_hours
 │       ├── analytics.js             ← track events
 │       └── cookies.js               ← cookie consent banner
 ├── supabase/
 │   └── functions/
-│       └── send-booking-emails/     ← Edge Function (deployed ✅)
-│           └── index.ts             ← sends email to diner + restaurant via Resend
-├── assets/
-│   ├── manifest.json                ← PWA manifest (start_url: "/", 8 icon sizes)
-│   ├── icons/                       ← icon-72 through icon-512 PNG
-│   └── screenshots/
-└── generate-icons-pure.js           ← regenerate icons with: node generate-icons-pure.js
+│       ├── send-booking-emails/     ← emails diner + restaurant on booking
+│       ├── notify-owner/            ← FCM push + web push to restaurant owner
+│       ├── send-contract/           ← generates + emails contract to restaurant
+│       └── sign-contract/           ← handles contract signing page
+├── partner/                         ← DaMesa Partner native Android app
+│   ├── app/
+│   │   ├── google-services.json     ← Firebase config (pt.damesa.partner)
+│   │   ├── build.gradle
+│   │   └── src/main/
+│   │       ├── AndroidManifest.xml
+│   │       └── java/pt/damesa/partner/
+│   │           ├── MainActivity.kt          ← WebView + FCM token injection
+│   │           ├── AndroidInterface.kt      ← JS bridge (window.AndroidInterface)
+│   │           └── DaMesaFirebaseService.kt ← FCM message handler
+│   ├── build.gradle
+│   └── settings.gradle
+├── .github/
+│   └── workflows/
+│       ├── deploy-functions.yml     ← auto-deploys edge functions on push
+│       └── build-partner-apk.yml   ← builds + releases DaMesa Partner APK
+└── assets/
+    ├── manifest.json                ← PWA manifest (website, not APK)
+    └── icons/                       ← icon-72 through icon-512 PNG
 ```
 
 ---
@@ -127,8 +143,11 @@ Slug is read from `window.location.pathname`, NOT `?slug=` param.
 | Table | Purpose |
 |-------|---------|
 | `profiles` | User profiles with `role` field |
-| `restaurants` | Restaurant listings (slug, city, cuisine_type, status, email, owner_id) |
+| `restaurants` | Restaurant listings (slug, city, cuisine_type, status, email, owner_id, contract_status) |
 | `bookings` | Reservations (diner_id, diner_email, restaurant_id, booking_date, booking_time, party_size, status, reference_code) |
+| `opening_hours` | Per-day open/close times (day_of_week 0-6, open_time, close_time, is_closed) |
+| `push_subscriptions` | FCM tokens + web push subscriptions for owner notifications |
+| `contracts` | Restaurant contracts (token, status, signer_name, signed_at, signer_ip, contract_html) |
 | `reviews` | Restaurant reviews (gated: only past diners) |
 | `restaurant_photos` | Photos with `approved` flag |
 | `menu_categories` / `menu_items` | Menu data |
@@ -142,6 +161,11 @@ Slug is read from `window.location.pathname`, NOT `?slug=` param.
   - ⚠️ NEVER use `SELECT email FROM auth.users` in policies — permission denied. Use `auth.jwt()->>'email'` instead.
 - Reviews/Photos: only users with past `confirmed`/`completed` booking at that restaurant
 
+### Booking slot generation
+Slots are derived from `opening_hours` table, NOT from `restaurants.available_times`.
+`getAvailableSlots()` in `restaurants.js` generates 30-min slots per day of week,
+last slot = closing_time minus 30 minutes. Falls back to `available_times` if no opening_hours set.
+
 ### Running SQL via Management API
 ```javascript
 node -e "
@@ -154,7 +178,7 @@ const req = https.request({
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
-    'Authorization': 'Bearer sbp_2f9ef9884322d9e199cca9c2c4c4ea7f5ba5facb',
+    'Authorization': 'Bearer sbp_****',   // your token from supabase.com/dashboard/account/tokens
     'Content-Length': Buffer.byteLength(payload)
   }
 }, res => { let d=''; res.on('data',c=>d+=c); res.on('end',()=>console.log(d)) })
@@ -170,15 +194,11 @@ req.write(payload); req.end()
 | Role | After login goes to | Notes |
 |------|-------------------|-------|
 | `super_admin` | `/pages/dashboard.html` | Access superadmin directly via URL |
-| `restaurant_owner` | `/pages/owner-dashboard.html` | |
+| `restaurant_owner` | `/pages/owner-dashboard.html` | Partner APK loads owner-app.html |
 | `diner` / any | `/pages/dashboard.html` | |
 
 ### `?return=` param
 Login page respects `?return=/pages/restaurant.html` — redirects back after login.
-
-### Nav "Entrar" button
-Public pages check session on load. If logged in: shows "A minha conta" → `/pages/dashboard.html`.
-If not logged in: shows "Entrar" → `/pages/login.html`.
 
 ### Superadmin PIN
 `DaMesa@2026` — stored in `sessionStorage` (clears when tab closes).
@@ -192,29 +212,60 @@ Click "Entrar como →" next to any restaurant → sets `localStorage.damesa_imp
 ## BOOKING FLOW
 
 1. User selects date/time/party on restaurant page (step 1)
-2. If not logged in → redirect to login with `?return=` param
-3. User fills name/email/phone (step 2) → confirm
-4. `createBooking()` in `bookings.js` inserts to DB with `diner_id`
-5. Edge Function `send-booking-emails` called with `bookingId`
-6. Two emails sent:
-   - **Customer**: confirmation with ref, date, time, address
-   - **Restaurant**: new booking notification with client details
-7. Step 3 shown: confirmation screen with REF #
+2. Past dates/times blocked in both UI and `createBooking()` (Lisbon timezone)
+3. Time slots derived from `opening_hours` per day of week
+4. If not logged in → redirect to login with `?return=` param
+5. User fills name/email/phone (step 2) → confirm
+6. `createBooking()` in `bookings.js` inserts to DB
+7. Edge Function `send-booking-emails` → emails to diner + restaurant
+8. Edge Function `notify-owner` → FCM push to partner app (or web push fallback)
+9. Step 3 shown: confirmation screen with REF #
+
+---
+
+## PUSH NOTIFICATION SYSTEM
+
+### Flow
+Booking created → `notify-owner` edge function → checks `push_subscriptions` table:
+- If `fcm_token` present → Firebase FCM v1 API (native partner app)
+- If `subscription` present → web-push VAPID (browser fallback)
+
+### FCM JWT signing (Deno edge function)
+Must use base64url (not plain base64). `btoa()` gives standard base64 — always apply:
+`.replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'')`
+
+### Partner app auto-subscribe
+`autoSubscribePush()` called in `bootApp()` — no manual tap needed.
+Native: FCM token injected by `MainActivity.kt` via `window._fcmToken`.
+Web: browser permission prompt shown automatically on first login.
+
+---
+
+## PARTNER APK (DaMesa Partner)
+
+### What it is
+Native Kotlin Android app (`pt.damesa.partner`) that wraps `owner-app.html` in a WebView.
+Provides reliable FCM push notifications (bypasses battery optimization that kills Chrome).
+
+### JS bridge
+`window.AndroidInterface` exposed to the WebView:
+- `isNativeApp()` → returns `true`
+- `showToast(msg)` → native Android toast
+- `refreshFcmToken()` → re-fetches FCM token
+
+### Build (GitHub Actions auto-builds on partner/** push)
+Uses existing `KEYSTORE_BASE64`, `KEY_ALIAS`, `KEY_STORE_PASSWORD` secrets.
+Latest APK always at: https://github.com/dnabinn/damesa.pt/releases (tag: `partner-apk-*`)
 
 ---
 
 ## EMAIL SYSTEM
 
-Edge Function: `supabase/functions/send-booking-emails/index.ts` (deployed ✅)
-- Called from `bookings.js` `sendBookingConfirmation()`
-- Fetches full booking + restaurant from DB using service role
-- Sends branded HTML emails via Resend
-- Restaurant email only sent if `restaurants.email` is not null
-
-### Deploy edge function
-```bash
-npx supabase functions deploy send-booking-emails --project-ref jdkbywroucgwrfpirloa --no-verify-jwt
-```
+Edge Functions (all deployed via GitHub Actions on push to `supabase/functions/**`):
+- `send-booking-emails` — confirmation to diner + restaurant
+- `notify-owner` — FCM/web-push notification to owner
+- `send-contract` — generates HTML contract + sends signing link
+- `sign-contract` — handles signature, updates DB, sends confirmation
 
 ---
 
@@ -234,50 +285,17 @@ npx supabase functions deploy send-booking-emails --project-ref jdkbywroucgwrfpi
 
 ---
 
-## PWA & ANDROID APK
-
-### PWA
-- Service worker: `sw.js` (cache-first, offline fallback)
-- Manifest: `assets/manifest.json` (start_url: `/`, 8 icon sizes)
-- SW registered in: index.html, restaurantes.html, restaurant.html, login.html
-
-### Android APK
-- Built with Bubblewrap TWA
-- Package: `pt.damesa.pwa`
-- `gradle.properties`: must keep `org.gradle.jvmargs=-Xmx512m` (system RAM limit)
-- `local.properties`: `sdk.dir=C:\\Android`
-
-### Rebuild APK
-```powershell
-# In project folder:
-$env:JAVA_HOME = "C:\Users\DNABINN\.bubblewrap\jdk\jdk-17.0.11+9"
-$env:PATH = "$env:JAVA_HOME\bin;" + $env:PATH
-.\gradlew.bat assembleRelease
-
-# Then zipalign + sign:
-C:\Users\DNABINN\.bubblewrap\android_sdk\build-tools\34.0.0\zipalign.exe -v -p 4 app\build\outputs\apk\release\app-release-unsigned.apk app-aligned.apk
-C:\Users\DNABINN\.bubblewrap\android_sdk\build-tools\34.0.0\apksigner.bat sign --ks android.keystore --ks-key-alias android --ks-pass pass:"M3lh0R123!!!" --key-pass pass:"M3lh0R123!!!" --out app-release-signed.apk app-aligned.apk
-```
-
----
-
 ## DEPLOYMENT
 
 ### How it works
-Push to `main` branch → GitHub Actions runs `.github/workflows/deploy.yml` → FTP uploads to Hostinger `public_html/`
+Push to `main` branch → GitHub Actions:
+1. `deploy.yml` → FTP uploads to Hostinger `public_html/`
+2. `deploy-functions.yml` → deploys edge functions (only when `supabase/functions/**` changes)
+3. `build-partner-apk.yml` → builds partner APK (only when `partner/**` changes)
 
 ### Deploy command
 ```bash
 git add -A && git commit -m "your message" && git push origin main
-```
-
-### Branch strategy
-- `dev` — work in progress
-- `main` — production (auto-deploys to damesa.pt)
-
-### Always merge dev → main to deploy
-```bash
-git checkout main && git merge dev && git push origin main
 ```
 
 ---
@@ -293,7 +311,7 @@ git checkout main && git merge dev && git push origin main
 7. **Restaurant slug from pathname** not `?slug=` param (clean URL rewrite strips query)
 8. **Cache busting**: use `?v=N` on JS imports when debugging stale files
 9. **RLS policies**: never reference `auth.users` directly — use `auth.jwt()->>'email'` or `auth.uid()`
-10. **Gradle heap**: keep `org.gradle.jvmargs=-Xmx512m` in `gradle.properties` (Bubblewrap resets it — fix before each build)
+10. **Booking dates**: always use Lisbon timezone; past dates/times blocked in UI + `createBooking()`
 
 ---
 
@@ -306,9 +324,9 @@ git checkout main && git merge dev && git push origin main
 | Clean URL slug is empty | Read from `window.location.pathname.split('/')` not `?slug=` |
 | Superadmin restaurants not loading | Removed `profiles` join (RLS blocks cross-user profile reads) |
 | `prompt()` blocked | Replaced with PIN overlay form using `Promise` |
-| Gradle "could not reserve heap space" | Set `-Xmx512m` in `gradle.properties` (Bubblewrap resets to 1536m) |
-| APK "invalid package" error | Must zipalign before signing; also uninstall previous APK first |
+| FCM notifications not sent | JWT must be base64url not base64 — apply replace(+→- /→_ =→'') after btoa() |
+| Push subscription not saving | Check both browser sub AND DB record before toggling direction |
 
 ---
 
-*Da Mesa · Lisboa, Portugal · Updated April 2026*
+*Da Mesa · Lisboa, Portugal · Updated May 2026*
