@@ -1256,35 +1256,62 @@
     const today = getLisbonToday()
     dateInput.min = today
 
-    // Block past dates — user may have typed one or page was open past midnight
-    if (date < today) {
+    // Detect if any of this restaurant's days are cross-midnight (close_time < open_time)
+    const hasCrossMidnight = (restaurant.opening_hours ?? []).some(h => {
+      if (h.is_closed || !h.open_time || !h.close_time) return false
+      const [oh, om] = h.open_time.slice(0, 5).split(':').map(Number)
+      const [ch, cm] = h.close_time.slice(0, 5).split(':').map(Number)
+      return (ch * 60 + cm) <= (oh * 60 + om)
+    })
+
+    // Compute yesterday — needed if restaurant runs past midnight
+    // e.g. it's Sunday 01:30 and the Saturday service closes at 02:00
+    const yd = new Date(today + 'T12:00:00')
+    yd.setDate(yd.getDate() - 1)
+    const yesterday = yd.toLocaleDateString('en-CA')
+
+    // Block past dates — but allow "yesterday" if restaurant is cross-midnight
+    // (the late-night cross-midnight slots may still be in the future)
+    if (date < today && !(hasCrossMidnight && date === yesterday)) {
       slotsEl.innerHTML = '<p style="color:var(--muted);font-size:14px;grid-column:1/-1;">Não é possível reservar para datas passadas. Escolhe uma data a partir de hoje.</p>'
       return
     }
 
     slotsEl.innerHTML = [1,2,3,4,5,6].map(() => `<div class="slot skeleton" style="height:40px;border:none;"></div>`).join('')
     const slots = await getAvailableSlots(restaurant.id, date, restaurant.available_times, restaurant.opening_hours)
-    const capacity = restaurant.capacity ?? 50
-
-    const isToday = date === today
+    const capacity  = restaurant.capacity ?? 50
+    const isToday   = date === today
+    const isYesterday = date === yesterday
     const nowLisbon = getLisbonNow()
 
-    // For today: hide slots whose time has already passed
-    const visible = slots.filter(s => !isToday || s.time > nowLisbon)
+    // Filter slots that have already passed:
+    // - Regular (same-day) slots on today → hide if time <= now
+    // - Cross-midnight (nextDay) slots on today → always show (they're late-night, still ahead)
+    // - Yesterday's cross-midnight slots → show only nextDay slots still ahead of now
+    const visible = slots.filter(s => {
+      if (isToday)      return s.nextDay ? true : s.time > nowLisbon
+      if (isYesterday)  return s.nextDay && s.time > nowLisbon
+      return true
+    })
 
     if (!visible.length) {
       const dayOfWeek = new Date(date + 'T12:00:00').getDay()
-      const dayHours = (restaurant.opening_hours ?? []).filter(h => h.day_of_week === dayOfWeek)
-      const isClosed = dayHours.length > 0 && dayHours.some(h => h.is_closed)
+      const dayHours  = (restaurant.opening_hours ?? []).filter(h => h.day_of_week === dayOfWeek)
+      const isClosed  = dayHours.length > 0 && dayHours.some(h => h.is_closed)
       const msg = isClosed
         ? 'Restaurante fechado neste dia. Escolhe outra data.'
         : 'Sem horários disponíveis. Escolhe outro dia.'
       slotsEl.innerHTML = `<p style="color:var(--muted);font-size:14px;grid-column:1/-1;">${msg}</p>`
       return
     }
+
+    // Render slots — cross-midnight slots get a small "+1" superscript to indicate next day
     slotsEl.innerHTML = visible.map(s => {
-      const full = s.booked >= capacity
-      return `<div class="slot${full ? ' full' : ''}" data-time="${s.time}" onclick="selectSlot(this)">${s.time}</div>`
+      const full  = s.booked >= capacity
+      const label = s.nextDay
+        ? `${s.time}<sup style="font-size:9px;margin-left:1px;opacity:0.65">+1</sup>`
+        : s.time
+      return `<div class="slot${full ? ' full' : ''}" data-time="${s.time}" onclick="selectSlot(this)">${label}</div>`
     }).join('')
   }
 

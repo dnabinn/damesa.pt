@@ -7,17 +7,22 @@ export async function createBooking(bookingData) {
     bookingDate, bookingTime, partySize, specialRequests, occasion, dinerId
   } = bookingData
 
-  // Server-side past-date guard (Lisbon timezone)
-  const todayLisbon = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Lisbon' })
-  if (bookingDate < todayLisbon) {
-    return { error: { message: 'Não é possível reservar para datas passadas.' } }
-  }
-  // Past-time guard for today
-  if (bookingDate === todayLisbon) {
-    const nowLisbon = new Date().toLocaleTimeString('en-GB', { timeZone: 'Europe/Lisbon', hour: '2-digit', minute: '2-digit' })
-    if (bookingTime <= nowLisbon) {
-      return { error: { message: 'Este horário já passou. Escolhe um horário futuro.' } }
-    }
+  // Server-side past-datetime guard (Lisbon timezone).
+  //
+  // We compare the full booking datetime against now as ISO-style strings:
+  //   "2026-05-03T01:30" vs "2026-05-03T00:45"
+  //
+  // This single check naturally handles cross-midnight restaurants:
+  // A restaurant open Saturday 20:00–02:00 stores the 01:30 slot as booking_date=Saturday.
+  // If it's currently Saturday 01:00, "Saturday 01:30" > "Saturday 01:00" → still valid. ✓
+  // If it's Sunday 02:00,          "Saturday 01:30" < "Sunday 02:00"     → correctly blocked. ✓
+  const nowDate    = new Date()
+  const todayLisbon = nowDate.toLocaleDateString('en-CA', { timeZone: 'Europe/Lisbon' })   // "2026-05-03"
+  const nowLisbon   = nowDate.toLocaleTimeString('en-GB', { timeZone: 'Europe/Lisbon', hour: '2-digit', minute: '2-digit' }) // "14:30"
+  const nowCombined     = `${todayLisbon}T${nowLisbon}`   // "2026-05-03T14:30"
+  const bookingCombined = `${bookingDate}T${bookingTime}` // "2026-05-03T20:00"
+  if (bookingCombined <= nowCombined) {
+    return { error: { message: 'Este horário já passou. Escolhe um horário futuro.' } }
   }
 
   const row = {

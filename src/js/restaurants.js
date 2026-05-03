@@ -30,8 +30,14 @@ export async function getRestaurantBySlug(slug) {
   return { restaurant: data, error }
 }
 
-// Derive 30-min booking slots from opening_hours for a specific day of week
-// Returns [] if closed, null if no opening_hours configured for that day (fall back to availableTimes)
+// Derive 30-min booking slots from opening_hours for a specific day of week.
+// Returns [] if closed, null if no opening_hours configured for that day (fall back to availableTimes).
+//
+// Cross-midnight support: if close_time < open_time (e.g. open 20:00, close 02:00)
+// the service runs past midnight. Slots for 00:00–01:30 are generated correctly
+// and tagged { time, nextDay: true } so the UI can show them differently if needed.
+// The booking is stored with the opening day's date — consistent with how restaurants
+// think about their shift ("Saturday night service ends Sunday 2am").
 function slotsFromOpeningHours(openingHours, dayOfWeek) {
   if (!openingHours || !openingHours.length) return null
 
@@ -40,21 +46,31 @@ function slotsFromOpeningHours(openingHours, dayOfWeek) {
 
   if (dayRows.some(h => h.is_closed)) return [] // Closed
 
-  const slots = []
+  const result = []
   for (const row of dayRows) {
     if (!row.open_time || !row.close_time) continue
     const [oh, om] = row.open_time.slice(0, 5).split(':').map(Number)
     const [ch, cm] = row.close_time.slice(0, 5).split(':').map(Number)
-    let mins = oh * 60 + om
-    const closeMins = ch * 60 + cm - 30 // last booking slot ends 30 min before closing
-    while (mins <= closeMins) {
-      const h = String(Math.floor(mins / 60)).padStart(2, '0')
-      const m = String(mins % 60).padStart(2, '0')
-      slots.push(`${h}:${m}`)
+    const openMins = oh * 60 + om
+    let closeMins  = ch * 60 + cm
+
+    // Cross-midnight: close time is earlier than open time (e.g. 02:00 < 20:00)
+    const crossesMidnight = closeMins <= openMins
+    if (crossesMidnight) closeMins += 24 * 60  // e.g. 02:00 → 26:00 (1560 min)
+
+    let mins = openMins
+    while (mins <= closeMins - 30) {  // last slot ends 30 min before closing
+      const wrappedMins = mins % (24 * 60)   // wrap 25:30 → 01:30
+      const h = String(Math.floor(wrappedMins / 60)).padStart(2, '0')
+      const m = String(wrappedMins % 60).padStart(2, '0')
+      result.push({ time: `${h}:${m}`, nextDay: mins >= 24 * 60 })
       mins += 30
     }
   }
-  return slots.sort()
+
+  // Keep generation order (open→close, then cross-midnight tail) — do NOT sort,
+  // alphabetical sort would push 00:30 before 20:00 and break the display.
+  return result
 }
 
 // Get available time slots for a date
@@ -76,9 +92,11 @@ export async function getAvailableSlots(restaurantId, date, availableTimes, open
 
   if (derived !== null) {
     // opening_hours configured → use derived slots (may be empty if closed)
-    return derived.map(slot => ({
-      time: slot,
-      booked: bookings?.filter(b => b.booking_time === slot + ':00').reduce((sum, b) => sum + b.party_size, 0) || 0
+    // Each entry is { time: 'HH:MM', nextDay: bool }
+    return derived.map(({ time, nextDay }) => ({
+      time,
+      nextDay: nextDay || false,
+      booked: bookings?.filter(b => b.booking_time === time + ':00').reduce((sum, b) => sum + b.party_size, 0) || 0
     }))
   }
 

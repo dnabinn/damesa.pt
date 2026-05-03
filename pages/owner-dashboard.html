@@ -436,6 +436,7 @@
       <div class="section-title">Horário de Funcionamento</div>
       <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">
         Define os períodos de funcionamento de cada dia. Os horários de reserva disponíveis para os clientes são calculados automaticamente com intervalos de 30 minutos (última reserva 30 min antes do fecho).
+        Para restaurantes abertos depois da meia-noite, coloca simplesmente a hora de fecho no dia seguinte (ex: abertura 20:00 → fecho 02:00). Será apresentado o aviso <strong>+1 dia</strong> para confirmar.
       </p>
       <div class="hours-grid" id="hours-grid">
         <p style="color:var(--muted)"><span class="loading-text">A carregar horários</span></p>
@@ -1036,13 +1037,31 @@
     }).join('')
   }
 
+  function isCrossMidnight(open, close) {
+    if (!open || !close) return false
+    const [oh, om] = open.split(':').map(Number)
+    const [ch, cm] = close.split(':').map(Number)
+    return (ch * 60 + cm) <= (oh * 60 + om)
+  }
+
   function slotRowHtml(dayIdx, slotIdx, open, close) {
-    return `<div class="slot-row" id="slot-${dayIdx}-${slotIdx}">
-      <input type="time" data-day="${dayIdx}" data-slot="${slotIdx}" data-type="open" value="${open}" />
+    const xm = isCrossMidnight(open, close)
+    return `<div class="slot-row" id="slot-${dayIdx}-${slotIdx}" style="align-items:center;gap:6px;">
+      <input type="time" data-day="${dayIdx}" data-slot="${slotIdx}" data-type="open"  value="${open}"  oninput="updateMidnightBadge(this)" />
       <span class="slot-sep">até</span>
-      <input type="time" data-day="${dayIdx}" data-slot="${slotIdx}" data-type="close" value="${close}" />
+      <input type="time" data-day="${dayIdx}" data-slot="${slotIdx}" data-type="close" value="${close}" oninput="updateMidnightBadge(this)" />
+      <span class="midnight-badge" style="font-size:11px;color:var(--primary);font-weight:600;white-space:nowrap;${xm ? '' : 'display:none;'}">+1 dia</span>
       <button class="slot-del" onclick="removeSlot(${dayIdx},${slotIdx})" title="Remover">🗑</button>
     </div>`
+  }
+
+  // Called on every time-input change — shows/hides the +1 dia badge
+  window.updateMidnightBadge = function(input) {
+    const row   = input.closest('.slot-row')
+    const open  = row.querySelector('[data-type="open"]')?.value
+    const close = row.querySelector('[data-type="close"]')?.value
+    const badge = row.querySelector('.midnight-badge')
+    if (badge) badge.style.display = isCrossMidnight(open, close) ? '' : 'none'
   }
 
   window.toggleClosed = function(i) {
