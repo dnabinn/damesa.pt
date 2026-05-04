@@ -866,10 +866,19 @@
               <div class="conf-icon">🎉</div>
               <div class="conf-ref" id="conf-ref">REF #--------</div>
               <p class="conf-msg">Mesa reservada! Enviámos a confirmação para o seu email.</p>
-              <a id="cal-btn" href="#" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:7px;background:#fff;border:1.5px solid var(--border);color:var(--text);padding:10px 20px;border-radius:100px;font-size:13px;font-weight:600;margin-bottom:10px;transition:border-color 0.15s;">
-                📅 Adicionar ao Google Calendar
-              </a>
-              <br>
+
+              <!-- Calendar add buttons -->
+              <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:12px;">
+                <a id="cal-google-btn" href="#" target="_blank" rel="noopener"
+                   style="display:inline-flex;align-items:center;gap:7px;background:#fff;border:1.5px solid var(--border);color:var(--text);padding:10px 18px;border-radius:100px;font-size:13px;font-weight:600;text-decoration:none;transition:border-color 0.15s;">
+                  <img src="https://www.google.com/favicon.ico" width="16" height="16" alt="" style="border-radius:3px;"/> Google Calendar
+                </a>
+                <button id="cal-ics-btn" onclick="downloadICS()"
+                   style="display:inline-flex;align-items:center;gap:7px;background:#fff;border:1.5px solid var(--border);color:var(--text);padding:10px 18px;border-radius:100px;font-size:13px;font-weight:600;cursor:pointer;">
+                  🗓️ Apple / Outlook
+                </button>
+              </div>
+
               <a id="manage-btn" href="#" style="display:inline-flex;align-items:center;gap:6px;color:var(--muted);font-size:13px;margin-bottom:16px;">
                 ✏️ Alterar ou cancelar reserva
               </a>
@@ -1384,18 +1393,64 @@
     }
     document.getElementById('conf-ref').textContent = `REF #${booking.reference_code}`
 
-    // Google Calendar link
-    const dtStart = (bookingDate + 'T' + bookingTime).replace(/-|:/g, '') + '00'
-    const dtEnd   = (() => {
-      const d = new Date(bookingDate + 'T' + bookingTime); d.setHours(d.getHours() + 2)
-      return d.toISOString().replace(/-|:|\..*$/g, '').slice(0, 15) + '00'
-    })()
+    // ── Calendar helpers ──────────────────────────────────────
+    // All datetime arithmetic uses local Lisbon time strings directly
+    // (never through Date → toISOString, which shifts to UTC and breaks the times)
+
+    // Compact datetime for Google Calendar dates param: "20260503T200000"
+    const dtCompact = (date, time) => (date + 'T' + time).replace(/-|:/g, '') + '00'
+
+    // Add N hours to HH:MM, returns HH:MM (wraps at midnight)
+    const addHours = (time, n) => {
+      const [h, m] = time.split(':').map(Number)
+      return String((h + n) % 24).padStart(2, '0') + ':' + String(m).padStart(2, '0')
+    }
+
+    // Assume ~2h dining duration for the calendar event end time
+    const endTime   = addHours(bookingTime, 2)
+    const dtStart   = dtCompact(bookingDate, bookingTime)
+    const dtEnd     = dtCompact(bookingDate, endTime)
+    const calTitle  = `Reserva — ${restaurant.name}`
+    const calDetail = `REF #${booking.reference_code} · ${booking.party_size} pessoa${booking.party_size !== 1 ? 's' : ''} · Da Mesa`
+    const calLoc    = restaurant.address || restaurant.city || 'Lisboa'
+
+    // Google Calendar URL (uses local-time datetimes — no Z suffix)
     const calUrl = 'https://calendar.google.com/calendar/render?action=TEMPLATE' +
-      '&text=' + encodeURIComponent(`Reserva ${restaurant.name}`) +
-      '&dates=' + dtStart + '/' + dtEnd +
-      '&details=' + encodeURIComponent(`REF #${booking.reference_code} · ${restaurant.name} · Da Mesa`) +
-      '&location=' + encodeURIComponent(restaurant.address || restaurant.city || 'Lisboa')
-    document.getElementById('cal-btn').href = calUrl
+      '&text='     + encodeURIComponent(calTitle) +
+      '&dates='    + dtStart + '/' + dtEnd +
+      '&details='  + encodeURIComponent(calDetail) +
+      '&location=' + encodeURIComponent(calLoc)
+    document.getElementById('cal-google-btn').href = calUrl
+
+    // .ics file for Apple Calendar, Outlook, Samsung Calendar, etc.
+    // Uses TZID=Europe/Lisbon so the event lands at the correct local time on any device.
+    const icsUid = `${booking.id}@damesa.pt`
+    window.downloadICS = function() {
+      const ics = [
+        'BEGIN:VCALENDAR',
+        'VERSION:2.0',
+        'PRODID:-//Da Mesa//Reservas//PT',
+        'CALSCALE:GREGORIAN',
+        'METHOD:PUBLISH',
+        'BEGIN:VEVENT',
+        `UID:${icsUid}`,
+        `DTSTART;TZID=Europe/Lisbon:${dtStart}`,
+        `DTEND;TZID=Europe/Lisbon:${dtEnd}`,
+        `SUMMARY:${calTitle}`,
+        `DESCRIPTION:${calDetail}`,
+        `LOCATION:${calLoc}`,
+        'STATUS:CONFIRMED',
+        `DTSTAMP:${new Date().toISOString().replace(/-|:|\..*$/g, '').slice(0, 15)}Z`,
+        'END:VEVENT',
+        'END:VCALENDAR'
+      ].join('\r\n')
+
+      const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' })
+      const url  = URL.createObjectURL(blob)
+      const a    = Object.assign(document.createElement('a'), { href: url, download: `reserva-${booking.reference_code}.ics` })
+      document.body.appendChild(a); a.click()
+      setTimeout(() => { URL.revokeObjectURL(url); a.remove() }, 1000)
+    }
 
     // Manage booking link
     if (booking.cancel_token) {

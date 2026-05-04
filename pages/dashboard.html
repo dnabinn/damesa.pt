@@ -358,6 +358,53 @@
   })()
 
   // ── Helpers ───────────────────────────────────────────────
+
+  // Generate 'Add to calendar' pill buttons for an upcoming booking
+  function calendarButtons(b) {
+    if (b.status === 'cancelled') return ''
+    const date   = b.booking_date
+    const time   = (b.booking_time ?? '').slice(0, 5)
+    if (!date || !time) return ''
+
+    const compact = (d, t) => (d + 'T' + t).replace(/-|:/g, '') + '00'
+    const [h, m]  = time.split(':').map(Number)
+    const endTime = String((h + 2) % 24).padStart(2, '0') + ':' + String(m).padStart(2, '0')
+    const dtStart = compact(date, time)
+    const dtEnd   = compact(date, endTime)
+    const title   = 'Reserva — ' + (b.restaurants?.name ?? 'Restaurante')
+    const detail  = 'REF #' + (b.reference_code ?? '') + ' · ' + b.party_size + ' pessoa' + (b.party_size > 1 ? 's' : '') + ' · Da Mesa'
+    const loc     = b.restaurants?.address ?? b.restaurants?.city ?? 'Lisboa'
+
+    const googleUrl = 'https://calendar.google.com/calendar/render?action=TEMPLATE' +
+      '&text='     + encodeURIComponent(title) +
+      '&dates='    + dtStart + '/' + dtEnd +
+      '&details='  + encodeURIComponent(detail) +
+      '&location=' + encodeURIComponent(loc)
+
+    const ics = [
+      'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Da Mesa//Reservas//PT',
+      'CALSCALE:GREGORIAN', 'METHOD:PUBLISH', 'BEGIN:VEVENT',
+      'UID:' + b.id + '@damesa.pt',
+      'DTSTART;TZID=Europe/Lisbon:' + dtStart,
+      'DTEND;TZID=Europe/Lisbon:'   + dtEnd,
+      'SUMMARY:'     + title,
+      'DESCRIPTION:' + detail,
+      'LOCATION:'    + loc,
+      'STATUS:CONFIRMED', 'END:VEVENT', 'END:VCALENDAR'
+    ].join('
+')
+    const icsUri = 'data:text/calendar;charset=utf-8,' + encodeURIComponent(ics)
+    const fname  = 'reserva-' + (b.reference_code ?? b.id?.slice(0, 8)) + '.ics'
+
+    return '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;">' +
+      '<a href="' + googleUrl + '" target="_blank" rel="noopener" ' +
+      'style="display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);border:1px solid var(--border);padding:4px 10px;border-radius:100px;text-decoration:none;white-space:nowrap;">' +
+      '<img src="https://www.google.com/favicon.ico" width="12" height="12" alt=""/> Google</a>' +
+      '<a href="' + icsUri + '" download="' + fname + '" ' +
+      'style="display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);border:1px solid var(--border);padding:4px 10px;border-radius:100px;text-decoration:none;white-space:nowrap;">' +
+      '🗓️ Apple / Outlook</a></div>'
+  }
+
   function bookingCard(b, canCancel) {
     const d = new Date(b.booking_date + 'T12:00:00')
     const day = d.getDate()
@@ -384,6 +431,7 @@
             ${b.restaurants?.address ? `<span>📍 ${b.restaurants.address}</span>` : ''}
           </div>
           <div class="booking-ref">REF #${b.reference_code ?? b.id?.slice(0,8).toUpperCase()}</div>
+          ${canCancel ? calendarButtons(b) : ""}
         </div>
         <div class="booking-actions">
           <span class="status status-${b.status}">${statusLabel}</span>
