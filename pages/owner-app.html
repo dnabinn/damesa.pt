@@ -458,8 +458,55 @@ let _session = null
 let _restaurant = null
 
 // ── BOOT ─────────────────────────────────────────────────
+// Guard against bootApp() being called twice (e.g. INITIAL_SESSION + manual login)
+let _bootDone = false
+
+// onAuthStateChange is the primary session driver — handles:
+//   INITIAL_SESSION  → first load, session already in localStorage
+//   SIGNED_IN        → manual login or token auto-refresh after expiry
+//   TOKEN_REFRESHED  → Supabase silently refreshed the 1-hour access token
+//   SIGNED_OUT       → explicit sign-out or refresh token expired (7 days)
+supabase.auth.onAuthStateChange(async (event, session) => {
+  if (event === 'SIGNED_OUT') {
+    _session = null; _restaurant = null; _bootDone = false
+    showScreen('login')
+    return
+  }
+
+  if (!session) return
+
+  _session = session  // always keep _session current (needed after TOKEN_REFRESHED)
+
+  if (event === 'TOKEN_REFRESHED' && _restaurant) {
+    // Session silently refreshed while app was running or in background.
+    // Reconnect Realtime (it uses the JWT and may have dropped on expiry)
+    // and confirm the FCM token is still registered.
+    console.log('[auth] token refreshed — reconnecting realtime')
+    setupRealtime()
+    if (window._fcmToken) {
+      await supabase.from('push_subscriptions').upsert({
+        user_id: session.user.id,
+        restaurant_id: _restaurant.id,
+        fcm_token: window._fcmToken, subscription: null
+      }, { onConflict: 'user_id,restaurant_id' })
+    }
+    return
+  }
+
+  // INITIAL_SESSION or SIGNED_IN — boot the app if not already done
+  if (_bootDone) return
+  const { data: profile } = await supabase
+    .from('profiles').select('role').eq('id', session.user.id).single()
+  if (profile?.role === 'restaurant_owner' || profile?.role === 'super_admin') {
+    _bootDone = true
+    await bootApp()
+  } else {
+    showScreen('login')
+  }
+})
+
 ;(async () => {
-  // Check for recovery hash
+  // Handle password-recovery deep link (arrives as URL hash)
   const hash = window.location.hash
   if (hash && hash.includes('type=recovery')) {
     const params = new URLSearchParams(hash.slice(1))
@@ -471,18 +518,10 @@ let _restaurant = null
       return
     }
   }
-
-  const { data: { session } } = await supabase.auth.getSession()
-  if (session) {
-    const { data: profile } = await supabase
-      .from('profiles').select('role').eq('id', session.user.id).single()
-    if (profile?.role === 'restaurant_owner' || profile?.role === 'super_admin') {
-      _session = session
-      await bootApp()
-      return
-    }
-  }
-  showScreen('login')
+  // onAuthStateChange fires INITIAL_SESSION automatically after the listener
+  // is registered, so no explicit getSession() call is needed here.
+  // We just need to show the login screen if no session arrives within a tick.
+  setTimeout(() => { if (!_bootDone && !_session) showScreen('login') }, 300)
 })()
 
 function showScreen(name) {
@@ -518,9 +557,10 @@ window.doLogin = async function() {
     btn.disabled = false; btn.textContent = 'Entrar'; return
   }
 
-  _session = data.session
+  // onAuthStateChange(SIGNED_IN) will fire and call bootApp() via the listener.
+  // Just show a loading state — no direct bootApp() call needed.
   btn.textContent = 'A carregar...'
-  await bootApp()
+  // (session is set by onAuthStateChange handler)
 }
 
 window.doForgot = async function() {
@@ -548,7 +588,8 @@ window.doReset = async function() {
   const { error } = await supabase.auth.updateUser({ password: pw1 })
   if (error) { showErr(err, error.message); btn.disabled = false; btn.textContent = 'Guardar'; return }
   ok.style.display = 'block'
-  setTimeout(async () => { _session = (await supabase.auth.getSession()).data.session; await bootApp() }, 1500)
+  // onAuthStateChange(SIGNED_IN) will fire after updateUser and handle bootApp()
+  setTimeout(() => { _bootDone = false }, 1500)  // allow re-boot after password reset
 }
 
 document.getElementById('li-pw').addEventListener('keydown', e => { if (e.key === 'Enter') window.doLogin() })
@@ -804,11 +845,27 @@ function setupRealtime() {
 // Called by Android MainActivity.onResume() via evaluateJavascript
 // Reloads the current bookings list and reconnects realtime after returning from background
 window.onAppResume = async function() {
-  if (!_restaurant) return
+  if (!_restaurant || !_session) return
   console.log('[onAppResume] refreshing bookings and reconnecting realtime')
+
+  // Reload bookings list so any booking that arrived while in background is visible
   if (_activeTab === 'hoje') await loadToday()
   else if (_activeTab === 'reservas') await loadReservas()
-  setupRealtime()  // reconnect WebSocket (may have dropped while app was in background)
+
+  // Reconnect Realtime WebSocket (drops when WebView is backgrounded by Android)
+  setupRealtime()
+
+  // Re-confirm FCM token registration — handles the case where the app was
+  // reinstalled (new token) or the DB row was cleaned up (expired token pruning)
+  if (window._fcmToken) {
+    await supabase.from('push_subscriptions').upsert({
+      user_id: _session.user.id,
+      restaurant_id: _restaurant.id,
+      fcm_token: window._fcmToken,
+      subscription: null
+    }, { onConflict: 'user_id,restaurant_id' })
+    console.log('[onAppResume] FCM token confirmed in DB')
+  }
 }
 
 // ── IN-APP ALERT + SOUND ──────────────────────────────────
