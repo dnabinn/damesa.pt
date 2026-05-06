@@ -484,11 +484,7 @@ supabase.auth.onAuthStateChange(async (event, session) => {
     console.log('[auth] token refreshed — reconnecting realtime')
     setupRealtime()
     if (window._fcmToken) {
-      await supabase.from('push_subscriptions').upsert({
-        user_id: session.user.id,
-        restaurant_id: _restaurant.id,
-        fcm_token: window._fcmToken, subscription: null
-      }, { onConflict: 'user_id,restaurant_id' })
+      await savePushToken({ fcm_token: window._fcmToken, subscription: null })
     }
     return
   }
@@ -855,15 +851,9 @@ window.onAppResume = async function() {
   // Reconnect Realtime WebSocket (drops when WebView is backgrounded by Android)
   setupRealtime()
 
-  // Re-confirm FCM token registration — handles the case where the app was
-  // reinstalled (new token) or the DB row was cleaned up (expired token pruning)
+  // Re-confirm FCM token registration — handles reinstall (new token) and DB cleanup
   if (window._fcmToken) {
-    await supabase.from('push_subscriptions').upsert({
-      user_id: _session.user.id,
-      restaurant_id: _restaurant.id,
-      fcm_token: window._fcmToken,
-      subscription: null
-    }, { onConflict: 'user_id,restaurant_id' })
+    await savePushToken({ fcm_token: window._fcmToken, subscription: null })
     console.log('[onAppResume] FCM token confirmed in DB')
   }
 }
@@ -907,57 +897,61 @@ function urlBase64ToUint8Array(b64) {
   return new Uint8Array([...raw].map(c => c.charCodeAt(0)))
 }
 
+// Reliable push token save: delete existing row then insert fresh.
+// Avoids dependency on DB unique constraints for upsert ON CONFLICT.
+async function savePushToken(fields) {
+  try {
+    await supabase.from('push_subscriptions')
+      .delete()
+      .eq('user_id', _session.user.id)
+      .eq('restaurant_id', _restaurant.id)
+    const { error } = await supabase.from('push_subscriptions').insert({
+      user_id: _session.user.id,
+      restaurant_id: _restaurant.id,
+      ...fields
+    })
+    if (error) console.error('[push] save error:', error.message)
+    else console.log('[push] subscription saved:', Object.keys(fields))
+  } catch (e) {
+    console.error('[push] savePushToken exception:', e.message)
+  }
+}
+
 // Auto-subscribe on boot — no tap needed. Silently registers FCM or web push.
 async function autoSubscribePush() {
   const isNative = !!(window.AndroidInterface && window.AndroidInterface.isNativeApp())
 
   if (isNative) {
-    // Native: onFcmTokenReady() already handles token registration when the app injects it.
-    // But if the token arrived before _restaurant was set, register it now.
+    // Native APK: FCM token is injected by MainActivity via window._fcmToken
     if (window._fcmToken) {
-      await supabase.from('push_subscriptions').upsert({
-        user_id: _session.user.id,
-        restaurant_id: _restaurant.id,
-        fcm_token: window._fcmToken,
-        subscription: null
-      }, { onConflict: 'user_id,restaurant_id' })
+      await savePushToken({ fcm_token: window._fcmToken, subscription: null })
       await updateNotifUI()
     }
+    // If token not ready yet, onFcmTokenReady() will call savePushToken when it arrives
     return
   }
 
-  // Web push: skip if browser doesn't support or already denied
+  // Browser web push
   if (!('Notification' in window) || !('serviceWorker' in navigator)) return
   if (Notification.permission === 'denied') return
 
   try {
-    const reg = await navigator.serviceWorker.ready
-    const existingSub = await reg.pushManager.getSubscription()
-    const { data: dbSub } = await supabase.from('push_subscriptions')
-      .select('id').eq('user_id', _session.user.id).eq('restaurant_id', _restaurant.id).maybeSingle()
-
-    // Already fully subscribed → nothing to do
-    if (existingSub && dbSub) { await updateNotifUI(); return }
-
-    // Request permission if not yet granted (shows browser prompt once)
+    // Request permission if not yet granted
     if (Notification.permission !== 'granted') {
       const perm = await Notification.requestPermission()
       if (perm !== 'granted') { await updateNotifUI(); return }
     }
 
-    // Subscribe (reuse existing browser sub if any)
-    const sub = existingSub || await reg.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC)
-    })
-    await supabase.from('push_subscriptions').upsert({
-      user_id: _session.user.id,
-      restaurant_id: _restaurant.id,
-      subscription: sub.toJSON()
-    }, { onConflict: 'user_id,restaurant_id' })
+    const reg = await navigator.serviceWorker.ready
+    const sub = await reg.pushManager.getSubscription()
+      || await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC)
+        })
+    await savePushToken({ subscription: sub.toJSON(), fcm_token: null })
     await updateNotifUI()
   } catch (e) {
-    console.warn('autoSubscribePush error:', e.message)
+    console.error('[push] autoSubscribePush error:', e.message, e)
   }
 }
 
@@ -998,12 +992,7 @@ window.onFcmTokenReady = async function(token) {
   window._fcmToken = token
   // If app is already booted, register immediately; otherwise autoSubscribePush() will pick it up
   if (!_session || !_restaurant) return
-  await supabase.from('push_subscriptions').upsert({
-    user_id: _session.user.id,
-    restaurant_id: _restaurant.id,
-    fcm_token: token,
-    subscription: null
-  }, { onConflict: 'user_id,restaurant_id' })
+  await savePushToken({ fcm_token: token, subscription: null })
   await updateNotifUI()
 }
 
