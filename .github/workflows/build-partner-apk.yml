@@ -35,6 +35,10 @@ jobs:
         run: |
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > partner/app/partner.keystore
 
+      - name: Write ADI token file (ensure LF, no CRLF)
+        run: |
+          printf '%s\n' "${{ secrets.ADI_TOKEN }}" > partner/app/src/main/assets/adi-registration.properties
+
       - name: Fix Gradle properties
         run: |
           echo "org.gradle.jvmargs=-Xmx2048m" > partner/gradle.properties
