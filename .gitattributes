@@ -1,0 +1,2 @@
+# Force LF for Android asset files (CRLF breaks token validation)
+partner/app/src/main/assets/adi-registration.properties text eol=lf
