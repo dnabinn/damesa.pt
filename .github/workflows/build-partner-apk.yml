@@ -33,7 +33,7 @@ jobs:
 
       - name: Decode keystore
         run: |
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > partner/partner.keystore
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > partner/app/partner.keystore
 
       - name: Fix Gradle properties
         run: |
