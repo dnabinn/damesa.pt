@@ -52,3 +52,11 @@ jobs:
             --no-verify-jwt
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
+      - name: Deploy send-booking-reminders
+        run: |
+          supabase functions deploy send-booking-reminders \
+            --project-ref jdkbywroucgwrfpirloa \
+            --no-verify-jwt
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}

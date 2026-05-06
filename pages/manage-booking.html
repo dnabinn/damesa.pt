@@ -215,6 +215,17 @@
         return
       }
 
+      // Fire cancellation emails (fire-and-forget — don't block reload)
+      fetch('https://jdkbywroucgwrfpirloa.supabase.co/functions/v1/send-booking-emails', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': 'sb_publishable_rU5h79iwvA6wDozm72uvMg_zSFZAkkY',
+          'Authorization': 'Bearer sb_publishable_rU5h79iwvA6wDozm72uvMg_zSFZAkkY'
+        },
+        body: JSON.stringify({ cancelToken: token })
+      }).catch(() => {})
+
       // Reload to show cancelled state
       location.reload()
     }

@@ -76,7 +76,8 @@ function slotsFromOpeningHours(openingHours, dayOfWeek) {
 // Get available time slots for a date
 // openingHours: array from restaurant.opening_hours — used as primary source for slot generation
 // availableTimes: legacy fallback if opening_hours not configured
-export async function getAvailableSlots(restaurantId, date, availableTimes, openingHours) {
+// maxCapacity: max total people per 30-min slot (null = unlimited)
+export async function getAvailableSlots(restaurantId, date, availableTimes, openingHours, maxCapacity = null) {
   const { data: bookings } = await supabase
     .from('bookings')
     .select('booking_time, party_size')
@@ -87,17 +88,25 @@ export async function getAvailableSlots(restaurantId, date, availableTimes, open
   // Day of week for the selected date (0=Sunday … 6=Saturday)
   const dayOfWeek = new Date(date + 'T12:00:00').getDay()
 
+  const booked = (time) =>
+    bookings?.filter(b => b.booking_time === time + ':00').reduce((sum, b) => sum + b.party_size, 0) || 0
+
+  const isFull = (bookedCount) =>
+    maxCapacity !== null && maxCapacity > 0 && bookedCount >= maxCapacity
+
   // Try to derive slots from opening_hours first
   const derived = slotsFromOpeningHours(openingHours, dayOfWeek)
 
   if (derived !== null) {
-    // opening_hours configured → use derived slots (may be empty if closed)
-    // Each entry is { time: 'HH:MM', nextDay: bool }
-    return derived.map(({ time, nextDay }) => ({
-      time,
-      nextDay: nextDay || false,
-      booked: bookings?.filter(b => b.booking_time === time + ':00').reduce((sum, b) => sum + b.party_size, 0) || 0
-    }))
+    return derived.map(({ time, nextDay }) => {
+      const bookedCount = booked(time)
+      return {
+        time,
+        nextDay: nextDay || false,
+        booked: bookedCount,
+        full: isFull(bookedCount)
+      }
+    })
   }
 
   // Fallback: use available_times or hardcoded defaults
@@ -106,10 +115,14 @@ export async function getAvailableSlots(restaurantId, date, availableTimes, open
     '19:00','19:30','20:00','20:30','21:00','21:30','22:00','22:30','23:00'
   ]
   const allSlots = (availableTimes && availableTimes.length > 0) ? availableTimes : defaultSlots
-  return allSlots.map(slot => ({
-    time: slot,
-    booked: bookings?.filter(b => b.booking_time === slot + ':00').reduce((sum, b) => sum + b.party_size, 0) || 0
-  }))
+  return allSlots.map(slot => {
+    const bookedCount = booked(slot)
+    return {
+      time: slot,
+      booked: bookedCount,
+      full: isFull(bookedCount)
+    }
+  })
 }
 
 // Get all restaurants for a specific owner (admin use)

@@ -431,7 +431,7 @@
     <div class="table-wrap">
       <table>
         <thead>
-          <tr><th>Data</th><th>Hora</th><th>Restaurante</th><th>Cliente</th><th>Pessoas</th><th>Estado</th><th>Ref</th></tr>
+          <tr><th>Data</th><th>Hora</th><th>Restaurante</th><th>Cliente</th><th>Pessoas</th><th>Estado</th><th>Origem</th><th>Ref</th></tr>
         </thead>
         <tbody id="bookings-tbody">
           <tr><td colspan="7" style="padding:32px;text-align:center;color:var(--muted)"><span class="loading-text">A carregar</span></td></tr>
@@ -594,6 +594,7 @@
     <!-- Internal tabs -->
     <div style="display:flex;border-bottom:1px solid var(--border);background:#fff;overflow-x:auto;">
       <button class="bm-tab active" onclick="bmTab('faturacao')" data-tab="faturacao">💳 Faturação</button>
+      <button class="bm-tab" onclick="bmTab('detalhes')" data-tab="detalhes">✏️ Detalhes</button>
       <button class="bm-tab" onclick="bmTab('contrato')" data-tab="contrato">📄 Contrato</button>
       <button class="bm-tab" onclick="bmTab('fotos')" data-tab="fotos">🖼️ Fotos</button>
       <button class="bm-tab" onclick="bmTab('avaliacoes')" data-tab="avaliacoes">⭐ Avaliações</button>
@@ -620,6 +621,38 @@
           <div class="modal-error" id="bm-billing-error"></div>
           <div class="modal-success" id="bm-billing-success"></div>
         </div>
+      </div>
+
+      <!-- DETALHES -->
+      <div class="bm-pane" id="bmp-detalhes">
+        <div class="modal-section-title">✏️ Detalhes do Restaurante</div>
+
+        <!-- Direct booking link row -->
+        <div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:20px;">
+          <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:8px;">🔗 Link Direto</div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <input id="bm-direct-link" readonly
+              style="flex:1;min-width:0;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:12px;font-family:monospace;background:#fff;color:var(--text);outline:none;" />
+            <button onclick="copyDirectLink()"
+              style="background:#1c1612;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:12px;cursor:pointer;white-space:nowrap;flex-shrink:0;">
+              Copiar
+            </button>
+          </div>
+          <div style="font-size:11px;color:var(--muted);margin-top:6px;">
+            Link para partilhar com clientes do restaurante — sem comissão de plataforma.
+          </div>
+        </div>
+
+        <!-- Capacity field -->
+        <div class="modal-field">
+          <label class="modal-label">Capacidade por slot (pessoas)</label>
+          <input class="modal-input" id="bm-max-capacity" type="number" min="1" max="500" placeholder="Ex: 20" />
+          <div style="font-size:11px;color:var(--muted);margin-top:4px;">Máx. de pessoas aceites por horário de 30 min</div>
+        </div>
+
+        <button class="modal-btn modal-btn-primary" id="bm-detalhes-btn" onclick="saveRestaurantDetails()">Guardar alterações</button>
+        <div class="modal-error" id="bm-detalhes-error"></div>
+        <div class="modal-success" id="bm-detalhes-success"></div>
       </div>
 
       <!-- CONTRATO -->
@@ -817,7 +850,7 @@
     try {
       const { data, error } = await supabase
         .from('restaurants')
-        .select('id, name, slug, cuisine_type, status, plan, subscription, owner_id, city, address, created_at, email, owner_legal_name, owner_iban, billing_status, contract_status, stripe_customer_id, damesa_email, description, cuisines, razao_social, restaurant_nif, billing_address')
+        .select('id, name, slug, cuisine_type, status, plan, subscription, owner_id, city, address, created_at, email, owner_legal_name, owner_iban, billing_status, contract_status, stripe_customer_id, damesa_email, description, cuisines, razao_social, restaurant_nif, billing_address, max_capacity')
         .order('created_at', { ascending: false })
       if (error) throw error
       allRestaurants = data ?? []
@@ -867,6 +900,12 @@
         <td style="white-space:nowrap">
           <button class="btn-billing" onclick="openBillingModal('${r.id}')">💳 Faturação</button>
           <button class="btn-enter" onclick="enterAs('${r.id}','${safeName}')">Entrar como →</button>
+          <br><a href="https://damesa.pt/restaurante/${(r.city ?? 'lisboa').toLowerCase()}/${r.slug}?src=direct" target="_blank"
+            style="font-size:11px;color:var(--muted);display:inline-flex;align-items:center;gap:3px;margin-top:5px;text-decoration:underline;text-decoration-color:var(--border);">
+            🔗 Link direto
+          </a>
+          <button onclick="navigator.clipboard.writeText('https://damesa.pt/restaurante/${(r.city ?? 'lisboa').toLowerCase()}/${r.slug}?src=direct').then(()=>{this.textContent='✓';setTimeout(()=>this.textContent='Copiar',1500)})"
+            style="background:none;border:1px solid var(--border);border-radius:5px;padding:2px 7px;font-size:11px;cursor:pointer;color:var(--muted);margin-left:4px;margin-top:5px;">Copiar</button>
         </td>
       </tr>`
     }).join('')
@@ -903,20 +942,25 @@
   // ── BOOKINGS ──────────────────────────────────────────────
   async function loadAllBookings() {
     document.getElementById('bookings-tbody').innerHTML =
-      '<tr><td colspan="7" style="padding:32px;text-align:center;color:var(--muted)"><span class="loading-text">A carregar</span></td></tr>'
+      '<tr><td colspan="8" style="padding:32px;text-align:center;color:var(--muted)"><span class="loading-text">A carregar</span></td></tr>'
     try {
       const { data, error } = await supabase
         .from('bookings')
-        .select('*, restaurants(name)')
+        .select('id, booking_date, booking_time, diner_name, diner_email, party_size, status, reference_code, source, restaurants(name)')
         .order('booking_date', { ascending: false })
         .limit(200)
       if (error) throw error
       if (!data?.length) {
         document.getElementById('bookings-tbody').innerHTML =
-          '<tr><td colspan="7" style="padding:32px;text-align:center;color:var(--muted)">Nenhuma reserva ainda.</td></tr>'
+          '<tr><td colspan="8" style="padding:32px;text-align:center;color:var(--muted)">Nenhuma reserva ainda.</td></tr>'
         return
       }
-      document.getElementById('bookings-tbody').innerHTML = data.map(b => `
+      document.getElementById('bookings-tbody').innerHTML = data.map(b => {
+        const src = b.source ?? ''
+        const srcBadge = src === 'direct'
+          ? `<span style="background:#e3f2fd;color:#1565c0;padding:2px 8px;border-radius:100px;font-size:11px;font-weight:500;">Direto</span>`
+          : `<span style="background:var(--bg);border:1px solid var(--border);color:var(--muted);padding:2px 8px;border-radius:100px;font-size:11px;">Da Mesa</span>`
+        return `
         <tr>
           <td>${b.booking_date}</td>
           <td>${(b.booking_time ?? '').slice(0,5)}</td>
@@ -924,12 +968,13 @@
           <td style="font-size:12px">${b.diner_name ?? '—'}<br><span style="color:var(--muted)">${b.diner_email ?? ''}</span></td>
           <td>${b.party_size ?? '—'}</td>
           <td><span class="status status-${b.status}">${b.status}</span></td>
+          <td>${srcBadge}</td>
           <td style="font-size:11px;color:var(--muted)">#${b.reference_code ?? ''}</td>
-        </tr>
-      `).join('')
+        </tr>`
+      }).join('')
     } catch(e) {
       document.getElementById('bookings-tbody').innerHTML =
-        `<tr><td colspan="7" style="padding:32px;text-align:center;color:var(--accent)">Erro: ${e.message}</td></tr>`
+        `<tr><td colspan="8" style="padding:32px;text-align:center;color:var(--accent)">Erro: ${e.message}</td></tr>`
     }
   }
 
@@ -1331,8 +1376,13 @@
     document.getElementById('bm-damesa-email-display').textContent = damesaEmail ?? 'Não configurado'
     document.getElementById('bm-damesa-email-btn').textContent = damesaEmail ? 'Regenerar email Da Mesa' : 'Gerar email Da Mesa'
 
+    // DETALHES tab
+    const directLink = `https://damesa.pt/restaurante/${restaurant.city?.toLowerCase() ?? 'lisboa'}/${restaurant.slug}?src=direct`
+    document.getElementById('bm-direct-link').value = directLink
+    document.getElementById('bm-max-capacity').value = restaurant.max_capacity ?? ''
+
     // Reset messages
-    ;['bm-billing-error','bm-billing-success','bm-contract-error','bm-contract-success','bm-damesa-email-error','bm-damesa-email-success'].forEach(id => {
+    ;['bm-billing-error','bm-billing-success','bm-contract-error','bm-contract-success','bm-damesa-email-error','bm-damesa-email-success','bm-detalhes-error','bm-detalhes-success'].forEach(id => {
       const el = document.getElementById(id); el.style.display = 'none'; el.textContent = ''
     })
 
@@ -1659,6 +1709,51 @@
       btn.textContent = 'Gerar email Da Mesa'
     } finally {
       btn.disabled = false
+    }
+  }
+
+  // ── RESTAURANT DETAILS (max_capacity + direct link) ──────
+  window.copyDirectLink = function() {
+    const link = document.getElementById('bm-direct-link').value
+    if (!link) return
+    navigator.clipboard.writeText(link).then(() => {
+      const sucEl = document.getElementById('bm-detalhes-success')
+      sucEl.textContent = '✓ Link copiado!'
+      sucEl.style.display = 'block'
+      setTimeout(() => { sucEl.style.display = 'none' }, 2500)
+    })
+  }
+
+  window.saveRestaurantDetails = async function() {
+    if (!_billingRestaurantId) return
+
+    const maxCapacity = parseInt(document.getElementById('bm-max-capacity').value) || 20
+
+    const errEl = document.getElementById('bm-detalhes-error')
+    const sucEl = document.getElementById('bm-detalhes-success')
+    errEl.style.display = 'none'; sucEl.style.display = 'none'
+
+    const btn = document.getElementById('bm-detalhes-btn')
+    btn.disabled = true; btn.textContent = 'A guardar...'
+
+    try {
+      const { error } = await supabase.from('restaurants').update({
+        max_capacity: maxCapacity
+      }).eq('id', _billingRestaurantId)
+
+      if (error) throw error
+
+      // Update local cache
+      const idx = allRestaurants.findIndex(r => r.id === _billingRestaurantId)
+      if (idx !== -1) allRestaurants[idx].max_capacity = maxCapacity
+
+      sucEl.textContent = `✓ Capacidade atualizada: ${maxCapacity} pessoas por slot`
+      sucEl.style.display = 'block'
+    } catch(e) {
+      errEl.textContent = `Erro: ${e.message}`
+      errEl.style.display = 'block'
+    } finally {
+      btn.disabled = false; btn.textContent = 'Guardar alterações'
     }
   }
 

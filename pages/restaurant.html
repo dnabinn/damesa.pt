@@ -1357,8 +1357,7 @@
     }
 
     slotsEl.innerHTML = [1,2,3,4,5,6].map(() => `<div class="slot skeleton" style="height:40px;border:none;"></div>`).join('')
-    const slots = await getAvailableSlots(restaurant.id, date, restaurant.available_times, restaurant.opening_hours)
-    const capacity  = restaurant.capacity ?? 50
+    const slots = await getAvailableSlots(restaurant.id, date, restaurant.available_times, restaurant.opening_hours, restaurant.max_capacity ?? null)
     const isToday   = date === today
     const isYesterday = date === yesterday
     const nowLisbon = getLisbonNow()
@@ -1386,11 +1385,10 @@
 
     // Render slots — cross-midnight slots get a small "+1" superscript to indicate next day
     slotsEl.innerHTML = visible.map(s => {
-      const full  = s.booked >= capacity
       const label = s.nextDay
         ? `${s.time}<sup style="font-size:9px;margin-left:1px;opacity:0.65">+1</sup>`
         : s.time
-      return `<div class="slot${full ? ' full' : ''}" data-time="${s.time}" onclick="selectSlot(this)">${label}</div>`
+      return `<div class="slot${s.full ? ' full' : ''}" data-time="${s.time}" ${s.full ? '' : `onclick="selectSlot(this)"`}>${label}${s.full ? '<br><span style="font-size:10px;opacity:0.6">Esgotado</span>' : ''}</div>`
     }).join('')
   }
 
@@ -1448,6 +1446,8 @@
     btn.disabled = true
     const bookingDate = document.getElementById('bdate').value
     const bookingTime = selectedSlot.dataset.time
+    // Detect booking source: 'direct' if restaurant shared the link with ?src=direct param
+    const _bookingSource = new URLSearchParams(location.search).get('src') === 'direct' ? 'direct' : 'platform'
     const { booking, error } = await createBooking({
       restaurantId: restaurant.id,
       dinerName: name, dinerEmail: email, dinerPhone: phone,
@@ -1455,7 +1455,8 @@
       partySize: parseInt(document.getElementById('bparty').value),
       specialRequests: document.getElementById('special-requests').value,
       occasion: document.getElementById('occasion').value || null,
-      dinerId: _session?.user?.id || null
+      dinerId: _session?.user?.id || null,
+      source: _bookingSource
     })
     if (error) {
       alert('Erro ao criar reserva: ' + error.message)

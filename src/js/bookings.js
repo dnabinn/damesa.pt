@@ -4,7 +4,8 @@ import { supabase } from './supabase.js'
 export async function createBooking(bookingData) {
   const {
     restaurantId, dinerName, dinerEmail, dinerPhone,
-    bookingDate, bookingTime, partySize, specialRequests, occasion, dinerId
+    bookingDate, bookingTime, partySize, specialRequests, occasion, dinerId,
+    source
   } = bookingData
 
   // Server-side past-datetime guard (Lisbon timezone).
@@ -35,7 +36,8 @@ export async function createBooking(bookingData) {
     booking_time: bookingTime,
     party_size: partySize,
     special_requests: specialRequests || null,
-    status: 'pending'
+    status: 'pending',
+    source: source || 'platform'
   }
   // occasion & cancel_token only inserted if columns exist (added via migration)
   if (occasion) row.occasion = occasion
