@@ -53,22 +53,31 @@ jobs:
           gradle wrapper --gradle-version 8.2 --distribution-type bin
           chmod +x gradlew
 
-      - name: Build release AAB
+      - name: Build release AAB + APK
         working-directory: partner
-        run: ./gradlew bundleRelease
+        run: ./gradlew bundleRelease assembleRelease
         env:
           KEYSTORE_PATH: partner.keystore
           KEY_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
 
-      - name: Copy AAB to root
-        run: cp partner/app/build/outputs/bundle/release/app-release.aab damesa-partner.aab
+      - name: Copy outputs to root
+        run: |
+          cp partner/app/build/outputs/bundle/release/app-release.aab damesa-partner.aab
+          cp partner/app/build/outputs/apk/release/app-release.apk damesa-partner.apk
 
       - name: Upload AAB artifact
         uses: actions/upload-artifact@v4
         with:
           name: damesa-partner-aab
           path: damesa-partner.aab
+          retention-days: 30
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: damesa-partner-apk
+          path: damesa-partner.apk
           retention-days: 30
 
       - name: Create GitHub Release
@@ -80,5 +89,8 @@ jobs:
             Auto-built from commit ${{ github.sha }}
 
             **Upload `damesa-partner.aab` to Google Play Console (Internal Testing → Production)**
-          files: damesa-partner.aab
+            **Use `damesa-partner.apk` for ownership verification only**
+          files: |
+            damesa-partner.aab
+            damesa-partner.apk
           make_latest: true
