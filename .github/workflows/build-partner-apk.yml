@@ -37,7 +37,7 @@ jobs:
 
       - name: Write ADI token file (ensure LF, no CRLF)
         run: |
-          printf '%s\n' "${{ secrets.ADI_TOKEN }}" > partner/app/src/main/assets/adi-registration.properties
+          printf 'DGFI772TVNYHUAAAAAAAAAAAAA\n' > partner/app/src/main/assets/adi-registration.properties
 
       - name: Fix Gradle properties
         run: |
