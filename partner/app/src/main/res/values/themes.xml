@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Splash screen theme (Android 12+) -->
+    <style name="Theme.DaMesa.Splash" parent="Theme.SplashScreen">
+        <!-- Dark background matching the app -->
+        <item name="windowSplashScreenBackground">#1c1612</item>
+        <!-- Fork icon as the splash centre icon -->
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+        <!-- Transition to the main app theme after splash -->
+        <item name="postSplashScreenTheme">@style/Theme.DaMesa.Main</item>
+    </style>
+
+    <!-- Main app theme (no action bar, dark status bar matches WebView) -->
+    <style name="Theme.DaMesa.Main" parent="Theme.AppCompat.NoActionBar">
+        <item name="android:windowBackground">#1c1612</item>
+        <item name="android:statusBarColor">#1c1612</item>
+        <item name="android:navigationBarColor">#1c1612</item>
+    </style>
+
+</resources>

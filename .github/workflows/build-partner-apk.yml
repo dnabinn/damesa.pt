@@ -1,4 +1,4 @@
-name: Build Partner APK
+name: Build Partner AAB
 
 on:
   push:
@@ -37,7 +37,7 @@ jobs:
 
       - name: Fix Gradle properties
         run: |
-          echo "org.gradle.jvmargs=-Xmx512m" > partner/gradle.properties
+          echo "org.gradle.jvmargs=-Xmx2048m" > partner/gradle.properties
           echo "android.useAndroidX=true" >> partner/gradle.properties
           echo "android.enableJetifier=true" >> partner/gradle.properties
           echo "kotlin.code.style=official" >> partner/gradle.properties
@@ -53,42 +53,32 @@ jobs:
           gradle wrapper --gradle-version 8.2 --distribution-type bin
           chmod +x gradlew
 
-      - name: Build release APK
+      - name: Build release AAB
         working-directory: partner
-        run: ./gradlew assembleRelease
+        run: ./gradlew bundleRelease
         env:
           KEYSTORE_PATH: partner.keystore
           KEY_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
 
-      - name: Zipalign APK
-        run: |
-          $ANDROID_HOME/build-tools/34.0.0/zipalign -v -p 4 \
-            partner/app/build/outputs/apk/release/app-release-unsigned.apk \
-            damesa-partner-aligned.apk
+      - name: Copy AAB to root
+        run: cp partner/app/build/outputs/bundle/release/app-release.aab damesa-partner.aab
 
-      - name: Sign APK
-        run: |
-          $ANDROID_HOME/build-tools/34.0.0/apksigner sign \
-            --ks partner/partner.keystore \
-            --ks-key-alias ${{ secrets.KEY_ALIAS }} \
-            --ks-pass pass:${{ secrets.KEY_STORE_PASSWORD }} \
-            --key-pass pass:${{ secrets.KEY_STORE_PASSWORD }} \
-            --out damesa-partner.apk \
-            damesa-partner-aligned.apk
-
-      - name: Upload APK artifact
+      - name: Upload AAB artifact
         uses: actions/upload-artifact@v4
         with:
-          name: damesa-partner-apk
-          path: damesa-partner.apk
+          name: damesa-partner-aab
+          path: damesa-partner.aab
           retention-days: 30
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: partner-apk-${{ github.run_number }}
+          tag_name: partner-aab-${{ github.run_number }}
           name: "DaMesa Partner v${{ github.run_number }}"
-          body: "Auto-built from commit ${{ github.sha }}"
-          files: damesa-partner.apk
-          make_latest: false
+          body: |
+            Auto-built from commit ${{ github.sha }}
+
+            **Upload `damesa-partner.aab` to Google Play Console (Internal Testing → Production)**
+          files: damesa-partner.aab
+          make_latest: true

@@ -10,9 +10,11 @@ import android.os.Build
 import android.os.Bundle
 import android.webkit.*
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.google.firebase.messaging.FirebaseMessaging
 
 class MainActivity : AppCompatActivity() {
@@ -22,6 +24,7 @@ class MainActivity : AppCompatActivity() {
     private val APP_URL = "https://damesa.pt/pages/owner-app.html"
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        installSplashScreen()  // must be before super.onCreate for Android 12+
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
@@ -30,6 +33,18 @@ class MainActivity : AppCompatActivity() {
 
         webView = findViewById(R.id.webView)
         setupWebView()
+
+        // Handle back navigation — go back in WebView history before exiting
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                if (webView.canGoBack()) {
+                    webView.goBack()
+                } else {
+                    isEnabled = false
+                    onBackPressedDispatcher.onBackPressed()
+                }
+            }
+        })
 
         // Load the owner app
         webView.loadUrl(APP_URL)
@@ -164,11 +179,4 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    override fun onBackPressed() {
-        if (webView.canGoBack()) {
-            webView.goBack()
-        } else {
-            super.onBackPressed()
-        }
-    }
 }
