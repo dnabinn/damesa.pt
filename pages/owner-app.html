@@ -833,6 +833,14 @@ function setupRealtime() {
       if (_activeTab === 'hoje') loadToday()
       else if (_activeTab === 'reservas') loadReservas()
     })
+    .on('postgres_changes', {
+      event: 'UPDATE', schema: 'public', table: 'bookings',
+      filter: `restaurant_id=eq.${_restaurant.id}`
+    }, payload => {
+      // Refresh the list so status changes (e.g. customer cancellation) show immediately
+      if (_activeTab === 'hoje') loadToday()
+      else if (_activeTab === 'reservas') loadReservas()
+    })
     .subscribe(status => {
       console.log('[Realtime] status:', status)
     })

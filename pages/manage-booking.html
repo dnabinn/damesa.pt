@@ -64,17 +64,7 @@
 
     .divider { height: 1px; background: var(--border); margin: 24px 0; }
 
-    /* Modify form */
-    .modify-section { display: none; }
-    .modify-section.open { display: block; }
     .form-group { margin-bottom: 16px; }
-    .form-group label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.7px; color: var(--muted); margin-bottom: 6px; }
-    .form-group input, .form-group select {
-      width: 100%; padding: 11px 14px; border: 1.5px solid var(--border); border-radius: 10px;
-      font-size: 14px; font-family: var(--sans); background: #fff; color: var(--text);
-      transition: border-color 0.15s;
-    }
-    .form-group input:focus, .form-group select:focus { outline: none; border-color: var(--accent); }
 
     .btn { display: block; width: 100%; padding: 13px; border-radius: 10px; font-size: 15px; font-weight: 600; font-family: var(--sans); cursor: pointer; border: none; transition: opacity 0.15s, background 0.15s; margin-bottom: 10px; }
     .btn-primary { background: var(--accent); color: #fff; }
@@ -143,10 +133,6 @@
     const bookingDateFmt = new Date(booking.booking_date + 'T12:00').toLocaleDateString('pt-PT', { weekday:'long', day:'numeric', month:'long', year:'numeric' })
     const partyLabel = booking.party_size === 1 ? '1 pessoa' : `${booking.party_size} pessoas`
 
-    // Today's Lisbon date for min date
-    const todayLisbon = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Lisbon' })
-    const maxDate = (() => { const d = new Date(); d.setMonth(d.getMonth() + 3); return d.toLocaleDateString('en-CA', { timeZone: 'Europe/Lisbon' }) })()
-
     card.innerHTML = `
       <div class="card-title">Gerir Reserva</div>
 
@@ -182,8 +168,7 @@
         </div>` : ''}
       </div>
 
-      <div id="msg-success" class="msg msg-success">✓ Reserva atualizada com sucesso!</div>
-      <div id="msg-error"   class="msg msg-error">Erro ao atualizar reserva. Tenta novamente.</div>
+      <div id="msg-error" class="msg msg-error">Erro ao cancelar. Tenta novamente.</div>
 
       ${isCancelled ? `
         <div class="cancelled-notice">
@@ -198,44 +183,6 @@
       ` : `
         <div class="divider"></div>
 
-        <!-- Modify section (toggle) -->
-        <div id="modify-section" class="modify-section">
-          <div style="font-size:13px;font-weight:600;margin-bottom:16px;color:var(--text);">Alterar reserva</div>
-          <div class="form-group">
-            <label>Nova data</label>
-            <input type="date" id="new-date" min="${todayLisbon}" max="${maxDate}" value="${booking.booking_date}" />
-          </div>
-          <div class="form-group">
-            <label>Nova hora</label>
-            <select id="new-time">
-              <option value="12:00" ${booking.booking_time?.startsWith('12:00')?'selected':''}>12:00</option>
-              <option value="12:30" ${booking.booking_time?.startsWith('12:30')?'selected':''}>12:30</option>
-              <option value="13:00" ${booking.booking_time?.startsWith('13:00')?'selected':''}>13:00</option>
-              <option value="13:30" ${booking.booking_time?.startsWith('13:30')?'selected':''}>13:30</option>
-              <option value="14:00" ${booking.booking_time?.startsWith('14:00')?'selected':''}>14:00</option>
-              <option value="14:30" ${booking.booking_time?.startsWith('14:30')?'selected':''}>14:30</option>
-              <option value="19:00" ${booking.booking_time?.startsWith('19:00')?'selected':''}>19:00</option>
-              <option value="19:30" ${booking.booking_time?.startsWith('19:30')?'selected':''}>19:30</option>
-              <option value="20:00" ${booking.booking_time?.startsWith('20:00')?'selected':''}>20:00</option>
-              <option value="20:30" ${booking.booking_time?.startsWith('20:30')?'selected':''}>20:30</option>
-              <option value="21:00" ${booking.booking_time?.startsWith('21:00')?'selected':''}>21:00</option>
-              <option value="21:30" ${booking.booking_time?.startsWith('21:30')?'selected':''}>21:30</option>
-              <option value="22:00" ${booking.booking_time?.startsWith('22:00')?'selected':''}>22:00</option>
-              <option value="22:30" ${booking.booking_time?.startsWith('22:30')?'selected':''}>22:30</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Número de pessoas</label>
-            <select id="new-party">
-              ${[1,2,3,4,5,6,7,8].map(n => `<option value="${n}" ${booking.party_size===n?'selected':''}>${n === 8 ? '8+ pessoas' : n === 1 ? '1 pessoa' : n + ' pessoas'}</option>`).join('')}
-            </select>
-          </div>
-          <button class="btn btn-primary" id="confirm-modify-btn" onclick="confirmModify()">Guardar alterações</button>
-          <button class="btn btn-secondary" onclick="toggleModify(false)">Cancelar</button>
-          <div class="divider"></div>
-        </div>
-
-        <button class="btn btn-secondary" id="modify-btn" onclick="toggleModify(true)">✏️ Alterar data / hora / pessoas</button>
         <button class="btn btn-danger" id="cancel-btn" onclick="cancelBooking()">✕ Cancelar reserva</button>
 
         <p style="font-size:12px;color:var(--muted);text-align:center;margin-top:12px;line-height:1.6;">
@@ -247,49 +194,14 @@
       <a href="/pages/restaurantes.html" style="font-size:13px;color:var(--muted);">← Ver outros restaurantes</a>
     `
 
-    // Functions
-    window.toggleModify = function(open) {
-      document.getElementById('modify-section').classList.toggle('open', open)
-      document.getElementById('modify-btn').style.display = open ? 'none' : 'block'
-    }
-
-    window.confirmModify = async function() {
-      const btn = document.getElementById('confirm-modify-btn')
-      btn.textContent = 'A guardar...'; btn.disabled = true
-      hideMsg()
-
-      const newDate  = document.getElementById('new-date').value
-      const newTime  = document.getElementById('new-time').value
-      const newParty = parseInt(document.getElementById('new-party').value)
-
-      const { error } = await supabase.from('bookings').update({
-        booking_date: newDate,
-        booking_time: newTime,
-        party_size: newParty,
-        updated_at: new Date().toISOString()
-      }).eq('cancel_token', token)
-
-      if (error) {
-        showMsg('error', 'Erro ao atualizar reserva. Tenta novamente.')
-        btn.textContent = 'Guardar alterações'; btn.disabled = false
-        return
-      }
-
-      showMsg('success', '✓ Reserva atualizada com sucesso!')
-      // Update displayed date
-      const newDateFmt = new Date(newDate + 'T12:00').toLocaleDateString('pt-PT', { weekday:'long', day:'numeric', month:'long', year:'numeric' })
-      window.scrollTo({ top: 0, behavior: 'smooth' })
-      btn.textContent = 'Guardar alterações'; btn.disabled = false
-      toggleModify(false)
-    }
-
     window.cancelBooking = async function() {
       const confirmed = window.confirm('Tens a certeza que queres cancelar esta reserva?')
       if (!confirmed) return
 
       const btn = document.getElementById('cancel-btn')
       btn.textContent = 'A cancelar...'; btn.disabled = true
-      hideMsg()
+      const errEl2 = document.getElementById('msg-error')
+      if (errEl2) errEl2.classList.remove('show')
 
       const { error } = await supabase.from('bookings').update({
         status: 'cancelled',
@@ -297,23 +209,14 @@
       }).eq('cancel_token', token)
 
       if (error) {
-        showMsg('error', 'Erro ao cancelar. Tenta novamente.')
+        const errEl = document.getElementById('msg-error')
+        if (errEl) { errEl.textContent = 'Erro ao cancelar. Tenta novamente.'; errEl.classList.add('show') }
         btn.textContent = '✕ Cancelar reserva'; btn.disabled = false
         return
       }
 
       // Reload to show cancelled state
       location.reload()
-    }
-
-    function showMsg(type, text) {
-      const el = document.getElementById(`msg-${type}`)
-      if (!el) return
-      el.textContent = text; el.classList.add('show')
-      setTimeout(() => el.classList.remove('show'), 5000)
-    }
-    function hideMsg() {
-      document.querySelectorAll('.msg').forEach(m => m.classList.remove('show'))
     }
   })()
 </script>

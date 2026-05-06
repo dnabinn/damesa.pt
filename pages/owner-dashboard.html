@@ -1263,6 +1263,17 @@
           loadBookings(dateInput?.value || null)
         }
       })
+      .on('postgres_changes', {
+        event: 'UPDATE', schema: 'public', table: 'bookings',
+        filter: `restaurant_id=eq.${restaurant.id}`
+      }, () => {
+        // Refresh list when customer cancels or status changes
+        const reservasPanel = document.getElementById('tab-reservas')
+        if (reservasPanel?.classList.contains('active')) {
+          const dateInput = document.getElementById('booking-date')
+          loadBookings(dateInput?.value || null)
+        }
+      })
       .subscribe()
   }
 

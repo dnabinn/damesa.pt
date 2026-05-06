@@ -92,18 +92,57 @@
     .nav-back:hover { color: var(--text); }
     .nav-cta { background: var(--text); color: #fff !important; padding: 8px 18px; border-radius: 8px; font-size: 13px; }
 
-    /* ── HERO ───────────────────────────────────── */
-    .hero-wrap { position: relative; height: 460px; overflow: hidden; background: #d4c9bc; }
-    .cover-img {
-      position: absolute; inset: 0;
-      background-size: cover; background-position: center;
-      transition: transform 8s ease;
+    /* ── HERO GRID ───────────────────────────────────── */
+    .hero-grid {
+      position: relative;
+      display: grid;
+      grid-template-columns: 55% 1fr 1fr;
+      grid-template-rows: 230px 226px;
+      gap: 3px;
+      background: #1c1612;
+      overflow: hidden;
     }
-    .hero-wrap:hover .cover-img { transform: scale(1.03); }
-    .hero-gradient {
-      position: absolute; inset: 0;
-      background: linear-gradient(to top, rgba(20,14,10,0.85) 0%, rgba(20,14,10,0.3) 50%, transparent 100%);
+    .hg-cell {
+      background: #d4c9bc center/cover no-repeat;
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      transition: filter 0.2s;
     }
+    .hg-cell:hover { filter: brightness(0.88); }
+    .hg-main {
+      grid-column: 1;
+      grid-row: 1 / 3;
+      cursor: default;
+    }
+    .hg-main:hover { filter: none; }
+    /* Gradient only on main cell for content readability */
+    .hg-main::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(to top, rgba(20,14,10,0.88) 0%, rgba(20,14,10,0.35) 45%, transparent 75%);
+      pointer-events: none;
+    }
+    .hero-content {
+      position: absolute; bottom: 0; left: 0;
+      width: 55%;
+      padding: 32px;
+      color: #fff;
+      z-index: 2;
+      animation: fadeUp 0.5s 0.1s ease both;
+    }
+    .hero-all-btn {
+      position: absolute; bottom: 16px; right: 16px; z-index: 3;
+      display: none;
+      align-items: center; gap: 6px;
+      background: rgba(255,255,255,0.92); backdrop-filter: blur(8px);
+      border: none; border-radius: 8px;
+      padding: 9px 16px; font-size: 13px; font-weight: 600; color: #1c1612;
+      cursor: pointer; font-family: inherit;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.18);
+      transition: background 0.15s, transform 0.1s;
+    }
+    .hero-all-btn:hover { background: #fff; transform: translateY(-1px); }
     .hero-actions {
       display: flex; gap: 8px; margin-top: 12px;
     }
@@ -116,13 +155,6 @@
     }
     .hero-action-btn:hover { background: rgba(255,255,255,0.25); }
     .hero-fav-btn.active { color: #ff6b81; border-color: rgba(255,107,129,0.5); }
-
-    .hero-content {
-      position: absolute; bottom: 0; left: 0; right: 0;
-      padding: 32px;
-      color: #fff;
-      animation: fadeUp 0.5s 0.1s ease both;
-    }
     .hero-badge {
       display: inline-block;
       background: rgba(255,255,255,0.2);
@@ -138,7 +170,7 @@
     }
     .hero-name {
       font-family: var(--serif);
-      font-size: clamp(28px, 4vw, 48px);
+      font-size: clamp(26px, 3.5vw, 44px);
       font-weight: normal;
       line-height: 1.1;
       margin-bottom: 12px;
@@ -163,7 +195,41 @@
       border-radius: 100px; padding: 4px 12px;
       font-size: 13px; color: #fff;
     }
-    @media (max-width: 768px) { .hero-wrap { height: 340px; } .hero-content { padding: 20px; } }
+
+    /* Mobile: horizontal swipe strip */
+    @media (max-width: 768px) {
+      .hero-grid {
+        display: flex;
+        flex-direction: row;
+        overflow-x: scroll;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        height: 300px;
+        gap: 3px;
+      }
+      .hero-grid::-webkit-scrollbar { display: none; }
+      .hg-main {
+        flex: 0 0 90vw;
+        grid-column: unset; grid-row: unset;
+        scroll-snap-align: start;
+      }
+      .hg-cell {
+        flex: 0 0 78vw;
+        scroll-snap-align: start;
+      }
+      .hg-main::after {
+        background: linear-gradient(to top, rgba(20,14,10,0.9) 0%, rgba(20,14,10,0.3) 50%, transparent 80%);
+      }
+      .hero-content {
+        width: auto; right: 40px;
+        padding: 20px;
+        pointer-events: none;
+      }
+      .hero-content button,
+      .hero-content a { pointer-events: auto; }
+      .hero-all-btn { display: none !important; }
+    }
 
     /* ── INFOBAR ────────────────────────────────── */
     .infobar {
@@ -630,10 +696,13 @@
   </div>
 </nav>
 
-<!-- HERO -->
-<div class="hero-wrap">
-  <div class="cover-img skeleton" id="cover-img"></div>
-  <div class="hero-gradient"></div>
+<!-- HERO GRID -->
+<div class="hero-grid" id="hero-grid">
+  <div class="hg-cell hg-main skeleton" id="hg-0"></div>
+  <div class="hg-cell skeleton" id="hg-1" onclick="switchTab('photos')"></div>
+  <div class="hg-cell skeleton" id="hg-2" onclick="switchTab('photos')"></div>
+  <div class="hg-cell skeleton" id="hg-3" onclick="switchTab('photos')"></div>
+  <div class="hg-cell skeleton" id="hg-4" onclick="switchTab('photos')"></div>
   <div class="hero-content">
     <div class="hero-badge" id="rest-cuisine"><span class="loading-text">A carregar</span></div>
     <h1 class="hero-name" id="rest-name"> </h1>
@@ -652,6 +721,7 @@
       <button class="hero-action-btn" onclick="shareRestaurant()">↗ Partilhar</button>
     </div>
   </div>
+  <button class="hero-all-btn" id="hero-all-btn" onclick="switchTab('photos')">⊞ Ver todas as fotos</button>
 </div>
 
 <!-- TABS BAR -->
@@ -1046,13 +1116,13 @@
   schemaEl.textContent = JSON.stringify(schema)
   document.head.appendChild(schemaEl)
 
-  // ── HERO ─────────────────────────────────────────────────
-  const coverEl = document.getElementById('cover-img')
-  coverEl.classList.remove('skeleton')
+  // ── HERO GRID — main cell (cover image) ─────────────────
+  const hg0 = document.getElementById('hg-0')
+  hg0.classList.remove('skeleton')
   if (restaurant.cover_image) {
-    coverEl.style.backgroundImage = `url(${restaurant.cover_image})`
+    hg0.style.backgroundImage = `url(${restaurant.cover_image})`
   } else {
-    coverEl.style.background = 'linear-gradient(135deg, #c8b5a0 0%, #a08060 100%)'
+    hg0.style.background = 'linear-gradient(135deg, #c8b5a0 0%, #a08060 100%)'
   }
   document.getElementById('rest-name').textContent = restaurant.name
   document.getElementById('rest-cuisine').textContent = restaurant.cuisine_type ?? 'Restaurante'
@@ -1484,6 +1554,41 @@
     const diners = data?.filter(p => p.source_type === 'diner') ?? []
     renderPhotoGrid('photos-grid-restaurant', rest)
     renderPhotoGrid('photos-grid-diner', diners)
+
+    // ── Populate hero grid cells 1–4 ────────────────────────
+    const allPhotos = [...rest, ...diners]
+    const fallback = restaurant.cover_image
+      ? `url(${restaurant.cover_image})`
+      : null
+    const fallbackBrightness = ['brightness(0.72)', 'brightness(0.65)', 'brightness(0.78)', 'brightness(0.60)']
+    const gradients = [
+      'linear-gradient(145deg,#c8b5a0 0%,#a08060 100%)',
+      'linear-gradient(160deg,#b5a090 0%,#906850 100%)',
+      'linear-gradient(130deg,#d0c0b0 0%,#b09070 100%)',
+      'linear-gradient(150deg,#c0a898 0%,#987060 100%)'
+    ]
+    for (let i = 1; i <= 4; i++) {
+      const cell = document.getElementById(`hg-${i}`)
+      if (!cell) continue
+      cell.classList.remove('skeleton')
+      const photo = allPhotos[i - 1]
+      if (photo) {
+        cell.style.backgroundImage = `url(${photo.photo_url})`
+      } else if (fallback) {
+        cell.style.backgroundImage = fallback
+        cell.style.filter = fallbackBrightness[i - 1]
+      } else {
+        cell.style.background = gradients[i - 1]
+      }
+    }
+
+    // Show "all photos" button on desktop when there are photos
+    const allBtn = document.getElementById('hero-all-btn')
+    if (allBtn && allPhotos.length > 0) {
+      allBtn.style.display = 'inline-flex'
+      const count = allPhotos.length
+      allBtn.textContent = count > 5 ? `⊞ Ver todas (${count})` : '⊞ Ver todas as fotos'
+    }
   }
   await loadPhotos()
 
