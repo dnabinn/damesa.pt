@@ -59,7 +59,7 @@ function slotsFromOpeningHours(openingHours, dayOfWeek) {
     if (crossesMidnight) closeMins += 24 * 60  // e.g. 02:00 → 26:00 (1560 min)
 
     let mins = openMins
-    while (mins <= closeMins - 30) {  // last slot ends 30 min before closing
+    while (mins <= closeMins) {  // last slot = closing time
       const wrappedMins = mins % (24 * 60)   // wrap 25:30 → 01:30
       const h = String(Math.floor(wrappedMins / 60)).padStart(2, '0')
       const m = String(wrappedMins % 60).padStart(2, '0')
